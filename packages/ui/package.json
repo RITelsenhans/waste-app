@@ -21,7 +21,7 @@
     "@types/react-dom": "19.2.3",
     "@waste/design-tokens": "workspace:*",
     "@waste/eslint-config": "workspace:*",
-    "eslint": "9.39.5",
+    "eslint": "10.8.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "typescript": "6.0.3",
