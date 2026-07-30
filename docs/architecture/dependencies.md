@@ -16,7 +16,7 @@ Stand: 30. Juli 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, 
 | Jackson Kotlin Module       | durch Spring Boot verwaltet | JSON-Bindung für Kotlin-Datenklassen                                                                     | Apache-2.0 |
 | Spotless Gradle Plugin      | 8.9.0                       | reproduzierbare Kotlin-Format- und Lintprüfung                                                           | Apache-2.0 |
 | ktlint                      | 1.7.1                       | Kotlin-Regeln innerhalb Spotless                                                                         | MIT        |
-| Gradle Wrapper              | 9.5.1                       | reproduzierbares API-Buildwerkzeug ohne globale Installation                                             | Apache-2.0 |
+| Gradle Wrapper              | 9.6.1                       | reproduzierbares API-Buildwerkzeug ohne globale Installation; empfohlenes Patch-Update der 9.6-Linie     | Apache-2.0 |
 | Redocly CLI                 | 2.43.1                      | semantische OpenAPI-3.1-Validierung und API-Regeln                                                       | MIT        |
 | Hey API OpenAPI TypeScript  | 0.97.3                      | deterministische TypeScript-Typen und Fetch-SDK; sichere, zur Node-22.13-Baseline passende Patchversion  | MIT        |
 
