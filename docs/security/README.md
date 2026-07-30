@@ -13,9 +13,9 @@
   Lizenz-Deny-Liste.
 - Dependabot beobachtet npm/pnpm, Gradle und GitHub Actions wöchentlich.
 
-Secret Scanning und Push Protection werden nach Anlage des GitHub-Remotes in den
-Repository-Einstellungen aktiviert. Ihre Verfügbarkeit für ein privates Repository
-hängt von der GitHub-Organisationslizenz ab.
+Secret Scanning und Push Protection sind im öffentlichen GitHub-Repository aktiv.
+Dependabot Alerts und automatische Security Updates sind ebenfalls eingeschaltet.
+CodeQL-, Secret-Scanning- und Dependabot-Alerts werden vor jeder Übergabe geprüft.
 
 Threat Modeling, Container-Scans, SBOM, Header-Policy, Rate Limits, WAF und produktive
 Secret-Verwaltung sind nach Wahl der Betriebsplattform umzusetzen. Dependency Audit und
