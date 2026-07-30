@@ -59,8 +59,21 @@ Lokale und CI-Prüfungen besitzen eine gemeinsame Befehlsquelle im Root-Paket. E
 kleiner Policy-Test schützt SHA-Pinning, Minimalrechte und die vereinbarten Gates vor
 unbeabsichtigter Abschwächung.
 
-Vor dem ersten Merge muss ein Repository-Administrator die Checknamen und
-Security-Einstellungen gemäß `tooling/ci/README.md` aktivieren. Falls Dependency Review,
-CodeQL oder Secret Scanning für ein privates Ziel-Repository nicht lizenziert sind,
-muss die Organisation eine gleichwertige, dokumentierte Alternative entscheiden; die
-Gates werden nicht stillschweigend entfernt.
+Für den ersten geschützten Merge wurden die Checknamen und Security-Einstellungen gemäß
+`tooling/ci/README.md` aktiviert. Falls das Repository später auf `private` umgestellt
+wird und Dependency Review, CodeQL oder Secret Scanning nicht lizenziert sind, muss die
+Organisation eine gleichwertige, dokumentierte Alternative entscheiden; die Gates
+werden nicht stillschweigend entfernt.
+
+## Umsetzungsstand
+
+Das öffentliche Repository
+[`RITelsenhans/waste-app`](https://github.com/RITelsenhans/waste-app) wurde am 30. Juli 2026 angelegt. Die Workflows liefen auf `main` erfolgreich. Secret Scanning,
+Push Protection, Dependabot Alerts, automatische Security Updates und Admin-Enforcement
+sind aktiv.
+
+`main` verlangt Pull Requests, aktuelle Quality-/Security-/Dependency-Checks und
+aufgelöste Gespräche; Force Push und Löschung sind gesperrt. Weil noch kein zweiter
+Reviewer benannt wurde, steht die Zahl verpflichtender Freigaben dokumentiert auf `0`.
+Diese verbleibende Organisationsentscheidung ist keine technische Freigabe für
+ungeprüfte Änderungen.

@@ -81,10 +81,12 @@ Nach Änderungen unter `contracts/openapi/` wird der eingecheckte TypeScript-Cli
 `pnpm contracts:generate` aktualisiert. `pnpm contracts:check` prüft den Vertrag strikt,
 erkennt nicht regenerierte Clientdateien und führt die Vertragstests aus.
 
-Die GitHub-Actions-Workflows spiegeln diese Befehle. Nach Anlage eines GitHub-Remotes
-sind Branch-Regeln und Security-Funktionen gemäß
-[`tooling/ci/README.md`](tooling/ci/README.md) zu aktivieren. Es ist kein
-Deployment-Workflow enthalten.
+Die GitHub-Actions-Workflows spiegeln diese Befehle. Das öffentliche
+[GitHub-Repository](https://github.com/RITelsenhans/waste-app) schützt `main` mit den
+dokumentierten Required Checks; Dependabot, CodeQL, Secret Scanning und Push Protection
+sind aktiv. Details und noch offene Organisationsentscheidungen stehen unter
+[`tooling/ci/README.md`](tooling/ci/README.md). Es ist kein Deployment-Workflow
+enthalten.
 
 Weitere Entscheidungen und offene Voraussetzungen stehen im
 [Decision Log](docs/decision-log.md) und in den [ADRs](docs/adr/).

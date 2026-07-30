@@ -32,7 +32,7 @@ describe("generated tenant SDK facade", () => {
     );
 
     const config = await getTenantConfig("demo", {
-      apiBaseUrl: "https://api.example.invalid/",
+      apiBaseUrl: "https://api.example.invalid///",
       fetcher,
     });
 
