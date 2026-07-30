@@ -19,18 +19,20 @@ pnpm ci:validate
 pnpm security:audit
 ```
 
-## Nach Anlage des GitHub-Remotes
+## GitHub-Iststand
 
-Vor dem ersten Merge sind in den GitHub-Einstellungen zu aktivieren:
+Das öffentliche Zielrepository ist
+[`RITelsenhans/waste-app`](https://github.com/RITelsenhans/waste-app). Aktiv sind:
 
-1. Dependency Graph, Dependabot Alerts und Dependabot Security Updates.
-2. CodeQL/Code Scanning; für private Repositories muss die verfügbare GitHub-Lizenz
-   vorab bestätigt werden.
+1. Dependency Graph, Dependabot Alerts, automatische Security Updates und wöchentliche
+   Version Updates.
+2. CodeQL/Code Scanning für JavaScript/TypeScript und Java/Kotlin.
 3. Secret Scanning und Push Protection; produktive Geheimnisse bleiben trotzdem
    außerhalb des Repositories.
-4. Eine Branch-Regel für `main` mit Pull-Request-Pflicht, mindestens einer Freigabe,
-   verworfenen Freigaben nach neuen Commits, aufgelösten Gesprächen sowie Schutz vor
-   Force Push und Löschung.
+4. Branch-Schutz für `main` mit Pull-Request-Pflicht, verworfenen Freigaben nach neuen
+   Commits, aufgelösten Gesprächen, Admin-Enforcement sowie Schutz vor Force Push und
+   Löschung.
+5. Auto-Merge, das weiterhin sämtliche Branch-Regeln und Required Checks abwartet.
 
 Als Required Status Checks werden empfohlen:
 
@@ -39,10 +41,14 @@ Als Required Status Checks werden empfohlen:
 - `Security / CodeQL`
 - `Dependency Review / Dependency review`
 
-Das verantwortliche Review-Team, Ausnahmen für Administratoren, Merge Queue,
-Repository-Sichtbarkeit und die GitHub-Sicherheitslizenz sind noch
-Organisationsentscheidungen. Bei nicht verfügbarer Lizenz wird kein Gate ohne ADR
-entfernt; stattdessen ist eine gleichwertige Alternative zu beschließen.
+Die API-Kontexte heißen `Quality gates`, `Dependency audit`, `CodeQL` und
+`Dependency review`; die GitHub-Oberfläche kann zusätzlich den Workflow-Namen anzeigen.
+
+Ein zweiter Reviewer und die künftige GitHub-Organisationszuordnung sind noch offen.
+Deshalb ist die Pull-Request-Pflicht bereits aktiv, die Zahl verpflichtender
+Freigaben aber vorläufig `0`. Sobald ein unabhängiger Reviewer benannt ist, wird sie
+auf mindestens `1` erhöht. Administratoren können die übrigen Regeln nicht umgehen.
+Auch der Einsatz einer Merge Queue ist noch zu entscheiden.
 
 Die aktuell von Dependency Review unterstützte Option `deny-licenses` ist laut
 Action-Dokumentation als künftig entfallend markiert. Sie bleibt für diese schmale,
