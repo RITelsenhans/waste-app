@@ -1,0 +1,6 @@
+apis:
+  abfall-app@v1:
+    root: contracts/openapi/abfall-api.yaml
+
+extends:
+  - recommended-strict

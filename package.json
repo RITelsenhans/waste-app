@@ -1,0 +1,29 @@
+{
+  "name": "abfall-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Technischer Projektstart für Phase 1 der Abfall APP",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "build": "pnpm contracts:check && pnpm --filter @waste/design-tokens build && pnpm --filter @waste/web build && ./gradlew :services:api:bootJar",
+    "ci:validate": "node --test tooling/ci/tests/workflows.test.mjs",
+    "contracts:check": "pnpm contracts:lint && pnpm --filter @waste/api-client generate:check && pnpm --filter @waste/api-client test",
+    "contracts:generate": "pnpm --filter @waste/api-client generate",
+    "contracts:lint": "redocly lint",
+    "dev:api": "./gradlew :services:api:bootRun",
+    "dev:web": "pnpm --filter @waste/design-tokens build && pnpm --filter @waste/web dev",
+    "format": "prettier --write --ignore-unknown . && ./gradlew spotlessApply",
+    "format:check": "prettier --check --ignore-unknown . && ./gradlew spotlessCheck",
+    "lint": "pnpm contracts:lint && pnpm --filter @waste/ui lint && pnpm --filter @waste/web lint && ./gradlew spotlessCheck",
+    "security:audit": "pnpm audit --audit-level high",
+    "test": "pnpm ci:validate && pnpm contracts:check && pnpm --filter @waste/design-tokens test && pnpm --filter @waste/ui test && pnpm --filter @waste/web test && ./gradlew test integrationTest",
+    "typecheck": "pnpm --filter @waste/api-client typecheck && pnpm --filter @waste/ui typecheck && pnpm --filter @waste/web typecheck && ./gradlew :services:api:compileKotlin :services:api:compileTestKotlin"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.43.1",
+    "prettier": "3.9.6"
+  }
+}

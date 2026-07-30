@@ -1,0 +1,45 @@
+/* Generated from tokens.json. Do not edit directly. */
+:root {
+  --brand-primary: #c8102e;
+  --text-strong: #17233a;
+  --text-muted: #536174;
+  --text-inverse: #ffffff;
+  --accent-info: #008f8c;
+  --status-success: #54a846;
+  --status-warning: #f1a62a;
+  --status-danger: #b42318;
+  --surface-page: #f6f8fb;
+  --surface-card: #ffffff;
+  --surface-subtle: #e9eef4;
+  --border-default: #cbd3dd;
+  --focus-color: #008f8c;
+  --focus-width: 3px;
+  --focus-offset: 3px;
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-pill: 999px;
+  --shadow-card: 0 8px 24px rgba(23, 35, 58, 0.08);
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.5rem;
+  --spacing-2xl: 2rem;
+  --spacing-3xl: 3rem;
+  --spacing-4xl: 4rem;
+  --control-target-min: 2.75rem;
+  --layout-content-max: 76rem;
+  --breakpoint-mobile: 40rem;
+  --breakpoint-tablet: 64rem;
+  --typography-family-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --typography-size-caption: 0.875rem;
+  --typography-size-base: 1rem;
+  --typography-size-lead: 1.25rem;
+  --typography-size-heading3: 1.25rem;
+  --typography-weight-regular: 400;
+  --typography-weight-semibold: 650;
+  --typography-weight-bold: 750;
+  --typography-line-height-body: 1.5;
+  --typography-line-height-heading: 1.2;
+}

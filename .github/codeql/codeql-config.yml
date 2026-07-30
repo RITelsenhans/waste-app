@@ -1,0 +1,9 @@
+name: Abfall APP CodeQL
+
+queries:
+  - uses: security-extended
+
+paths-ignore:
+  - "**/build/**"
+  - "**/coverage/**"
+  - "**/node_modules/**"

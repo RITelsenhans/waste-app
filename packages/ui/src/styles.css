@@ -1,0 +1,95 @@
+.waste-action {
+  align-items: center;
+  border: 2px solid transparent;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: var(--typography-weight-bold);
+  justify-content: center;
+  min-block-size: var(--control-target-min);
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-decoration: none;
+}
+
+.waste-action--primary {
+  background: var(--tenant-primary, var(--brand-primary));
+  color: var(--text-inverse);
+}
+
+.waste-action--secondary {
+  background: var(--surface-card);
+  border-color: var(--tenant-info, var(--accent-info));
+  color: var(--text-strong);
+}
+
+.waste-action:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.waste-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.waste-action:focus-visible {
+  outline: var(--focus-width) solid var(--focus-color);
+  outline-offset: var(--focus-offset);
+}
+
+.waste-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+}
+
+.waste-card--raised {
+  box-shadow: var(--shadow-card);
+}
+
+.waste-card--flat {
+  box-shadow: none;
+}
+
+.waste-status-badge {
+  align-items: center;
+  color: var(--text-muted);
+  display: inline-flex;
+  font-size: var(--typography-size-caption);
+  font-weight: var(--typography-weight-semibold);
+  gap: var(--spacing-sm);
+}
+
+.waste-status-badge__indicator {
+  background: var(--status-color, var(--text-muted));
+  border-radius: var(--radius-pill);
+  block-size: 0.65rem;
+  flex: 0 0 0.65rem;
+  inline-size: 0.65rem;
+}
+
+.waste-status-badge--info {
+  --status-color: var(--accent-info);
+}
+
+.waste-status-badge--success {
+  --status-color: var(--status-success);
+}
+
+.waste-status-badge--warning {
+  --status-color: var(--status-warning);
+}
+
+.waste-status-badge--danger {
+  --status-color: var(--status-danger);
+}
+
+@media (forced-colors: active) {
+  .waste-action {
+    border-color: ButtonText;
+  }
+
+  .waste-status-badge__indicator {
+    border: 1px solid CanvasText;
+  }
+}

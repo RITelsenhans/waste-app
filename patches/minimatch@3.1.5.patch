@@ -1,0 +1,17 @@
+diff --git a/minimatch.js b/minimatch.js
+index 2dfcc6e..20159c7 100644
+--- a/minimatch.js
++++ b/minimatch.js
+@@ -7,7 +7,11 @@ var path = (function () { try { return require('path') } catch (e) {}}()) || {
+ minimatch.sep = path.sep
+ 
+ var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
+-var expand = require('brace-expansion')
++// brace-expansion 5 exposes a named CommonJS export. This compatibility shim
++// lets the legacy minimatch API consume the patched, bounded implementation
++// required for CVE-2026-14257 without changing minimatch's public API.
++var braceExpansion = require('brace-expansion')
++var expand = braceExpansion.expand || braceExpansion
+ 
+ var plTypes = {
+   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},

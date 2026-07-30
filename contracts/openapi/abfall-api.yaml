@@ -1,0 +1,197 @@
+openapi: 3.1.0
+info:
+  title: Abfall APP API
+  version: 0.1.0
+  description: Contract-first API-Baseline für den technischen Projektstart der Phase 1.
+  license:
+    name: UNLICENSED
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: /
+    description: Aktueller API-Ursprung; konkrete Basis-URLs kommen aus der Laufzeitkonfiguration.
+security: []
+tags:
+  - name: Health
+    description: Technische Betriebsbereitschaft der API.
+  - name: Tenants
+    description: Öffentliche, mandantenspezifische Laufzeitkonfiguration.
+paths:
+  /v1/health/ready:
+    get:
+      operationId: getReadiness
+      summary: Prüft die Betriebsbereitschaft der API.
+      tags:
+        - Health
+      responses:
+        "200":
+          description: Die API ist bereit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadyResponse"
+              examples:
+                ready:
+                  $ref: "../examples/ready-response.json"
+        "503":
+          description: Die API oder eine zwingende Abhängigkeit ist nicht bereit.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          description: Zu viele Anfragen.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /v1/tenants/{tenantKey}/config:
+    get:
+      operationId: getTenantConfig
+      summary: Liefert die öffentliche Laufzeitkonfiguration eines Mandanten.
+      tags:
+        - Tenants
+      parameters:
+        - name: tenantKey
+          in: path
+          required: true
+          description: Stabiler, öffentlicher Mandantenschlüssel.
+          schema:
+            type: string
+            pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
+      responses:
+        "200":
+          description: Öffentliche Mandantenkonfiguration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantConfig"
+              examples:
+                demo:
+                  $ref: "../examples/demo-tenant-config.json"
+        "404":
+          description: Der Mandant ist nicht konfiguriert.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+components:
+  schemas:
+    ReadyResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - checkedAt
+      properties:
+        status:
+          type: string
+          const: ready
+        checkedAt:
+          type: string
+          format: date-time
+    Branding:
+      type: object
+      additionalProperties: false
+      required:
+        - logoUrl
+        - primaryColor
+        - infoColor
+      properties:
+        logoUrl:
+          type: string
+        primaryColor:
+          type: string
+          pattern: "^#[0-9A-Fa-f]{6}$"
+        infoColor:
+          type: string
+          pattern: "^#[0-9A-Fa-f]{6}$"
+    LegalLinks:
+      type: object
+      additionalProperties: false
+      required:
+        - imprint
+        - privacy
+        - accessibility
+      properties:
+        imprint:
+          type: string
+        privacy:
+          type: string
+        accessibility:
+          type: string
+    SupportContact:
+      type: object
+      additionalProperties: false
+      required:
+        - label
+        - email
+      properties:
+        label:
+          type: string
+        email:
+          type: string
+          format: email
+    TenantConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - tenantId
+        - name
+        - shortName
+        - branding
+        - timezone
+        - locales
+        - enabledFeatures
+        - legalLinks
+        - supportContacts
+        - contentVersion
+      properties:
+        tenantId:
+          type: string
+        name:
+          type: string
+        shortName:
+          type: string
+        branding:
+          $ref: "#/components/schemas/Branding"
+        timezone:
+          type: string
+        locales:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        enabledFeatures:
+          type: object
+          additionalProperties:
+            type: boolean
+        legalLinks:
+          $ref: "#/components/schemas/LegalLinks"
+        supportContacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportContact"
+        contentVersion:
+          type: string
+    Problem:
+      type: object
+      additionalProperties: true
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference

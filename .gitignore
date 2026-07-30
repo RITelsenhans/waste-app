@@ -1,0 +1,24 @@
+.DS_Store
+.gradle/
+.kotlin/
+.next/
+.pnpm-store/
+build/
+coverage/
+node_modules/
+out/
+
+*.iml
+*.tsbuildinfo
+.idea/
+
+.env
+.env.*
+!.env.example
+
+services/api/src/main/resources/application-local.yml
+
+# Binäre Quellartefakte der bereitgestellten Spezifikation werden nicht versioniert.
+*.docx
+*.key
+*.pptx

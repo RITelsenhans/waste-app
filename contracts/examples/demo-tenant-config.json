@@ -1,0 +1,34 @@
+{
+  "summary": "Synthetischer Demo-Mandant",
+  "value": {
+    "tenantId": "demo",
+    "name": "Demo Kommune",
+    "shortName": "Demo",
+    "branding": {
+      "logoUrl": "/regio-it-logo.png",
+      "primaryColor": "#C8102E",
+      "infoColor": "#008F8C"
+    },
+    "timezone": "Europe/Berlin",
+    "locales": ["de-DE"],
+    "enabledFeatures": {
+      "home": true,
+      "calendar": false,
+      "wasteGuide": false,
+      "sites": false,
+      "notices": false
+    },
+    "legalLinks": {
+      "imprint": "#impressum",
+      "privacy": "#datenschutz",
+      "accessibility": "#barrierefreiheit"
+    },
+    "supportContacts": [
+      {
+        "label": "Demo-Support",
+        "email": "support@example.invalid"
+      }
+    ],
+    "contentVersion": "demo-2026-07-30"
+  }
+}

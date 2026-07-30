@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+*.docx binary
+*.key binary
+*.png binary
+*.pptx binary
+
+# Markdown-Hardbreaks der kanonischen Spezifikation und Unified-Diff-Syntax bewahren.
+docs/product/*.md whitespace=-trailing-space
+*.patch whitespace=-trailing-space
+
+gradlew text eol=lf
+gradlew.bat text eol=crlf

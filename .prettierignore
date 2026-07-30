@@ -1,0 +1,12 @@
+.gradle
+.kotlin
+.next
+build
+coverage
+node_modules
+pnpm-lock.yaml
+*.key
+*.pptx
+*.docx
+apps/web/public/regio-it-logo.png
+docs/product/Abfall_APP_Web-First_Spezifikation_Phase_1-2_Codex-CC.md

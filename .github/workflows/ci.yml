@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.14.0
+          package-manager-cache: false
+
+      - name: Java einrichten
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          cache: gradle
+          cache-dependency-path: |
+            **/*.gradle*
+            gradle/wrapper/gradle-wrapper.properties
+          distribution: temurin
+          java-version: "21"
+
+      - name: pnpm über Corepack aktivieren
+        run: corepack enable
+
+      - name: Abhängigkeiten reproduzierbar installieren
+        run: pnpm install --frozen-lockfile
+
+      - name: Formatierung prüfen
+        run: pnpm format:check
+
+      - name: Linting prüfen
+        run: pnpm lint
+
+      - name: Typen prüfen
+        run: pnpm typecheck
+
+      - name: Tests ausführen
+        run: pnpm test
+
+      - name: Produktionsartefakte bauen
+        run: pnpm build

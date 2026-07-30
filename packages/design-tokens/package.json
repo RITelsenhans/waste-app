@@ -1,0 +1,17 @@
+{
+  "name": "@waste/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tokens.css": "./src/tokens.css",
+    "./tokens.json": "./tokens.json"
+  },
+  "devDependencies": {
+    "prettier": "3.9.6"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/tokens.test.mjs"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/tenant-config.schema.json",
+  "title": "TenantConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tenantId",
+    "name",
+    "shortName",
+    "branding",
+    "timezone",
+    "locales",
+    "enabledFeatures",
+    "legalLinks",
+    "supportContacts",
+    "contentVersion"
+  ],
+  "properties": {
+    "tenantId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "shortName": {
+      "type": "string"
+    },
+    "branding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logoUrl", "primaryColor", "infoColor"],
+      "properties": {
+        "logoUrl": {
+          "type": "string"
+        },
+        "primaryColor": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "infoColor": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        }
+      }
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "locales": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "enabledFeatures": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "legalLinks": {
+      "type": "object"
+    },
+    "supportContacts": {
+      "type": "array"
+    },
+    "contentVersion": {
+      "type": "string"
+    }
+  }
+}
