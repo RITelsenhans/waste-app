@@ -10,6 +10,17 @@ export type {
 import type { TenantConfig } from "./generated/types.gen";
 
 const TENANT_KEY_PATTERN = /^[a-z0-9][a-z0-9-]{0,62}$/;
+const FORWARD_SLASH_CODE_POINT = 47;
+
+function removeTrailingSlashes(value: string): string {
+  let end = value.length;
+
+  while (end > 0 && value.charCodeAt(end - 1) === FORWARD_SLASH_CODE_POINT) {
+    end -= 1;
+  }
+
+  return value.slice(0, end);
+}
 
 export type ApiClientOptions = {
   apiBaseUrl?: string;
@@ -45,7 +56,7 @@ export async function getTenantConfig(
     throw new TenantConfigNotFoundError();
   }
 
-  const apiBaseUrl = (options.apiBaseUrl ?? "http://localhost:8080").replace(/\/+$/, "");
+  const apiBaseUrl = removeTrailingSlashes(options.apiBaseUrl ?? "http://localhost:8080");
   const client = createClient({
     baseUrl: apiBaseUrl,
     cache: "no-store",
