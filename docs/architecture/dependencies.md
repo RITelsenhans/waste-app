@@ -14,7 +14,7 @@ Stand: 30. Juli 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, 
 | Spring Boot Web / Test      | 4.1.0                       | eigenständige HTTP-API und Integrationstests                                                             | Apache-2.0 |
 | Kotlin JVM / Spring Plugin  | 2.3.21                      | von Spring Initializr 4.1 vorgegebene Kotlin-Kompilierung und Spring-Proxy-Kompatibilität                | Apache-2.0 |
 | Jackson Kotlin Module       | durch Spring Boot verwaltet | JSON-Bindung für Kotlin-Datenklassen                                                                     | Apache-2.0 |
-| Spotless Gradle Plugin      | 8.8.0                       | reproduzierbare Kotlin-Format- und Lintprüfung                                                           | Apache-2.0 |
+| Spotless Gradle Plugin      | 8.9.0                       | reproduzierbare Kotlin-Format- und Lintprüfung                                                           | Apache-2.0 |
 | ktlint                      | 1.7.1                       | Kotlin-Regeln innerhalb Spotless                                                                         | MIT        |
 | Gradle Wrapper              | 9.5.1                       | reproduzierbares API-Buildwerkzeug ohne globale Installation                                             | Apache-2.0 |
 | Redocly CLI                 | 2.43.1                      | semantische OpenAPI-3.1-Validierung und API-Regeln                                                       | MIT        |
