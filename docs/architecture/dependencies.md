@@ -12,7 +12,7 @@ Stand: 31. Juli 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, 
 | Node.js-Typdefinitionen     | 24.13.3                     | Typen für Node-basierte Generator-Konfiguration und Buildskripte; Patch innerhalb der Node-24-Baseline   | MIT        |
 | Prettier                    | 3.9.6                       | einheitliche Web-/Dokumentformatierung                                                                   | MIT        |
 | Spring Boot Web / Test      | 4.1.0                       | eigenständige HTTP-API und Integrationstests                                                             | Apache-2.0 |
-| Kotlin JVM / Spring Plugin  | 2.3.21                      | von Spring Initializr 4.1 vorgegebene Kotlin-Kompilierung und Spring-Proxy-Kompatibilität                | Apache-2.0 |
+| Kotlin JVM / Spring Plugin  | 2.4.10                      | gekoppelte Kotlin-Kompilierung und Spring-Proxy-Kompatibilität; aktuelles Fehlerkorrektur-Release        | Apache-2.0 |
 | Jackson Kotlin Module       | durch Spring Boot verwaltet | JSON-Bindung für Kotlin-Datenklassen                                                                     | Apache-2.0 |
 | Spotless Gradle Plugin      | 8.9.0                       | reproduzierbare Kotlin-Format- und Lintprüfung                                                           | Apache-2.0 |
 | ktlint                      | 1.7.1                       | Kotlin-Regeln innerhalb Spotless                                                                         | MIT        |
