@@ -1,6 +1,6 @@
 # Abhängigkeits- und Lizenzprüfung
 
-Stand: 30. Juli 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, Build- und Testabhängigkeiten. Transitive Abhängigkeiten müssen in CI künftig zusätzlich per SBOM und Policy geprüft werden.
+Stand: 31. Juli 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, Build- und Testabhängigkeiten. Transitive Abhängigkeiten müssen in CI künftig zusätzlich per SBOM und Policy geprüft werden.
 
 | Komponente                  | Version                     | Bedarf                                                                                                   | Lizenz     |
 | --------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- | ---------- |
@@ -9,7 +9,7 @@ Stand: 30. Juli 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, 
 | TypeScript                  | 6.0.3                       | statische Typprüfung im Web; Version 7 ist mit der aktuellen Next.js-Linttoolchain noch nicht kompatibel | Apache-2.0 |
 | ESLint / eslint-config-next | 9.39.5 / 16.2.12            | Web-Linting und Next-Regeln; ESLint 10 ist von den transitiven Next.js-Plugins noch nicht freigegeben    | MIT        |
 | Vitest                      | 4.1.10                      | schnelle TypeScript-Basistests                                                                           | MIT        |
-| Node.js-Typdefinitionen     | 24.10.1                     | Typen für Node-basierte Generator-Konfiguration und Buildskripte                                         | MIT        |
+| Node.js-Typdefinitionen     | 24.13.3                     | Typen für Node-basierte Generator-Konfiguration und Buildskripte; Patch innerhalb der Node-24-Baseline   | MIT        |
 | Prettier                    | 3.9.6                       | einheitliche Web-/Dokumentformatierung                                                                   | MIT        |
 | Spring Boot Web / Test      | 4.1.0                       | eigenständige HTTP-API und Integrationstests                                                             | Apache-2.0 |
 | Kotlin JVM / Spring Plugin  | 2.3.21                      | von Spring Initializr 4.1 vorgegebene Kotlin-Kompilierung und Spring-Proxy-Kompatibilität                | Apache-2.0 |
