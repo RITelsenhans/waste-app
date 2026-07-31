@@ -8,6 +8,16 @@
 
 Startbefehle und Qualitätsprüfungen stehen im Repository-README.
 
+Beide Dienste gemeinsam:
+
+```bash
+pnpm dev
+```
+
+Der Befehl startet API und Web, zeigt beide lokalen URLs an und beendet beim Stoppen
+auch beide Kindprozesse. Für getrennte Logs bleiben `pnpm dev:api` und `pnpm dev:web`
+verfügbar.
+
 ## Konfiguration
 
 `API_BASE_URL` ändert die serverseitige API-Basis des Webs.
@@ -23,4 +33,7 @@ Die mitgelieferte Konfiguration enthält keine Geheimnisse oder produktiven Date
 
 ## Nicht enthalten
 
-Es gibt noch keine Container, Deployments, Datenbank, externe Observability, produktive Readiness-Abhängigkeiten oder Runbooks. Diese werden erst nach der Plattformentscheidung ergänzt.
+PostgreSQL ist als Zieldatenbank entschieden, aber noch nicht als Laufzeitabhängigkeit
+eingeführt. Es gibt weiterhin keine Container, Deployments, externe Observability,
+produktive Readiness-Abhängigkeiten oder Runbooks. Diese werden erst mit einer
+datenführenden Story beziehungsweise nach der Plattformentscheidung ergänzt.

@@ -2,7 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import type { TenantConfig } from "../lib/tenant-config";
 
-export function SiteHeader({ config, tenantKey }: { config: TenantConfig; tenantKey: string }) {
+type SiteHeaderProps = {
+  addressLabel?: string;
+  config: TenantConfig;
+  tenantKey: string;
+};
+
+export function SiteHeader({ addressLabel, config, tenantKey }: SiteHeaderProps) {
   return (
     <header className="site-header">
       <a className="skip-link" href="#main-content">
@@ -23,16 +29,26 @@ export function SiteHeader({ config, tenantKey }: { config: TenantConfig; tenant
             width={171}
           />
         </Link>
-        <nav aria-label="Hauptnavigation">
-          <Link aria-current="page" href={`/${tenantKey}`}>
-            Start
-          </Link>
-          <a href="#projektstatus">Projektstatus</a>
-        </nav>
-        <div className="tenant-label" aria-label={`Aktiver Mandant: ${config.shortName}`}>
+        {addressLabel ? (
+          <nav className="desktop-nav" aria-label="Hauptnavigation">
+            <Link aria-current="page" href={`/${tenantKey}`}>
+              Start
+            </Link>
+            <a href="#kalender">Kalender</a>
+            <a href="#abfall-abc">Abfall-ABC</a>
+            <a href="#standorte">Standorte</a>
+            <a href="#mehr">Mehr</a>
+          </nav>
+        ) : (
+          <span />
+        )}
+        <a className="address-label" href="#demo-hinweis">
           <span aria-hidden="true">●</span>
-          {config.shortName}
-        </div>
+          <span>
+            <small>{addressLabel ? "Testadresse" : "Mandant"}</small>
+            {addressLabel ?? config.shortName}
+          </span>
+        </a>
       </div>
     </header>
   );

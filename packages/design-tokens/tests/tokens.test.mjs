@@ -35,6 +35,7 @@ test("generated CSS is current and contains the required Regio-IT tokens", async
   assert.match(css, /--brand-primary: #c8102e;/i);
   assert.match(css, /--text-strong: #17233a;/i);
   assert.match(css, /--accent-info: #008f8c;/i);
+  assert.match(css, /--accent-info-strong: #006d6a;/i);
   assert.match(css, /--surface-page: #f6f8fb;/i);
   assert.match(css, /--control-target-min: 2.75rem;/i);
   assert.match(css, /--focus-width: 3px;/i);
@@ -48,4 +49,5 @@ test("required Regio-IT color pairs meet their intended contrast thresholds", as
   assert.ok(contrastRatio(tokens.text.muted, tokens.surface.page) >= 4.5);
   assert.ok(contrastRatio(tokens.focus.color, tokens.surface.page) >= 3);
   assert.ok(contrastRatio(tokens.accent.info, tokens.surface.card) >= 3);
+  assert.ok(contrastRatio(tokens.accent.infoStrong, tokens.surface.card) >= 4.5);
 });

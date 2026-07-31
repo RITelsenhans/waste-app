@@ -18,6 +18,9 @@ semantisches HTML und eine spätere Nutzung der Tokens außerhalb des Webs mögl
   Radien. Breakpoints bleiben dokumentierte Tokens und werden in CSS-Media-Queries nur
   als technisch notwendige Literale verwendet, weil CSS Custom Properties dort nicht
   portabel einsetzbar sind.
+- Der Markenwert `accent.info` bleibt für grafische Akzente erhalten. Kleine
+  Informationstexte auf hellen Flächen verwenden `accent.infoStrong`, weil der
+  Markenwert dort die WCAG-AA-Kontrastschwelle nicht erreicht.
 - `@waste/ui` enthält zunächst ausschließlich `Action`, `Card` und `StatusBadge`. Diese
   Komponenten decken mehrere vorhandene Wiederverwendungsfälle ab, enthalten keine
   Fachlogik und keine Next.js-Abhängigkeit.

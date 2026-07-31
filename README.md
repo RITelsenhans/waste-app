@@ -1,6 +1,9 @@
 # Abfall APP
 
-Technischer Projektstart für Phase 1 „Web Core Relaunch“. Der aktuelle Stand enthält nur die Engineering Foundation: ein Next.js-Web, eine Kotlin/Spring-Boot-API, gemeinsame Design Tokens und UI-Primitives, einen Demo-Mandanten und die ersten API-Verträge. Fachliche Phase-1- und sämtliche Phase-2-Funktionen sind noch nicht implementiert.
+Technischer Projektstart für Phase 1 „Web Core Relaunch“. Der aktuelle Stand enthält
+die Engineering Foundation und eine klar gekennzeichnete, klickbare Startseiten-Vorschau
+mit ausschließlich synthetischen Daten. Fachliche Datenadapter und sämtliche
+Phase-2-Funktionen sind noch nicht implementiert.
 
 ## Voraussetzungen
 
@@ -36,6 +39,14 @@ Der Gradle Wrapper lädt Gradle beim ersten Aufruf selbstständig.
 
 ## Lokal starten
 
+API und Web gemeinsam:
+
+```bash
+pnpm dev
+```
+
+Alternativ in zwei Terminals:
+
 Terminal 1:
 
 ```bash
@@ -56,6 +67,12 @@ Danach:
 
 Die Web-App verwendet standardmäßig `http://localhost:8080` als API. Eine andere Basis-URL kann mit `API_BASE_URL` gesetzt werden.
 
+Beim ersten Browser-Test wird der versionierte Chromium-Browser installiert:
+
+```bash
+pnpm exec playwright install chromium
+```
+
 ## Qualitätsprüfungen
 
 ```bash
@@ -64,6 +81,10 @@ pnpm format:check
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:browser
+pnpm test:e2e
+pnpm test:a11y
+pnpm test:visual
 pnpm build
 pnpm ci:validate
 pnpm security:audit

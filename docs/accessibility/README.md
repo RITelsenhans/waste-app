@@ -7,4 +7,11 @@ Die UI-Primitives sichern native Link-/Button-Semantik, eine tokenbasierte
 zusätzlich zu Farbindikatoren ab. Forced-Colors-Darstellung wird in den Basisstilen
 berücksichtigt.
 
-Eine WCAG-2.2-AA-/BITV-Abnahme ist damit nicht erfolgt. Automatisierte Browser-Scans, 200-%-Zoom, High Contrast, Screenreader- und Tastaturtests gehören in einen folgenden Auftrag.
+Playwright prüft den Demo-Kernweg auf Desktop, Mobil und 320 px. axe-core blockiert
+automatisch erkennbare WCAG-A-/AA-Verstöße; der Tastatur-Sprunglink ist als Browserweg
+abgesichert.
+
+Eine WCAG-2.2-AA-/BITV-Abnahme ist damit nicht erfolgt. 200-%-Zoom, High Contrast,
+Textabstände, Screenreader, die verbindliche Browsermatrix und Tests mit
+Assistenztechnik-Nutzenden bleiben manuelle beziehungsweise organisatorische
+Abnahmeschritte.
