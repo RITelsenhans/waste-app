@@ -55,7 +55,11 @@ class CaseService(
         repository.insertCase(case, input.contactEmail)
         repository.insertDefect(case.id, input)
         insertCaseFoundation(case, "defect", idempotencyKey, "Meldung eingegangen")
-        return CaseCreationResult(case.createdResponse(), true)
+        val persistedCase =
+            requireNotNull(repository.findIdempotentCase(input.tenantId, "defect", idempotencyKey)) {
+                "Der angelegte Pilotvorgang konnte nicht erneut gelesen werden."
+            }
+        return CaseCreationResult(persistedCase.createdResponse(), true)
     }
 
     fun bulkWasteRules(tenantId: String): BulkWasteRules {
@@ -128,7 +132,11 @@ class CaseService(
         repository.insertCase(case, input.contactEmail)
         repository.insertBulkWasteOrder(case.id, input)
         insertCaseFoundation(case, "bulk-waste", idempotencyKey, "Sperrmüllanmeldung eingegangen")
-        return CaseCreationResult(case.createdResponse(), true)
+        val persistedCase =
+            requireNotNull(repository.findIdempotentCase(input.tenantId, "bulk-waste", idempotencyKey)) {
+                "Der angelegte Pilotvorgang konnte nicht erneut gelesen werden."
+            }
+        return CaseCreationResult(persistedCase.createdResponse(), true)
     }
 
     fun getCase(
