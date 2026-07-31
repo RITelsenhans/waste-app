@@ -14,9 +14,14 @@ Beide Dienste gemeinsam:
 pnpm dev
 ```
 
-Der Befehl startet API und Web, zeigt beide lokalen URLs an und beendet beim Stoppen
-auch beide Kindprozesse. Für getrennte Logs bleiben `pnpm dev:api` und `pnpm dev:web`
-verfügbar.
+Der Befehl prüft zuerst, ob beide Ports frei sind, startet die API, wartet auf deren
+Readiness und startet anschließend das Web. Beim Stoppen mit `Ctrl+C` werden beide
+Prozessgruppen beendet. Ist ein Port bereits belegt, nennt der Starter den betroffenen
+Port und die notwendige Aktion verständlich. Für die normale lokale Nutzung ist kein
+zweiter Startbefehl erforderlich.
+
+Die Einzelbefehle `pnpm dev:api` und `pnpm dev:web` bleiben ausschließlich für die
+gezielte technische Fehlersuche verfügbar.
 
 ## Konfiguration
 
