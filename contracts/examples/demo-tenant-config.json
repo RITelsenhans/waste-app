@@ -13,6 +13,7 @@
     "locales": ["de-DE"],
     "enabledFeatures": {
       "home": true,
+      "demoPreview": true,
       "calendar": false,
       "wasteGuide": false,
       "sites": false,

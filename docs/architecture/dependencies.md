@@ -2,23 +2,25 @@
 
 Stand: 31. Juli 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, Build- und Testabhängigkeiten. Transitive Abhängigkeiten müssen in CI künftig zusätzlich per SBOM und Policy geprüft werden.
 
-| Komponente                  | Version                     | Bedarf                                                                                                   | Lizenz     |
-| --------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- | ---------- |
-| Next.js                     | 16.2.12                     | App Router, SSR und Web-Build                                                                            | MIT        |
-| React / React DOM           | 19.2.8                      | deklarative Weboberfläche                                                                                | MIT        |
-| TypeScript                  | 6.0.3                       | statische Typprüfung im Web; Version 7 ist mit der aktuellen Next.js-Linttoolchain noch nicht kompatibel | Apache-2.0 |
-| ESLint / eslint-config-next | 9.39.5 / 16.2.12            | Web-Linting und Next-Regeln; ESLint 10 ist von den transitiven Next.js-Plugins noch nicht freigegeben    | MIT        |
-| Vitest                      | 4.1.10                      | schnelle TypeScript-Basistests                                                                           | MIT        |
-| Node.js-Typdefinitionen     | 24.13.3                     | Typen für Node-basierte Generator-Konfiguration und Buildskripte; Patch innerhalb der Node-24-Baseline   | MIT        |
-| Prettier                    | 3.9.6                       | einheitliche Web-/Dokumentformatierung                                                                   | MIT        |
-| Spring Boot Web / Test      | 4.1.0                       | eigenständige HTTP-API und Integrationstests                                                             | Apache-2.0 |
-| Kotlin JVM / Spring Plugin  | 2.4.10                      | gekoppelte Kotlin-Kompilierung und Spring-Proxy-Kompatibilität; aktuelles Fehlerkorrektur-Release        | Apache-2.0 |
-| Jackson Kotlin Module       | durch Spring Boot verwaltet | JSON-Bindung für Kotlin-Datenklassen                                                                     | Apache-2.0 |
-| Spotless Gradle Plugin      | 8.9.0                       | reproduzierbare Kotlin-Format- und Lintprüfung                                                           | Apache-2.0 |
-| ktlint                      | 1.7.1                       | Kotlin-Regeln innerhalb Spotless                                                                         | MIT        |
-| Gradle Wrapper              | 9.6.1                       | reproduzierbares API-Buildwerkzeug ohne globale Installation; empfohlenes Patch-Update der 9.6-Linie     | Apache-2.0 |
-| Redocly CLI                 | 2.43.1                      | semantische OpenAPI-3.1-Validierung und API-Regeln                                                       | MIT        |
-| Hey API OpenAPI TypeScript  | 0.97.3                      | deterministische TypeScript-Typen und Fetch-SDK; sichere, zur Node-22.13-Baseline passende Patchversion  | MIT        |
+| Komponente                  | Version                     | Bedarf                                                                                                     | Lizenz     |
+| --------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------- |
+| Next.js                     | 16.2.12                     | App Router, SSR und Web-Build                                                                              | MIT        |
+| React / React DOM           | 19.2.8                      | deklarative Weboberfläche                                                                                  | MIT        |
+| TypeScript                  | 6.0.3                       | statische Typprüfung im Web; Version 7 ist mit der aktuellen Next.js-Linttoolchain noch nicht kompatibel   | Apache-2.0 |
+| ESLint / eslint-config-next | 9.39.5 / 16.2.12            | Web-Linting und Next-Regeln; ESLint 10 ist von den transitiven Next.js-Plugins noch nicht freigegeben      | MIT        |
+| Vitest                      | 4.1.10                      | schnelle TypeScript-Basistests                                                                             | MIT        |
+| Node.js-Typdefinitionen     | 24.13.3                     | Typen für Node-basierte Generator-Konfiguration und Buildskripte; Patch innerhalb der Node-24-Baseline     | MIT        |
+| Prettier                    | 3.9.6                       | einheitliche Web-/Dokumentformatierung                                                                     | MIT        |
+| Spring Boot Web / Test      | 4.1.0                       | eigenständige HTTP-API und Integrationstests                                                               | Apache-2.0 |
+| Kotlin JVM / Spring Plugin  | 2.4.10                      | gekoppelte Kotlin-Kompilierung und Spring-Proxy-Kompatibilität; aktuelles Fehlerkorrektur-Release          | Apache-2.0 |
+| Jackson Kotlin Module       | durch Spring Boot verwaltet | JSON-Bindung für Kotlin-Datenklassen                                                                       | Apache-2.0 |
+| Spotless Gradle Plugin      | 8.9.0                       | reproduzierbare Kotlin-Format- und Lintprüfung                                                             | Apache-2.0 |
+| ktlint                      | 1.7.1                       | Kotlin-Regeln innerhalb Spotless                                                                           | MIT        |
+| Gradle Wrapper              | 9.6.1                       | reproduzierbares API-Buildwerkzeug ohne globale Installation; empfohlenes Patch-Update der 9.6-Linie       | Apache-2.0 |
+| Redocly CLI                 | 2.43.1                      | semantische OpenAPI-3.1-Validierung und API-Regeln                                                         | MIT        |
+| Hey API OpenAPI TypeScript  | 0.97.3                      | deterministische TypeScript-Typen und Fetch-SDK; sichere, zur Node-22.13-Baseline passende Patchversion    | MIT        |
+| Playwright Test             | 1.61.1                      | reale Browserwege, responsive Layoutprüfung und CI-Artefakte; abgehangene Version außerhalb der Wartefrist | Apache-2.0 |
+| axe-core Playwright         | 4.12.1                      | automatisierte WCAG-A-/AA-Prüfung im Browser; unverändertes Testwerkzeug                                   | MPL-2.0    |
 
 GitHub-Actions-Komponenten:
 

@@ -49,6 +49,9 @@ jobs:
       - name: Abhängigkeiten reproduzierbar installieren
         run: pnpm install --frozen-lockfile
 
+      - name: Chromium für Browsertests installieren
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Formatierung prüfen
         run: pnpm format:check
 
@@ -60,6 +63,9 @@ jobs:
 
       - name: Tests ausführen
         run: pnpm test
+
+      - name: Browser und Barrierefreiheit prüfen
+        run: pnpm test:browser
 
       - name: Produktionsartefakte bauen
         run: pnpm build

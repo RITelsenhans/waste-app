@@ -20,6 +20,7 @@ waste:
         - de-DE
       enabled-features:
         home: true
+        demoPreview: true
         calendar: false
         wasteGuide: false
         sites: false

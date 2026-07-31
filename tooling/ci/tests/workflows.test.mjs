@@ -47,6 +47,8 @@ test("quality workflow contains every documented root gate", async () => {
     "pnpm lint",
     "pnpm typecheck",
     "pnpm test",
+    "pnpm exec playwright install --with-deps chromium",
+    "pnpm test:browser",
     "pnpm build",
   ]) {
     assert.match(workflow, new RegExp(command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
