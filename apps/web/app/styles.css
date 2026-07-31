@@ -38,6 +38,7 @@ h1,
 h2,
 h3 {
   line-height: var(--typography-line-height-heading);
+  overflow-wrap: anywhere;
 }
 
 h2 {
@@ -98,6 +99,14 @@ h3 {
   gap: clamp(1rem, 3vw, 2.5rem);
   grid-template-columns: auto 1fr auto;
   min-height: 5rem;
+}
+
+.header-inner > *,
+.home-hero > *,
+.split-section > *,
+.feedback-section > *,
+.site-card > * {
+  min-width: 0;
 }
 
 .brand-link {
@@ -653,13 +662,19 @@ h3 {
 }
 
 @media (max-width: 25rem) {
+  .header-inner {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
   .brand-logo {
-    width: 6.5rem;
+    width: 5.75rem;
   }
 
   .address-label {
     font-size: 0.82rem;
-    max-width: 10.75rem;
+    max-width: min(10.75rem, calc(100vw - 7.75rem));
+    min-width: 0;
     padding-inline: 0.65rem;
   }
 
