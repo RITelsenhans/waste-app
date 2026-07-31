@@ -1,15 +1,15 @@
 # Abfall APP
 
-Technischer Projektstart für Phase 1 „Web Core Relaunch“. Der aktuelle Stand enthält
-die Engineering Foundation und eine klar gekennzeichnete, klickbare Startseiten-Vorschau
-mit ausschließlich synthetischen Daten. Fachliche Datenadapter und sämtliche
-Phase-2-Funktionen sind noch nicht implementiert.
+Funktionaler, lokal testbarer Pilot für Phase 1 „Web Core Relaunch“ und die explizit
+freigegebenen Phase-2-Wege Reklamation und Sperrmüll. Der Stand enthält ausschließlich
+synthetische Demo-Daten und ist keine produktive Bereitstellung.
 
 ## Voraussetzungen
 
 - Node.js 22.13 oder neuer
 - pnpm 11.9 über Corepack
 - JDK 21 bis 26; erzeugter Bytecode zielt auf Java 21
+- PostgreSQL 17 (`brew install postgresql@17`); ein globaler Datenbankdienst ist nicht nötig
 - Internetzugang beim ersten Installieren der Abhängigkeiten
 
 ## Installation
@@ -39,13 +39,17 @@ Der Gradle Wrapper lädt Gradle beim ersten Aufruf selbstständig.
 
 ## Lokal starten
 
-API und Web gemeinsam:
+PostgreSQL, API, Bürgeransicht und Pflege-Unit gemeinsam:
 
 ```bash
 pnpm dev
 ```
 
-Alternativ in zwei Terminals:
+`pnpm dev` legt beim ersten Start eine lokale Datenbank unter `build/dev-postgres` an,
+führt die Flyway-Migrationen aus und beendet alle vier Prozesse gemeinsam mit `Ctrl+C`.
+
+Die folgenden Einzelbefehle dienen nur der technischen Fehlersuche und erwarten eine
+bereits erreichbare Datenbank:
 
 Terminal 1:
 
@@ -59,13 +63,22 @@ Terminal 2:
 pnpm dev:web
 ```
 
+Terminal 3:
+
+```bash
+pnpm dev:admin
+```
+
 Danach:
 
 - Web: <http://localhost:3000/demo>
+- Pflege-Unit: <http://localhost:3001>
 - Readiness: <http://localhost:8080/v1/health/ready>
 - Demo-Konfiguration: <http://localhost:8080/v1/tenants/demo/config>
 
-Die Web-App verwendet standardmäßig `http://localhost:8080` als API. Eine andere Basis-URL kann mit `API_BASE_URL` gesetzt werden.
+Die Pflege-Unit besitzt im lokalen Pilot bewusst noch keine Anmeldung und darf nicht
+öffentlich erreichbar gemacht werden. Die Web-App verwendet standardmäßig
+`http://localhost:8080` als API. Eine andere Basis-URL kann mit `API_BASE_URL` gesetzt werden.
 
 Beim ersten Browser-Test wird der versionierte Chromium-Browser installiert:
 

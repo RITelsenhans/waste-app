@@ -3,12 +3,60 @@
 import type { Client, Options as Options2, TDataShape } from "./client";
 import { client } from "./client.gen";
 import type {
+  CreateBulkWasteOrderData,
+  CreateBulkWasteOrderErrors,
+  CreateBulkWasteOrderResponses,
+  CreateCollectionData,
+  CreateCollectionErrors,
+  CreateCollectionResponses,
+  CreateDefectCaseData,
+  CreateDefectCaseErrors,
+  CreateDefectCaseResponses,
+  CreateNoticeData,
+  CreateNoticeErrors,
+  CreateNoticeResponses,
+  CreateSiteData,
+  CreateSiteErrors,
+  CreateSiteResponses,
+  CreateWasteGuideEntryData,
+  CreateWasteGuideEntryErrors,
+  CreateWasteGuideEntryResponses,
+  GetAdminCasesData,
+  GetAdminCasesErrors,
+  GetAdminCasesResponses,
+  GetBulkWasteRulesData,
+  GetBulkWasteRulesErrors,
+  GetBulkWasteRulesResponses,
+  GetBulkWasteSlotsData,
+  GetBulkWasteSlotsErrors,
+  GetBulkWasteSlotsResponses,
+  GetCaseData,
+  GetCaseErrors,
+  GetCaseResponses,
+  GetCollectionsData,
+  GetCollectionsErrors,
+  GetCollectionsResponses,
+  GetNoticesData,
+  GetNoticesErrors,
+  GetNoticesResponses,
   GetReadinessData,
   GetReadinessErrors,
   GetReadinessResponses,
+  GetSitesData,
+  GetSitesErrors,
+  GetSitesResponses,
   GetTenantConfigData,
   GetTenantConfigErrors,
   GetTenantConfigResponses,
+  SearchAddressesData,
+  SearchAddressesErrors,
+  SearchAddressesResponses,
+  SearchWasteGuideData,
+  SearchWasteGuideErrors,
+  SearchWasteGuideResponses,
+  UpdateCaseStatusData,
+  UpdateCaseStatusErrors,
+  UpdateCaseStatusResponses,
 } from "./types.gen";
 
 export type Options<
@@ -50,3 +98,215 @@ export const getTenantConfig = <ThrowOnError extends boolean = false>(
     url: "/v1/tenants/{tenantKey}/config",
     ...options,
   });
+
+/**
+ * Sucht belieferte Adressen eines Mandanten.
+ */
+export const searchAddresses = <ThrowOnError extends boolean = false>(
+  options: Options<SearchAddressesData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<SearchAddressesResponses, SearchAddressesErrors, ThrowOnError>({
+    url: "/v1/addresses/search",
+    ...options,
+  });
+
+/**
+ * Liefert kommende Abholtermine einer Adresse.
+ */
+export const getCollections = <ThrowOnError extends boolean = false>(
+  options: Options<GetCollectionsData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetCollectionsResponses, GetCollectionsErrors, ThrowOnError>({
+    url: "/v1/addresses/{addressId}/collections",
+    ...options,
+  });
+
+/**
+ * Durchsucht das Abfall-ABC fehlertolerant nach Namen und Synonymen.
+ */
+export const searchWasteGuide = <ThrowOnError extends boolean = false>(
+  options: Options<SearchWasteGuideData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<SearchWasteGuideResponses, SearchWasteGuideErrors, ThrowOnError>({
+    url: "/v1/waste-guide/search",
+    ...options,
+  });
+
+/**
+ * Listet Entsorgungsstandorte und optionale Abfallartfilter.
+ */
+export const getSites = <ThrowOnError extends boolean = false>(
+  options: Options<GetSitesData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetSitesResponses, GetSitesErrors, ThrowOnError>({
+    url: "/v1/sites",
+    ...options,
+  });
+
+/**
+ * Liefert aktuell gültige Meldungen.
+ */
+export const getNotices = <ThrowOnError extends boolean = false>(
+  options: Options<GetNoticesData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetNoticesResponses, GetNoticesErrors, ThrowOnError>({
+    url: "/v1/notices",
+    ...options,
+  });
+
+/**
+ * Legt einen synthetischen Abholtermin an.
+ */
+export const createCollection = <ThrowOnError extends boolean = false>(
+  options: Options<CreateCollectionData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CreateCollectionResponses, CreateCollectionErrors, ThrowOnError>({
+    url: "/v1/admin/collections",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Legt einen synthetischen ABC-Eintrag an.
+ */
+export const createWasteGuideEntry = <ThrowOnError extends boolean = false>(
+  options: Options<CreateWasteGuideEntryData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<
+    CreateWasteGuideEntryResponses,
+    CreateWasteGuideEntryErrors,
+    ThrowOnError
+  >({
+    url: "/v1/admin/waste-guide",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Legt einen synthetischen Entsorgungsstandort an.
+ */
+export const createSite = <ThrowOnError extends boolean = false>(
+  options: Options<CreateSiteData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CreateSiteResponses, CreateSiteErrors, ThrowOnError>({
+    url: "/v1/admin/sites",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Legt eine synthetische Meldung an.
+ */
+export const createNotice = <ThrowOnError extends boolean = false>(
+  options: Options<CreateNoticeData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CreateNoticeResponses, CreateNoticeErrors, ThrowOnError>({
+    url: "/v1/admin/notices",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Reicht eine synthetische Mängelmeldung idempotent ein.
+ */
+export const createDefectCase = <ThrowOnError extends boolean = false>(
+  options: Options<CreateDefectCaseData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<CreateDefectCaseResponses, CreateDefectCaseErrors, ThrowOnError>({
+    url: "/v1/cases/defects",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Liefert Kategorien, Mengenlimits und Bereitstellungshinweise.
+ */
+export const getBulkWasteRules = <ThrowOnError extends boolean = false>(
+  options: Options<GetBulkWasteRulesData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetBulkWasteRulesResponses, GetBulkWasteRulesErrors, ThrowOnError>(
+    { url: "/v1/bulk-waste/rules", ...options },
+  );
+
+/**
+ * Liefert freie synthetische Sperrmülltermine.
+ */
+export const getBulkWasteSlots = <ThrowOnError extends boolean = false>(
+  options: Options<GetBulkWasteSlotsData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetBulkWasteSlotsResponses, GetBulkWasteSlotsErrors, ThrowOnError>(
+    { url: "/v1/bulk-waste/slots", ...options },
+  );
+
+/**
+ * Beauftragt eine synthetische Sperrmüllabholung idempotent.
+ */
+export const createBulkWasteOrder = <ThrowOnError extends boolean = false>(
+  options: Options<CreateBulkWasteOrderData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<
+    CreateBulkWasteOrderResponses,
+    CreateBulkWasteOrderErrors,
+    ThrowOnError
+  >({
+    url: "/v1/bulk-waste/orders",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Zeigt einen synthetischen Gastvorgang mit Zugriffsschlüssel.
+ */
+export const getCase = <ThrowOnError extends boolean = false>(
+  options: Options<GetCaseData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetCaseResponses, GetCaseErrors, ThrowOnError>({
+    url: "/v1/cases/{reference}",
+    ...options,
+  });
+
+/**
+ * Listet synthetische Pilotvorgänge für die lokale Bearbeitung.
+ */
+export const getAdminCases = <ThrowOnError extends boolean = false>(
+  options: Options<GetAdminCasesData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetAdminCasesResponses, GetAdminCasesErrors, ThrowOnError>({
+    url: "/v1/admin/cases",
+    ...options,
+  });
+
+/**
+ * Ändert den öffentlichen Status eines synthetischen Pilotvorgangs.
+ */
+export const updateCaseStatus = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateCaseStatusData, ThrowOnError>,
+) =>
+  (options.client ?? client).patch<UpdateCaseStatusResponses, UpdateCaseStatusErrors, ThrowOnError>(
+    {
+      url: "/v1/admin/cases/{reference}/status",
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    },
+  );

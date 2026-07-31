@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Abfall APP API
-  version: 0.1.0
-  description: Contract-first API-Baseline für den technischen Projektstart der Phase 1.
+  version: 0.2.0
+  description: Contract-first API für den synthetischen, lokal testbaren Phase-1/2-Piloten.
   license:
     name: UNLICENSED
     identifier: LicenseRef-Proprietary
@@ -15,6 +15,12 @@ tags:
     description: Technische Betriebsbereitschaft der API.
   - name: Tenants
     description: Öffentliche, mandantenspezifische Laufzeitkonfiguration.
+  - name: Content
+    description: Öffentliche Phase-1-Informationen des ausgewählten Mandanten.
+  - name: Cases
+    description: Synthetische Phase-2-Pilotvorgänge und Statuszugriff.
+  - name: Admin
+    description: Ausschließlich lokal aktivierte Pflege synthetischer Pilotdaten.
 paths:
   /v1/health/ready:
     get:
@@ -74,7 +80,411 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /v1/addresses/search:
+    get:
+      operationId: searchAddresses
+      summary: Sucht belieferte Adressen eines Mandanten.
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 120
+      responses:
+        "200":
+          description: Passende synthetische Adressen.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Address"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/addresses/{addressId}/collections:
+    get:
+      operationId: getCollections
+      summary: Liefert kommende Abholtermine einer Adresse.
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/AddressId"
+      responses:
+        "200":
+          description: Chronologische Abholtermine.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CollectionEvent"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/waste-guide/search:
+    get:
+      operationId: searchWasteGuide
+      summary: Durchsucht das Abfall-ABC fehlertolerant nach Namen und Synonymen.
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 120
+      responses:
+        "200":
+          description: Passende ABC-Einträge.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WasteGuideEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/sites:
+    get:
+      operationId: getSites
+      summary: Listet Entsorgungsstandorte und optionale Abfallartfilter.
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: wasteType
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Filterbare Standortliste.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Site"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/notices:
+    get:
+      operationId: getNotices
+      summary: Liefert aktuell gültige Meldungen.
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: addressId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Aktive Meldungen nach Priorität.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notice"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/admin/collections:
+    post:
+      operationId: createCollection
+      summary: Legt einen synthetischen Abholtermin an.
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectionInput"
+      responses:
+        "201":
+          description: Angelegter Termin.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectionEvent"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/admin/waste-guide:
+    post:
+      operationId: createWasteGuideEntry
+      summary: Legt einen synthetischen ABC-Eintrag an.
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WasteGuideInput"
+      responses:
+        "201":
+          description: Angelegter ABC-Eintrag.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WasteGuideEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/admin/sites:
+    post:
+      operationId: createSite
+      summary: Legt einen synthetischen Entsorgungsstandort an.
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteInput"
+      responses:
+        "201":
+          description: Angelegter Standort.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Site"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/admin/notices:
+    post:
+      operationId: createNotice
+      summary: Legt eine synthetische Meldung an.
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoticeInput"
+      responses:
+        "201":
+          description: Angelegte Meldung.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notice"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/cases/defects:
+    post:
+      operationId: createDefectCase
+      summary: Reicht eine synthetische Mängelmeldung idempotent ein.
+      tags: [Cases]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DefectCaseInput"
+      responses:
+        "201":
+          description: Vorgang wurde angenommen.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseCreated"
+        "200":
+          description: Bereits idempotent angelegter Vorgang.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/bulk-waste/rules:
+    get:
+      operationId: getBulkWasteRules
+      summary: Liefert Kategorien, Mengenlimits und Bereitstellungshinweise.
+      tags: [Cases]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Synthetische Sperrmüllregeln.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkWasteRules"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/bulk-waste/slots:
+    get:
+      operationId: getBulkWasteSlots
+      summary: Liefert freie synthetische Sperrmülltermine.
+      tags: [Cases]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/AddressIdQuery"
+      responses:
+        "200":
+          description: Verfügbare Abholslots.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BulkWasteSlot"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/bulk-waste/orders:
+    post:
+      operationId: createBulkWasteOrder
+      summary: Beauftragt eine synthetische Sperrmüllabholung idempotent.
+      tags: [Cases]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkWasteOrderInput"
+      responses:
+        "201":
+          description: Sperrmüllvorgang wurde angenommen.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseCreated"
+        "200":
+          description: Bereits idempotent angelegter Vorgang.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseCreated"
+        "409":
+          description: Slot oder fachliche Grenze ist nicht mehr verfügbar.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/cases/{reference}:
+    get:
+      operationId: getCase
+      summary: Zeigt einen synthetischen Gastvorgang mit Zugriffsschlüssel.
+      tags: [Cases]
+      parameters:
+        - $ref: "#/components/parameters/CaseReference"
+        - name: accessToken
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 32
+      responses:
+        "200":
+          description: Öffentlicher Vorgangsstatus.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/admin/cases:
+    get:
+      operationId: getAdminCases
+      summary: Listet synthetische Pilotvorgänge für die lokale Bearbeitung.
+      tags: [Admin]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Vorgangsliste ohne Gastzugriffsschlüssel.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CaseDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/admin/cases/{reference}/status:
+    patch:
+      operationId: updateCaseStatus
+      summary: Ändert den öffentlichen Status eines synthetischen Pilotvorgangs.
+      tags: [Admin]
+      parameters:
+        - $ref: "#/components/parameters/CaseReference"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseStatusInput"
+      responses:
+        "200":
+          description: Aktualisierter Vorgang.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
+  parameters:
+    TenantId:
+      name: tenantId
+      in: query
+      required: true
+      schema:
+        type: string
+        pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
+    AddressId:
+      name: addressId
+      in: path
+      required: true
+      schema:
+        type: string
+    AddressIdQuery:
+      name: addressId
+      in: query
+      required: true
+      schema:
+        type: string
+    CaseReference:
+      name: reference
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^DEMO-[A-F0-9]{20}$"
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 120
+  responses:
+    BadRequest:
+      description: Eingaben sind unvollständig oder fachlich ungültig.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: Die angeforderte Ressource ist nicht vorhanden.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
   schemas:
     ReadyResponse:
       type: object
@@ -173,6 +583,421 @@ components:
             $ref: "#/components/schemas/SupportContact"
         contentVersion:
           type: string
+    Address:
+      type: object
+      additionalProperties: false
+      required: [id, tenantId, street, houseNumber, postalCode, city, displayLabel]
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        street:
+          type: string
+        houseNumber:
+          type: string
+        postalCode:
+          type: string
+        city:
+          type: string
+        district:
+          type: [string, "null"]
+        displayLabel:
+          type: string
+    CollectionStatus:
+      type: string
+      enum: [planned, moved, cancelled, additional]
+    CollectionEvent:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          addressId,
+          wasteTypeId,
+          wasteTypeLabel,
+          plannedDate,
+          effectiveDate,
+          status,
+          lastModified,
+        ]
+      properties:
+        id:
+          type: string
+        addressId:
+          type: string
+        wasteTypeId:
+          type: string
+        wasteTypeLabel:
+          type: string
+        plannedDate:
+          type: string
+          format: date
+        effectiveDate:
+          type: string
+          format: date
+        status:
+          $ref: "#/components/schemas/CollectionStatus"
+        lastModified:
+          type: string
+          format: date-time
+    CollectionInput:
+      type: object
+      additionalProperties: false
+      required:
+        [tenantId, addressId, wasteTypeId, wasteTypeLabel, plannedDate, effectiveDate, status]
+      properties:
+        tenantId:
+          type: string
+        addressId:
+          type: string
+        wasteTypeId:
+          type: string
+        wasteTypeLabel:
+          type: string
+          minLength: 2
+        plannedDate:
+          type: string
+          format: date
+        effectiveDate:
+          type: string
+          format: date
+        status:
+          $ref: "#/components/schemas/CollectionStatus"
+    WasteGuideEntry:
+      type: object
+      additionalProperties: false
+      required: [id, tenantId, name, category, disposalRoute, notes, synonyms, dataStatus]
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        disposalRoute:
+          type: string
+        notes:
+          type: string
+        synonyms:
+          type: array
+          items:
+            type: string
+        dataStatus:
+          type: string
+          format: date-time
+    WasteGuideInput:
+      type: object
+      additionalProperties: false
+      required: [tenantId, name, category, disposalRoute, notes, synonyms]
+      properties:
+        tenantId:
+          type: string
+        name:
+          type: string
+          minLength: 2
+        category:
+          type: string
+          minLength: 2
+        disposalRoute:
+          type: string
+          minLength: 2
+        notes:
+          type: string
+        synonyms:
+          type: array
+          items:
+            type: string
+    Site:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          id,
+          tenantId,
+          name,
+          siteType,
+          address,
+          openingHours,
+          acceptedWasteTypes,
+          openNow,
+          dataStatus,
+        ]
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        name:
+          type: string
+        siteType:
+          type: string
+        address:
+          type: string
+        openingHours:
+          type: string
+        acceptedWasteTypes:
+          type: array
+          items:
+            type: string
+        openNow:
+          type: boolean
+        dataStatus:
+          type: string
+          format: date-time
+    SiteInput:
+      type: object
+      additionalProperties: false
+      required: [tenantId, name, siteType, address, openingHours, acceptedWasteTypes, openNow]
+      properties:
+        tenantId:
+          type: string
+        name:
+          type: string
+          minLength: 2
+        siteType:
+          type: string
+        address:
+          type: string
+        openingHours:
+          type: string
+        acceptedWasteTypes:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        openNow:
+          type: boolean
+    NoticePriority:
+      type: string
+      enum: [info, warning, critical]
+    Notice:
+      type: object
+      additionalProperties: false
+      required: [id, tenantId, noticeType, title, body, priority, validFrom, validUntil]
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        addressId:
+          type: [string, "null"]
+        noticeType:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        priority:
+          $ref: "#/components/schemas/NoticePriority"
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+    NoticeInput:
+      type: object
+      additionalProperties: false
+      required: [tenantId, noticeType, title, body, priority, validFrom, validUntil]
+      properties:
+        tenantId:
+          type: string
+        addressId:
+          type: [string, "null"]
+        noticeType:
+          type: string
+        title:
+          type: string
+          minLength: 3
+        body:
+          type: string
+          minLength: 3
+        priority:
+          $ref: "#/components/schemas/NoticePriority"
+        validFrom:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+    DefectCategory:
+      type: string
+      enum: [bin-not-emptied, damaged-bin, illegal-dumping, dirty-site, depot-container, other]
+    DefectCaseInput:
+      type: object
+      additionalProperties: false
+      required: [tenantId, category, address, description, occurredAt, consent, attachmentNames]
+      properties:
+        tenantId:
+          type: string
+        category:
+          $ref: "#/components/schemas/DefectCategory"
+        address:
+          type: string
+          minLength: 4
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        occurredAt:
+          type: string
+          format: date-time
+        contactEmail:
+          type: [string, "null"]
+          format: email
+        consent:
+          type: boolean
+        attachmentNames:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+    CaseStatus:
+      type: string
+      enum: [received, in-review, needs-info, in-progress, completed, rejected, closed]
+    CaseCreated:
+      type: object
+      additionalProperties: false
+      required: [reference, accessToken, status, createdAt]
+      properties:
+        reference:
+          type: string
+        accessToken:
+          type: string
+        status:
+          $ref: "#/components/schemas/CaseStatus"
+        createdAt:
+          type: string
+          format: date-time
+    CaseEvent:
+      type: object
+      additionalProperties: false
+      required: [status, publicLabel, occurredAt]
+      properties:
+        status:
+          $ref: "#/components/schemas/CaseStatus"
+        publicLabel:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+    CaseDetail:
+      type: object
+      additionalProperties: false
+      required:
+        [reference, tenantId, caseType, subject, status, createdAt, updatedAt, summary, events]
+      properties:
+        reference:
+          type: string
+        tenantId:
+          type: string
+        caseType:
+          type: string
+          enum: [defect, bulk-waste]
+        subject:
+          type: string
+        status:
+          $ref: "#/components/schemas/CaseStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        summary:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseEvent"
+    CaseStatusInput:
+      type: object
+      additionalProperties: false
+      required: [status, publicLabel]
+      properties:
+        status:
+          $ref: "#/components/schemas/CaseStatus"
+        publicLabel:
+          type: string
+          minLength: 3
+          maxLength: 240
+    BulkWasteItemRule:
+      type: object
+      additionalProperties: false
+      required: [id, label, maxQuantity]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        maxQuantity:
+          type: integer
+          minimum: 1
+    BulkWasteRules:
+      type: object
+      additionalProperties: false
+      required: [tenantId, maxTotalItems, items, preparationInstructions]
+      properties:
+        tenantId:
+          type: string
+        maxTotalItems:
+          type: integer
+          minimum: 1
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BulkWasteItemRule"
+        preparationInstructions:
+          type: string
+    BulkWasteSlot:
+      type: object
+      additionalProperties: false
+      required: [id, date, timeWindow, remainingCapacity]
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          format: date
+        timeWindow:
+          type: string
+        remainingCapacity:
+          type: integer
+          minimum: 0
+    BulkWasteOrderItem:
+      type: object
+      additionalProperties: false
+      required: [itemTypeId, quantity]
+      properties:
+        itemTypeId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+    BulkWasteOrderInput:
+      type: object
+      additionalProperties: false
+      required: [tenantId, addressId, slotId, items, consent]
+      properties:
+        tenantId:
+          type: string
+        addressId:
+          type: string
+        slotId:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/BulkWasteOrderItem"
+        contactEmail:
+          type: [string, "null"]
+          format: email
+        consent:
+          type: boolean
     Problem:
       type: object
       additionalProperties: true

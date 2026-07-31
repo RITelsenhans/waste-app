@@ -11,6 +11,11 @@ Prüfungen aus; es gibt keinen Deployment-Job.
 | `security.yml`          | Pull Request, Push auf `main`, wöchentlich, manuell | pnpm-Advisories und CodeQL für beide Technologie-Stacks            |
 | `dependency-review.yml` | Pull Request                                        | Neue verwundbare oder nicht freigegebene Abhängigkeiten blockieren |
 
+Der Quality-Job stellt für die realen Browserwege einen ephemeren offiziellen
+PostgreSQL-17.10-Service bereit. `POSTGRES_EXTERNAL_URL` weist den gleichen lokalen
+Starter an, diesen Dienst zu verwenden; es werden keine produktiven Daten oder
+Zugangsdaten eingebunden.
+
 Alle fremden Actions sind auf vollständige Commit-SHAs gepinnt. Der lokale Policy-Test
 prüft diese Eigenschaft sowie Minimalrechte und die vollständigen Quality Gates:
 

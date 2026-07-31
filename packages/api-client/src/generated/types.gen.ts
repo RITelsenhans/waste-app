@@ -41,6 +41,193 @@ export type TenantConfig = {
   contentVersion: string;
 };
 
+export type Address = {
+  id: string;
+  tenantId: string;
+  street: string;
+  houseNumber: string;
+  postalCode: string;
+  city: string;
+  district?: string | null;
+  displayLabel: string;
+};
+
+export type CollectionStatus = "planned" | "moved" | "cancelled" | "additional";
+
+export type CollectionEvent = {
+  id: string;
+  addressId: string;
+  wasteTypeId: string;
+  wasteTypeLabel: string;
+  plannedDate: string;
+  effectiveDate: string;
+  status: CollectionStatus;
+  lastModified: string;
+};
+
+export type CollectionInput = {
+  tenantId: string;
+  addressId: string;
+  wasteTypeId: string;
+  wasteTypeLabel: string;
+  plannedDate: string;
+  effectiveDate: string;
+  status: CollectionStatus;
+};
+
+export type WasteGuideEntry = {
+  id: string;
+  tenantId: string;
+  name: string;
+  category: string;
+  disposalRoute: string;
+  notes: string;
+  synonyms: Array<string>;
+  dataStatus: string;
+};
+
+export type WasteGuideInput = {
+  tenantId: string;
+  name: string;
+  category: string;
+  disposalRoute: string;
+  notes: string;
+  synonyms: Array<string>;
+};
+
+export type Site = {
+  id: string;
+  tenantId: string;
+  name: string;
+  siteType: string;
+  address: string;
+  openingHours: string;
+  acceptedWasteTypes: Array<string>;
+  openNow: boolean;
+  dataStatus: string;
+};
+
+export type SiteInput = {
+  tenantId: string;
+  name: string;
+  siteType: string;
+  address: string;
+  openingHours: string;
+  acceptedWasteTypes: Array<string>;
+  openNow: boolean;
+};
+
+export type NoticePriority = "info" | "warning" | "critical";
+
+export type Notice = {
+  id: string;
+  tenantId: string;
+  addressId?: string | null;
+  noticeType: string;
+  title: string;
+  body: string;
+  priority: NoticePriority;
+  validFrom: string;
+  validUntil: string;
+};
+
+export type NoticeInput = {
+  tenantId: string;
+  addressId?: string | null;
+  noticeType: string;
+  title: string;
+  body: string;
+  priority: NoticePriority;
+  validFrom: string;
+  validUntil: string;
+};
+
+export type DefectCategory =
+  | "bin-not-emptied"
+  | "damaged-bin"
+  | "illegal-dumping"
+  | "dirty-site"
+  | "depot-container"
+  | "other";
+
+export type DefectCaseInput = {
+  tenantId: string;
+  category: DefectCategory;
+  address: string;
+  description: string;
+  occurredAt: string;
+  contactEmail?: string | null;
+  consent: boolean;
+  attachmentNames: Array<string>;
+};
+
+export type CaseStatus =
+  "received" | "in-review" | "needs-info" | "in-progress" | "completed" | "rejected" | "closed";
+
+export type CaseCreated = {
+  reference: string;
+  accessToken: string;
+  status: CaseStatus;
+  createdAt: string;
+};
+
+export type CaseEvent = {
+  status: CaseStatus;
+  publicLabel: string;
+  occurredAt: string;
+};
+
+export type CaseDetail = {
+  reference: string;
+  tenantId: string;
+  caseType: "defect" | "bulk-waste";
+  subject: string;
+  status: CaseStatus;
+  createdAt: string;
+  updatedAt: string;
+  summary: string;
+  events: Array<CaseEvent>;
+};
+
+export type CaseStatusInput = {
+  status: CaseStatus;
+  publicLabel: string;
+};
+
+export type BulkWasteItemRule = {
+  id: string;
+  label: string;
+  maxQuantity: number;
+};
+
+export type BulkWasteRules = {
+  tenantId: string;
+  maxTotalItems: number;
+  items: Array<BulkWasteItemRule>;
+  preparationInstructions: string;
+};
+
+export type BulkWasteSlot = {
+  id: string;
+  date: string;
+  timeWindow: string;
+  remainingCapacity: number;
+};
+
+export type BulkWasteOrderItem = {
+  itemTypeId: string;
+  quantity: number;
+};
+
+export type BulkWasteOrderInput = {
+  tenantId: string;
+  addressId: string;
+  slotId: string;
+  items: Array<BulkWasteOrderItem>;
+  contactEmail?: string | null;
+  consent: boolean;
+};
+
 export type Problem = {
   type: string;
   title: string;
@@ -53,6 +240,16 @@ export type Problem = {
 export type Root = unknown;
 
 export type ReadyResponseRoot = unknown;
+
+export type TenantId = string;
+
+export type AddressId = string;
+
+export type AddressIdQuery = string;
+
+export type CaseReference = string;
+
+export type IdempotencyKey = string;
 
 export type GetReadinessData = {
   body?: never;
@@ -112,3 +309,460 @@ export type GetTenantConfigResponses = {
 };
 
 export type GetTenantConfigResponse = GetTenantConfigResponses[keyof GetTenantConfigResponses];
+
+export type SearchAddressesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    q: string;
+  };
+  url: "/v1/addresses/search";
+};
+
+export type SearchAddressesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type SearchAddressesError = SearchAddressesErrors[keyof SearchAddressesErrors];
+
+export type SearchAddressesResponses = {
+  /**
+   * Passende synthetische Adressen.
+   */
+  200: Array<Address>;
+};
+
+export type SearchAddressesResponse = SearchAddressesResponses[keyof SearchAddressesResponses];
+
+export type GetCollectionsData = {
+  body?: never;
+  path: {
+    addressId: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/addresses/{addressId}/collections";
+};
+
+export type GetCollectionsErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type GetCollectionsError = GetCollectionsErrors[keyof GetCollectionsErrors];
+
+export type GetCollectionsResponses = {
+  /**
+   * Chronologische Abholtermine.
+   */
+  200: Array<CollectionEvent>;
+};
+
+export type GetCollectionsResponse = GetCollectionsResponses[keyof GetCollectionsResponses];
+
+export type SearchWasteGuideData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    q: string;
+  };
+  url: "/v1/waste-guide/search";
+};
+
+export type SearchWasteGuideErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type SearchWasteGuideError = SearchWasteGuideErrors[keyof SearchWasteGuideErrors];
+
+export type SearchWasteGuideResponses = {
+  /**
+   * Passende ABC-Einträge.
+   */
+  200: Array<WasteGuideEntry>;
+};
+
+export type SearchWasteGuideResponse = SearchWasteGuideResponses[keyof SearchWasteGuideResponses];
+
+export type GetSitesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    wasteType?: string;
+  };
+  url: "/v1/sites";
+};
+
+export type GetSitesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetSitesError = GetSitesErrors[keyof GetSitesErrors];
+
+export type GetSitesResponses = {
+  /**
+   * Filterbare Standortliste.
+   */
+  200: Array<Site>;
+};
+
+export type GetSitesResponse = GetSitesResponses[keyof GetSitesResponses];
+
+export type GetNoticesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    addressId?: string;
+  };
+  url: "/v1/notices";
+};
+
+export type GetNoticesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetNoticesError = GetNoticesErrors[keyof GetNoticesErrors];
+
+export type GetNoticesResponses = {
+  /**
+   * Aktive Meldungen nach Priorität.
+   */
+  200: Array<Notice>;
+};
+
+export type GetNoticesResponse = GetNoticesResponses[keyof GetNoticesResponses];
+
+export type CreateCollectionData = {
+  body: CollectionInput;
+  path?: never;
+  query?: never;
+  url: "/v1/admin/collections";
+};
+
+export type CreateCollectionErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateCollectionError = CreateCollectionErrors[keyof CreateCollectionErrors];
+
+export type CreateCollectionResponses = {
+  /**
+   * Angelegter Termin.
+   */
+  201: CollectionEvent;
+};
+
+export type CreateCollectionResponse = CreateCollectionResponses[keyof CreateCollectionResponses];
+
+export type CreateWasteGuideEntryData = {
+  body: WasteGuideInput;
+  path?: never;
+  query?: never;
+  url: "/v1/admin/waste-guide";
+};
+
+export type CreateWasteGuideEntryErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateWasteGuideEntryError =
+  CreateWasteGuideEntryErrors[keyof CreateWasteGuideEntryErrors];
+
+export type CreateWasteGuideEntryResponses = {
+  /**
+   * Angelegter ABC-Eintrag.
+   */
+  201: WasteGuideEntry;
+};
+
+export type CreateWasteGuideEntryResponse =
+  CreateWasteGuideEntryResponses[keyof CreateWasteGuideEntryResponses];
+
+export type CreateSiteData = {
+  body: SiteInput;
+  path?: never;
+  query?: never;
+  url: "/v1/admin/sites";
+};
+
+export type CreateSiteErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateSiteError = CreateSiteErrors[keyof CreateSiteErrors];
+
+export type CreateSiteResponses = {
+  /**
+   * Angelegter Standort.
+   */
+  201: Site;
+};
+
+export type CreateSiteResponse = CreateSiteResponses[keyof CreateSiteResponses];
+
+export type CreateNoticeData = {
+  body: NoticeInput;
+  path?: never;
+  query?: never;
+  url: "/v1/admin/notices";
+};
+
+export type CreateNoticeErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateNoticeError = CreateNoticeErrors[keyof CreateNoticeErrors];
+
+export type CreateNoticeResponses = {
+  /**
+   * Angelegte Meldung.
+   */
+  201: Notice;
+};
+
+export type CreateNoticeResponse = CreateNoticeResponses[keyof CreateNoticeResponses];
+
+export type CreateDefectCaseData = {
+  body: DefectCaseInput;
+  headers: {
+    "Idempotency-Key": string;
+  };
+  path?: never;
+  query?: never;
+  url: "/v1/cases/defects";
+};
+
+export type CreateDefectCaseErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateDefectCaseError = CreateDefectCaseErrors[keyof CreateDefectCaseErrors];
+
+export type CreateDefectCaseResponses = {
+  /**
+   * Bereits idempotent angelegter Vorgang.
+   */
+  200: CaseCreated;
+  /**
+   * Vorgang wurde angenommen.
+   */
+  201: CaseCreated;
+};
+
+export type CreateDefectCaseResponse = CreateDefectCaseResponses[keyof CreateDefectCaseResponses];
+
+export type GetBulkWasteRulesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/bulk-waste/rules";
+};
+
+export type GetBulkWasteRulesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetBulkWasteRulesError = GetBulkWasteRulesErrors[keyof GetBulkWasteRulesErrors];
+
+export type GetBulkWasteRulesResponses = {
+  /**
+   * Synthetische Sperrmüllregeln.
+   */
+  200: BulkWasteRules;
+};
+
+export type GetBulkWasteRulesResponse =
+  GetBulkWasteRulesResponses[keyof GetBulkWasteRulesResponses];
+
+export type GetBulkWasteSlotsData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    addressId: string;
+  };
+  url: "/v1/bulk-waste/slots";
+};
+
+export type GetBulkWasteSlotsErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetBulkWasteSlotsError = GetBulkWasteSlotsErrors[keyof GetBulkWasteSlotsErrors];
+
+export type GetBulkWasteSlotsResponses = {
+  /**
+   * Verfügbare Abholslots.
+   */
+  200: Array<BulkWasteSlot>;
+};
+
+export type GetBulkWasteSlotsResponse =
+  GetBulkWasteSlotsResponses[keyof GetBulkWasteSlotsResponses];
+
+export type CreateBulkWasteOrderData = {
+  body: BulkWasteOrderInput;
+  headers: {
+    "Idempotency-Key": string;
+  };
+  path?: never;
+  query?: never;
+  url: "/v1/bulk-waste/orders";
+};
+
+export type CreateBulkWasteOrderErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Slot oder fachliche Grenze ist nicht mehr verfügbar.
+   */
+  409: Problem;
+};
+
+export type CreateBulkWasteOrderError =
+  CreateBulkWasteOrderErrors[keyof CreateBulkWasteOrderErrors];
+
+export type CreateBulkWasteOrderResponses = {
+  /**
+   * Bereits idempotent angelegter Vorgang.
+   */
+  200: CaseCreated;
+  /**
+   * Sperrmüllvorgang wurde angenommen.
+   */
+  201: CaseCreated;
+};
+
+export type CreateBulkWasteOrderResponse =
+  CreateBulkWasteOrderResponses[keyof CreateBulkWasteOrderResponses];
+
+export type GetCaseData = {
+  body?: never;
+  path: {
+    reference: string;
+  };
+  query: {
+    accessToken: string;
+  };
+  url: "/v1/cases/{reference}";
+};
+
+export type GetCaseErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type GetCaseError = GetCaseErrors[keyof GetCaseErrors];
+
+export type GetCaseResponses = {
+  /**
+   * Öffentlicher Vorgangsstatus.
+   */
+  200: CaseDetail;
+};
+
+export type GetCaseResponse = GetCaseResponses[keyof GetCaseResponses];
+
+export type GetAdminCasesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/cases";
+};
+
+export type GetAdminCasesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminCasesError = GetAdminCasesErrors[keyof GetAdminCasesErrors];
+
+export type GetAdminCasesResponses = {
+  /**
+   * Vorgangsliste ohne Gastzugriffsschlüssel.
+   */
+  200: Array<CaseDetail>;
+};
+
+export type GetAdminCasesResponse = GetAdminCasesResponses[keyof GetAdminCasesResponses];
+
+export type UpdateCaseStatusData = {
+  body: CaseStatusInput;
+  path: {
+    reference: string;
+  };
+  query?: never;
+  url: "/v1/admin/cases/{reference}/status";
+};
+
+export type UpdateCaseStatusErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateCaseStatusError = UpdateCaseStatusErrors[keyof UpdateCaseStatusErrors];
+
+export type UpdateCaseStatusResponses = {
+  /**
+   * Aktualisierter Vorgang.
+   */
+  200: CaseDetail;
+};
+
+export type UpdateCaseStatusResponse = UpdateCaseStatusResponses[keyof UpdateCaseStatusResponses];

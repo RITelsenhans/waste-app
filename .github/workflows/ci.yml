@@ -22,6 +22,21 @@ jobs:
     env:
       CI: "true"
       GRADLE_OPTS: -Dorg.gradle.daemon=false
+      POSTGRES_EXTERNAL_URL: jdbc:postgresql://127.0.0.1:55432/waste_app
+    services:
+      postgres:
+        image: postgres:17.10
+        env:
+          POSTGRES_DB: waste_app
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_USER: waste_app
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U waste_app -d waste_app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Repository auschecken

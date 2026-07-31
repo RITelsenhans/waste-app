@@ -3,8 +3,14 @@
 ## Umfang
 
 - Maßgeblich ist die Produktspezifikation unter `docs/product/`.
-- Der aktuelle Stand ist ausschließlich der technische Start von Phase 1.
-- Phase-2-Funktionen dürfen nicht implementiert oder sichtbar aktiviert werden.
+- Der aktuelle Entwicklungsauftrag liefert einen ausdrücklich synthetischen,
+  lokal testbaren Phase-1/2-Piloten.
+- Aus Phase 2 sind ausschließlich das gemeinsame Vorgangsmodell,
+  Mängel/Reklamationen und Sperrmüll freigegeben. Weitere Phase-2-Dienste bleiben
+  außerhalb des Umfangs.
+- Pilotfunktionen dürfen nicht als produktionsreif bezeichnet oder ohne die noch
+  fehlenden Sicherheits-, Datenschutz-, Fachverfahrens- und Betriebsfreigaben
+  ausgerollt werden.
 
 ## Architekturgrenzen
 

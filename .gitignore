@@ -2,6 +2,7 @@
 .gradle/
 .kotlin/
 .next/
+.next-*/
 .pnpm-store/
 build/
 coverage/
