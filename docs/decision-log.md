@@ -1,6 +1,6 @@
 # Decision Log
 
-Stand: 30. Juli 2026
+Stand: 31. Juli 2026
 
 ## Fehlende Voraussetzungen
 
@@ -33,6 +33,7 @@ Stand: 30. Juli 2026
 | D-011 | GitHub Actions führt auf `ubuntu-24.04` mit SHA-gepinnten Actions und Minimalrechten die lokalen Quality Gates aus.                      | Reproduzierbare Merge-Prüfung ohne Deployment oder privilegierte Pull-Request-Ausführung; siehe ADR-0005.                                                                      |
 | D-012 | CodeQL, pnpm-Audit ab `high`, Dependency Review, Dependabot, Secret Scanning und Push Protection bilden die erste Supply-Chain-Baseline. | Deckt statische Analyse, bekannte Advisories, neue Abhängigkeiten und versehentlich eingecheckte Geheimnisse ab.                                                               |
 | D-013 | `main` verlangt Pull Requests, aktuelle Required Checks und aufgelöste Gespräche; Administratoren dürfen die Regel nicht umgehen.        | Schützt den öffentlichen Hauptbranch vor ungeprüften Änderungen, Force Push und Löschung. Bis ein zweiter Reviewer benannt ist, sind noch keine Pflichtfreigaben konfiguriert. |
+| D-014 | Dependabot gruppiert beide Kotlin-Plugins und vertagt inkompatible reguläre Toolchain-Updates über `update-types`.                       | Verhindert getrennte Kotlin-Versionen und wiederkehrende, bereits negativ geprüfte PRs; Sicherheitsupdates bleiben von den Filtern unberührt; siehe ADR-0005.                  |
 
 ## Offene Entscheidungen
 

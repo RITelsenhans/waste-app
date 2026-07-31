@@ -74,3 +74,27 @@ test("Dependabot covers npm, Gradle and GitHub Actions", async () => {
     assert.match(dependabot, new RegExp(`package-ecosystem: ${ecosystem}`));
   }
 });
+
+test("Dependabot coordinates Kotlin plugins and defers incompatible version updates", async () => {
+  const dependabot = await readRepositoryFile(".github/dependabot.yml");
+
+  assert.match(
+    dependabot,
+    /kotlin-plugins:\n\s+applies-to: version-updates\n\s+patterns:\n\s+- jvm\n\s+- plugin\.spring/,
+  );
+
+  for (const [dependency, updateType] of [
+    ["@types/node", "version-update:semver-major"],
+    ["typescript", "version-update:semver-major"],
+    ["eslint", "version-update:semver-major"],
+    ["@hey-api/openapi-ts", "version-update:semver-minor"],
+  ]) {
+    const escapedDependency = dependency.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    assert.match(
+      dependabot,
+      new RegExp(
+        `dependency-name: "?${escapedDependency}"?\\n\\s+update-types:\\n\\s+- ${updateType}`,
+      ),
+    );
+  }
+});

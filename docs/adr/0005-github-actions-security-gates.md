@@ -77,3 +77,11 @@ aufgelöste Gespräche; Force Push und Löschung sind gesperrt. Weil noch kein z
 Reviewer benannt wurde, steht die Zahl verpflichtender Freigaben dokumentiert auf `0`.
 Diese verbleibende Organisationsentscheidung ist keine technische Freigabe für
 ungeprüfte Änderungen.
+
+Dependabot gruppiert die Kotlin-Plugins `jvm` und `plugin.spring`, damit ihre gemeinsame
+Version nicht durch getrennte Pull Requests auseinanderläuft. Reguläre Major-Updates
+von `@types/node`, TypeScript und ESLint sowie reguläre Minor-Updates von Hey API werden
+bis zu einem jeweils koordinierten Upgrade-Auftrag zurückgestellt. Die Regeln verwenden
+ausschließlich `update-types`; diese Filter betreffen laut
+[GitHub-Dokumentation](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference)
+nicht die Dependabot-Sicherheitsupdates.
