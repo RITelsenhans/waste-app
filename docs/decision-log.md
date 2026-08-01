@@ -40,6 +40,7 @@ Stand: 31. Juli 2026
 | D-018 | Playwright 1.61.1 und axe-core Playwright 4.12.1 bilden die erste Browser-/Accessibility-Testbaseline.                                    | Abgehangene, lizenzgeprüfte Testwerkzeuge; Chromium-Desktop/-Mobil ist zunächst blockierend, die vollständige Matrix bleibt offen; siehe ADR-0006.                                        |
 | D-019 | Der Auftrag wird auf einen synthetischen, lokal testbaren Phase-1/2-Piloten mit getrennter Pflegeoberfläche erweitert.                    | Der Auftraggeber hat die frühere Phase-2-Sperre am 31. Juli 2026 ausdrücklich aufgehoben; freigegeben sind Mängel/Reklamationen und Sperrmüll, nicht die vollständige Produktionsabnahme. |
 | D-020 | PostgreSQL 17, Spring JDBC und Flyway bilden die persistente Pilotdatenbasis.                                                             | Die erste datenführende Story ist erreicht; PostgreSQL 17 ist unterstützt, lokal verfügbar und benötigt keine ORM-Abstraktion; siehe ADR-0007.                                            |
+| D-021 | Der lokale Start setzt für PostgreSQL und seine Hilfsprogramme explizit `LANG=C` und `LC_ALL=C`.                                          | macOS/Homebrew stellt `C.UTF-8` nicht zuverlässig bereit; die portable `C`-Locale verhindert einen PostgreSQL-Startabbruch, ohne die Locale von Web oder API zu verändern.                |
 
 ## Offene Entscheidungen
 

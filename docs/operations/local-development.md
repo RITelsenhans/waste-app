@@ -23,6 +23,12 @@ Stoppen mit `Ctrl+C` werden alle Prozessgruppen beendet. Die persistenten synthe
 Daten bleiben für den nächsten Start erhalten. Für die normale lokale Nutzung ist kein
 zweiter Startbefehl erforderlich.
 
+Der Start setzt ausschließlich für PostgreSQL und dessen Hilfsprogramme die portable
+Locale `C`. Dadurch funktioniert der projektlokale Datenbankstart auf macOS auch dann,
+wenn das Terminal beispielsweise `LANG=C.UTF-8` exportiert, diese Locale vom
+Homebrew-Build aber nicht bereitgestellt wird. Die Locale von Web und API wird nicht
+verändert.
+
 Die Einzelbefehle `pnpm dev:api`, `pnpm dev:web` und `pnpm dev:admin` bleiben
 ausschließlich für die gezielte technische Fehlersuche verfügbar.
 

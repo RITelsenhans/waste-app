@@ -24,6 +24,10 @@ const playwrightSourceSnapshots = playwrightBuild
   : [];
 const externalDatabaseUrl = process.env.POSTGRES_EXTERNAL_URL;
 const postgresBin = externalDatabaseUrl ? undefined : findPostgresBin();
+const postgresProcessEnvironment = {
+  LANG: "C",
+  LC_ALL: "C",
+};
 const databaseEnvironment = {
   SPRING_DATASOURCE_PASSWORD: "",
   SPRING_DATASOURCE_URL:
@@ -72,6 +76,7 @@ const services = {
           "-k",
           databaseSocket,
         ],
+        env: postgresProcessEnvironment,
         executable: `${postgresBin}/postgres`,
         label: "PostgreSQL",
         url: `postgresql://127.0.0.1:${databasePort}/waste_app`,
@@ -190,7 +195,7 @@ async function prepareDatabase() {
         "-D",
         databaseData,
       ],
-      { label: "PostgreSQL-Initialisierung" },
+      { env: postgresProcessEnvironment, label: "PostgreSQL-Initialisierung" },
     );
   }
 }
@@ -202,7 +207,7 @@ async function waitForPostgres() {
     const result = await run(
       `${postgresBin}/pg_isready`,
       ["-h", "127.0.0.1", "-p", String(databasePort), "-U", "waste_app"],
-      { allowFailure: true, quiet: true },
+      { allowFailure: true, env: postgresProcessEnvironment, quiet: true },
     );
     if (result.code === 0) return;
     await delay(250);
@@ -226,14 +231,14 @@ async function ensureDatabase() {
       "-tAc",
       "SELECT 1 FROM pg_database WHERE datname = 'waste_app'",
     ],
-    { quiet: true },
+    { env: postgresProcessEnvironment, quiet: true },
   );
   if (check.output.trim() !== "1") {
     console.log("[vorbereiten] Datenbank waste_app wird angelegt …");
     await run(
       `${postgresBin}/createdb`,
       ["-h", "127.0.0.1", "-p", String(databasePort), "-U", "waste_app", "waste_app"],
-      { label: "Datenbankanlage" },
+      { env: postgresProcessEnvironment, label: "Datenbankanlage" },
     );
   }
 }
