@@ -29,7 +29,8 @@ fehlenden Rollen- und Benutzeranmeldung nicht veröffentlicht werden.
   veröffentlicht; die Pflegeoberfläche wird nicht gestartet und alle
   `/v1/admin/*`-Endpunkte werden durch die API-Konfiguration deaktiviert.
 - Vor allen Seiten und `/v1/*` liegt eine kleine Anwendungsauthentifizierung. Der
-  Passwortvergleich verwendet konstante Zeit über SHA-256-Digests. Nach erfolgreicher
+  Passwortvergleich verwendet konstante Zeit über mit dem Sitzungsschlüssel erzeugte
+  HMAC-SHA-256-Authentikatoren. Nach erfolgreicher
   Anmeldung wird ein HMAC-signiertes Cookie mit `HttpOnly`, `Secure`, `SameSite=Strict`
   und maximal acht Stunden Gültigkeit gesetzt. Abgelaufene oder manipulierte Cookies
   werden abgewiesen. Das gemeinsame Passwort wird getrennt vom Link weitergegeben.

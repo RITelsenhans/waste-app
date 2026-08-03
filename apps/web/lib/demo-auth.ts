@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const DEMO_SESSION_COOKIE = "waste_demo_session";
 export const DEMO_SESSION_MAX_AGE_SECONDS = 8 * 60 * 60;
@@ -30,9 +30,15 @@ export function verifyDemoPassword(
   environment: DemoEnvironment = process.env,
 ): boolean {
   const expected = environment.DEMO_ACCESS_PASSWORD;
-  if (!isDemoAuthConfigured(environment) || expected === undefined) return false;
+  const secret = environment.DEMO_SESSION_SECRET;
+  if (!isDemoAuthConfigured(environment) || expected === undefined || secret === undefined) {
+    return false;
+  }
 
-  return timingSafeEqual(digest(candidate), digest(expected));
+  return timingSafeEqual(
+    passwordAuthenticator(candidate, secret),
+    passwordAuthenticator(expected, secret),
+  );
 }
 
 export function createDemoSession(
@@ -62,10 +68,13 @@ export function verifyDemoSession(
   if (!Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(now / 1000)) return false;
 
   const payload = `${parts[0]}.${parts[1]}`;
-  const actualSignature = parts[2] ?? "";
-  const expectedSignature = sign(payload, secret);
+  const actualSignature = Buffer.from(parts[2] ?? "", "base64url");
+  const expectedSignature = Buffer.from(sign(payload, secret), "base64url");
 
-  return timingSafeEqual(digest(actualSignature), digest(expectedSignature));
+  return (
+    actualSignature.length === expectedSignature.length &&
+    timingSafeEqual(actualSignature, expectedSignature)
+  );
 }
 
 export function safeDemoReturnTo(value: FormDataEntryValue | string | null): string {
@@ -98,6 +107,6 @@ function sign(payload: string, secret: string): string {
   return createHmac("sha256", secret).update(payload).digest("base64url");
 }
 
-function digest(value: string): Buffer {
-  return createHash("sha256").update(value).digest();
+function passwordAuthenticator(value: string, secret: string): Buffer {
+  return createHmac("sha256", secret).update("demo-password-comparison\0").update(value).digest();
 }

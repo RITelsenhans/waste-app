@@ -59,7 +59,12 @@ export function SiteHeader({ addressLabel, config, tenantKey }: SiteHeaderProps)
             <select
               aria-label="Kommune auswählen"
               value={tenantKey}
-              onChange={(event) => window.location.assign(`/${event.target.value}`)}
+              onChange={(event) => {
+                const tenant = municipalities.find(
+                  (municipality) => municipality.tenantId === event.currentTarget.value,
+                );
+                if (tenant) window.location.assign(`/${encodeURIComponent(tenant.tenantId)}`);
+              }}
             >
               {municipalities.map((municipality) => (
                 <option key={municipality.tenantId} value={municipality.tenantId}>
