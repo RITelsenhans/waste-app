@@ -81,4 +81,22 @@ describe("demo authentication", () => {
     expect(hasDemoSameOrigin(sameOriginRequest, environment)).toBe(true);
     expect(hasDemoSameOrigin(foreignOriginRequest, environment)).toBe(false);
   });
+
+  it("prefers unforgeable browser fetch metadata across the Codespaces tunnel", () => {
+    const proxiedSameOriginRequest = new Request("http://127.0.0.1:3000/demo-auth/login", {
+      headers: {
+        origin: "https://proxy-rewritten.invalid",
+        "sec-fetch-site": "same-origin",
+      },
+    });
+    const crossSiteRequest = new Request("http://127.0.0.1:3000/demo-auth/login", {
+      headers: {
+        origin: "https://synthetic-codespace-3000.app.github.dev",
+        "sec-fetch-site": "cross-site",
+      },
+    });
+
+    expect(hasDemoSameOrigin(proxiedSameOriginRequest)).toBe(true);
+    expect(hasDemoSameOrigin(crossSiteRequest)).toBe(false);
+  });
 });

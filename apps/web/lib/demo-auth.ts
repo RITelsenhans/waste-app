@@ -109,6 +109,10 @@ export function hasDemoSameOrigin(
   request: Request,
   environment: DemoEnvironment = process.env,
 ): boolean {
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite === "same-origin") return true;
+  if (fetchSite === "same-site" || fetchSite === "cross-site") return false;
+
   const origin = request.headers.get("origin");
   return origin !== null && origin === demoRequestUrl(request, "/", environment).origin;
 }

@@ -40,8 +40,10 @@ fehlenden Rollen- und Benutzeranmeldung nicht veröffentlicht werden.
   werden abgewiesen. Das gemeinsame Passwort wird getrennt vom Link weitergegeben.
 - Der Freigabestart leitet die erwartete öffentliche HTTPS-Origin deterministisch aus
   `CODESPACE_NAME` und Port 3000 ab. Anmeldung, Abmeldung und Weiterleitungen akzeptieren
-  diese Origin ausdrücklich, statt sicherheitskritisch auf uneinheitliche
-  Forwarded-Header des GitHub-Tunnels zu vertrauen.
+  primär den nicht durch JavaScript veränderbaren Fetch-Metadata-Wert `Sec-Fetch-Site:
+same-origin` und verwenden die explizite Origin als Fallback. `same-site` und
+  `cross-site` werden abgewiesen; uneinheitliche Forwarded-Header des GitHub-Tunnels
+  sind nicht sicherheitsentscheidend.
 - Der normale lokale Befehl `pnpm dev` aktiviert diesen Schutz nicht und behält Web,
   Pflege-Unit, API, PostgreSQL und Mailpit für die lokale Entwicklung bei.
 - Es werden keine Authentifizierungsbibliotheken ergänzt; Node.js-Kryptografie und die
