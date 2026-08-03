@@ -8,9 +8,11 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.put
 import tools.jackson.databind.ObjectMapper
 import kotlin.test.assertEquals
 
@@ -93,6 +95,71 @@ class ApiHttpIntegrationTests {
                 status { isOk() }
                 jsonPath("$[0].name") { value("Batterien") }
             }
+
+        mockMvc
+            .get("/v1/sites") {
+                param("tenantId", "demo")
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$[0].latitude") { exists() }
+                jsonPath("$[0].longitude") { exists() }
+            }
+    }
+
+    @Test
+    fun `admin can correct list and delete a notice`() {
+        val created =
+            mockMvc
+                .post("/v1/admin/notices") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "tenantId":"demo",
+                          "addressId":null,
+                          "noticeType":"service",
+                          "title":"Falscher Titel",
+                          "body":"Dieser Text wird korrigiert.",
+                          "priority":"info",
+                          "validFrom":"2026-08-01T00:00:00Z",
+                          "validUntil":"2026-09-01T00:00:00Z"
+                        }
+                        """.trimIndent()
+                }.andExpect { status { isCreated() } }
+                .andReturn()
+        val id = objectMapper.readTree(created.response.contentAsString)["id"].asText()
+
+        mockMvc
+            .put("/v1/admin/notices/$id") {
+                contentType = MediaType.APPLICATION_JSON
+                content =
+                    """
+                    {
+                      "tenantId":"demo",
+                      "addressId":null,
+                      "noticeType":"service",
+                      "title":"Korrigierter Titel",
+                      "body":"Der Hinweis ist nun richtig.",
+                      "priority":"warning",
+                      "validFrom":"2026-08-01T00:00:00Z",
+                      "validUntil":"2026-09-01T00:00:00Z"
+                    }
+                    """.trimIndent()
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.title") { value("Korrigierter Titel") }
+            }
+
+        mockMvc
+            .get("/v1/admin/notices") { param("tenantId", "demo") }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$[?(@.id == '$id')].title") { value("Korrigierter Titel") }
+            }
+
+        mockMvc
+            .delete("/v1/admin/notices/$id") { param("tenantId", "demo") }
+            .andExpect { status { isNoContent() } }
     }
 
     @Test

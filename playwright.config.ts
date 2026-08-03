@@ -38,6 +38,8 @@ export default defineConfig({
     env: {
       ADMIN_PORT: "13001",
       NEXT_DIST_DIR: ".next-playwright",
+      MAIL_SMTP_PORT: "11025",
+      MAIL_UI_PORT: "18025",
       PORT: "13000",
       POSTGRES_PORT: "55434",
       SERVER_PORT: "18080",

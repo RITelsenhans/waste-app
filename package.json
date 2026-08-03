@@ -14,6 +14,7 @@
     "contracts:generate": "pnpm --filter @waste/api-client generate",
     "contracts:lint": "redocly lint",
     "dev": "node tooling/scripts/dev.mjs",
+    "dev:codespace": "node tooling/scripts/codespace-dev.mjs",
     "dev:api": "./gradlew :services:api:bootRun",
     "dev:admin": "pnpm --filter @waste/design-tokens build && pnpm --filter @waste/admin dev",
     "dev:web": "pnpm --filter @waste/design-tokens build && pnpm --filter @waste/web dev",
@@ -23,7 +24,8 @@
     "security:audit": "pnpm audit --audit-level high",
     "test": "pnpm ci:validate && pnpm contracts:check && pnpm --filter @waste/design-tokens test && pnpm --filter @waste/ui test && pnpm --filter @waste/web test && pnpm --filter @waste/admin test && ./gradlew test integrationTest",
     "test:a11y": "playwright test --config playwright.config.ts --grep @a11y",
-    "test:browser": "playwright test --config playwright.config.ts",
+    "test:browser": "playwright test --config playwright.config.ts && pnpm test:demo-auth",
+    "test:demo-auth": "playwright test --config playwright.demo-auth.config.ts",
     "test:e2e": "playwright test --config playwright.config.ts --grep-invert @a11y",
     "test:visual": "playwright test --config playwright.config.ts --grep @visual",
     "typecheck": "pnpm --filter @waste/api-client typecheck && pnpm --filter @waste/ui typecheck && pnpm --filter @waste/web typecheck && pnpm --filter @waste/admin typecheck && ./gradlew :services:api:compileKotlin :services:api:compileTestKotlin"

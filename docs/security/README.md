@@ -12,6 +12,9 @@
 - Dependency Review prüft neu eingeführte Abhängigkeiten und die vorläufige
   Lizenz-Deny-Liste.
 - Dependabot beobachtet npm/pnpm, Gradle und GitHub Actions wöchentlich.
+- Der temporäre Codespaces-Freigabemodus schützt Seiten und gleichursprüngliche API mit
+  einem HMAC-signierten, maximal acht Stunden gültigen HttpOnly-/Secure-Cookie. Er
+  startet keine Pflegeoberfläche und deaktiviert administrative API-Endpunkte.
 
 Secret Scanning und Push Protection sind im öffentlichen GitHub-Repository aktiv.
 Dependabot Alerts und automatische Security Updates sind ebenfalls eingeschaltet.

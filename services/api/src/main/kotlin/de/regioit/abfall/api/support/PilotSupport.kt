@@ -51,7 +51,7 @@ class PilotWebConfiguration(
             registry
                 .addMapping("/v1/**")
                 .allowedOrigins(*properties.allowedOrigins.toTypedArray())
-                .allowedMethods("GET", "POST", "PATCH", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("Content-Type", "Idempotency-Key", "Accept")
         }
     }

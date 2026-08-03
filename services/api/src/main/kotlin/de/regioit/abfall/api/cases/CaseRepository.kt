@@ -25,6 +25,15 @@ data class SlotCapacity(
     val reserved: Int,
 )
 
+data class PendingMailEvent(
+    val id: String,
+    val reference: String,
+    val recipient: String,
+    val subject: String,
+    val summary: String,
+    val attemptCount: Int,
+)
+
 @Repository
 class CaseRepository(
     private val jdbc: JdbcClient,
@@ -181,6 +190,73 @@ class CaseRepository(
             .param("eventType", eventType)
             .param("payload", payload)
             .param("createdAt", Timestamp.from(createdAt))
+            .update()
+    }
+
+    fun pendingDefectConfirmationMails(
+        now: Instant,
+        limit: Int,
+    ): List<PendingMailEvent> =
+        jdbc
+            .sql(
+                """
+                select o.id, c.public_reference, c.contact_email, c.subject, c.summary,
+                       o.attempt_count
+                from outbox_event o
+                join case_record c on c.id = o.aggregate_id
+                where o.event_type = 'defect-confirmation-requested'
+                  and o.published_at is null
+                  and o.next_attempt_at <= :now
+                  and c.contact_email is not null
+                order by o.created_at
+                limit :limit
+                """.trimIndent(),
+            ).param("now", Timestamp.from(now))
+            .param("limit", limit)
+            .query { rs, _ ->
+                PendingMailEvent(
+                    id = rs.getString("id"),
+                    reference = rs.getString("public_reference"),
+                    recipient = rs.getString("contact_email"),
+                    subject = rs.getString("subject"),
+                    summary = rs.getString("summary"),
+                    attemptCount = rs.getInt("attempt_count"),
+                )
+            }.list()
+
+    fun markOutboxPublished(
+        id: String,
+        publishedAt: Instant,
+    ) {
+        jdbc
+            .sql(
+                """
+                update outbox_event
+                set published_at = :publishedAt, last_error = null
+                where id = :id and published_at is null
+                """.trimIndent(),
+            ).param("id", id)
+            .param("publishedAt", Timestamp.from(publishedAt))
+            .update()
+    }
+
+    fun recordOutboxFailure(
+        id: String,
+        error: String,
+        nextAttemptAt: Instant,
+    ) {
+        jdbc
+            .sql(
+                """
+                update outbox_event
+                set attempt_count = attempt_count + 1,
+                    last_error = :error,
+                    next_attempt_at = :nextAttemptAt
+                where id = :id and published_at is null
+                """.trimIndent(),
+            ).param("id", id)
+            .param("error", error.take(1000))
+            .param("nextAttemptAt", Timestamp.from(nextAttemptAt))
             .update()
     }
 

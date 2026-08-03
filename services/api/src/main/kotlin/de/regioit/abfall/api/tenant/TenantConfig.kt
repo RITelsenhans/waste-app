@@ -16,6 +16,7 @@ data class TenantConfig(
     val locales: List<String> = listOf("de-DE"),
     val enabledFeatures: Map<String, Boolean> = emptyMap(),
     val legalLinks: LegalLinks = LegalLinks(),
+    val serviceArea: ServiceArea = ServiceArea(),
     val supportContacts: List<SupportContact> = emptyList(),
     val contentVersion: String = "",
 )
@@ -34,5 +35,13 @@ data class LegalLinks(
 
 data class SupportContact(
     val label: String = "",
+    val email: String = "",
+    val phone: String = "",
+)
+
+data class ServiceArea(
+    val city: String = "",
+    val reportingOffice: String = "",
+    val phone: String = "",
     val email: String = "",
 )

@@ -2,6 +2,7 @@ package de.regioit.abfall.api.content
 
 import de.regioit.abfall.api.support.PilotNotFoundException
 import de.regioit.abfall.api.support.PilotValidationException
+import de.regioit.abfall.api.tenant.WasteProperties
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
@@ -68,6 +69,20 @@ class ContentRepository(
             .query(::mapCollection)
             .list()
 
+    fun allCollections(tenantId: String): List<CollectionEvent> =
+        jdbc
+            .sql(
+                """
+                select id, address_id, waste_type_id, waste_type_label, planned_date, effective_date,
+                       status, last_modified
+                from collection_event
+                where tenant_id = :tenantId
+                order by effective_date desc, waste_type_label
+                """.trimIndent(),
+            ).param("tenantId", tenantId)
+            .query(::mapCollection)
+            .list()
+
     fun wasteGuideEntries(tenantId: String): List<WasteGuideEntry> =
         jdbc
             .sql(
@@ -89,13 +104,13 @@ class ContentRepository(
             if (wasteType.isNullOrBlank()) {
                 """
                 select id, tenant_id, name, site_type, address, opening_hours, accepted_waste_types,
-                       open_now, data_status
+                       open_now, latitude, longitude, data_status
                 from disposal_site where tenant_id = :tenantId order by name
                 """.trimIndent()
             } else {
                 """
                 select id, tenant_id, name, site_type, address, opening_hours, accepted_waste_types,
-                       open_now, data_status
+                       open_now, latitude, longitude, data_status
                 from disposal_site
                 where tenant_id = :tenantId and lower(accepted_waste_types) like :wasteType
                 order by name
@@ -126,6 +141,17 @@ class ContentRepository(
             ).param("tenantId", tenantId)
             .param("now", Timestamp.from(now))
             .param("addressId", addressId)
+            .query(::mapNotice)
+            .list()
+
+    fun allNotices(tenantId: String): List<Notice> =
+        jdbc
+            .sql(
+                """
+                select id, tenant_id, address_id, notice_type, title, body, priority, valid_from, valid_until
+                from notice where tenant_id = :tenantId order by valid_until desc, valid_from desc
+                """.trimIndent(),
+            ).param("tenantId", tenantId)
             .query(::mapNotice)
             .list()
 
@@ -203,10 +229,10 @@ class ContentRepository(
                 """
                 insert into disposal_site
                     (id, tenant_id, name, site_type, address, opening_hours, accepted_waste_types,
-                     open_now, data_status)
+                     open_now, latitude, longitude, data_status)
                 values
                     (:id, :tenantId, :name, :siteType, :address, :openingHours, :acceptedWasteTypes,
-                     :openNow, :dataStatus)
+                     :openNow, :latitude, :longitude, :dataStatus)
                 """.trimIndent(),
             ).param("id", id)
             .param("tenantId", input.tenantId)
@@ -216,6 +242,8 @@ class ContentRepository(
             .param("openingHours", input.openingHours.trim())
             .param("acceptedWasteTypes", input.acceptedWasteTypes.joinToString("|") { it.trim() })
             .param("openNow", input.openNow)
+            .param("latitude", input.latitude)
+            .param("longitude", input.longitude)
             .param("dataStatus", Timestamp.from(now))
             .update()
         return Site(
@@ -227,6 +255,8 @@ class ContentRepository(
             input.openingHours.trim(),
             input.acceptedWasteTypes.map(String::trim).filter(String::isNotBlank),
             input.openNow,
+            input.latitude,
+            input.longitude,
             now,
         )
     }
@@ -263,6 +293,190 @@ class ContentRepository(
             input.validFrom,
             input.validUntil,
         )
+    }
+
+    fun updateCollection(
+        id: String,
+        input: CollectionInput,
+    ): CollectionEvent {
+        val now = Instant.now()
+        requireUpdated(
+            jdbc
+                .sql(
+                    """
+                    update collection_event
+                    set address_id = :addressId, waste_type_id = :wasteTypeId,
+                        waste_type_label = :wasteTypeLabel, planned_date = :plannedDate,
+                        effective_date = :effectiveDate, status = :status, last_modified = :lastModified
+                    where id = :id and tenant_id = :tenantId
+                    """.trimIndent(),
+                ).param("id", id)
+                .param("tenantId", input.tenantId)
+                .param("addressId", input.addressId)
+                .param("wasteTypeId", input.wasteTypeId)
+                .param("wasteTypeLabel", input.wasteTypeLabel.trim())
+                .param("plannedDate", input.plannedDate)
+                .param("effectiveDate", input.effectiveDate)
+                .param("status", input.status)
+                .param("lastModified", Timestamp.from(now))
+                .update(),
+            id,
+        )
+        return CollectionEvent(
+            id,
+            input.addressId,
+            input.wasteTypeId,
+            input.wasteTypeLabel.trim(),
+            input.plannedDate,
+            input.effectiveDate,
+            input.status,
+            now,
+        )
+    }
+
+    fun updateWasteGuideEntry(
+        id: String,
+        input: WasteGuideInput,
+    ): WasteGuideEntry {
+        val now = Instant.now()
+        requireUpdated(
+            jdbc
+                .sql(
+                    """
+                    update waste_guide_entry
+                    set name = :name, category = :category, disposal_route = :disposalRoute,
+                        notes = :notes, synonyms = :synonyms, data_status = :dataStatus
+                    where id = :id and tenant_id = :tenantId
+                    """.trimIndent(),
+                ).param("id", id)
+                .param("tenantId", input.tenantId)
+                .param("name", input.name.trim())
+                .param("category", input.category.trim())
+                .param("disposalRoute", input.disposalRoute.trim())
+                .param("notes", input.notes.trim())
+                .param("synonyms", input.synonyms.joinToString("|") { it.trim() })
+                .param("dataStatus", Timestamp.from(now))
+                .update(),
+            id,
+        )
+        return WasteGuideEntry(
+            id,
+            input.tenantId,
+            input.name.trim(),
+            input.category.trim(),
+            input.disposalRoute.trim(),
+            input.notes.trim(),
+            input.synonyms.map(String::trim).filter(String::isNotBlank),
+            now,
+        )
+    }
+
+    fun updateSite(
+        id: String,
+        input: SiteInput,
+    ): Site {
+        val now = Instant.now()
+        requireUpdated(
+            jdbc
+                .sql(
+                    """
+                    update disposal_site
+                    set name = :name, site_type = :siteType, address = :address,
+                        opening_hours = :openingHours, accepted_waste_types = :acceptedWasteTypes,
+                        open_now = :openNow, latitude = :latitude, longitude = :longitude,
+                        data_status = :dataStatus
+                    where id = :id and tenant_id = :tenantId
+                    """.trimIndent(),
+                ).param("id", id)
+                .param("tenantId", input.tenantId)
+                .param("name", input.name.trim())
+                .param("siteType", input.siteType.trim())
+                .param("address", input.address.trim())
+                .param("openingHours", input.openingHours.trim())
+                .param("acceptedWasteTypes", input.acceptedWasteTypes.joinToString("|") { it.trim() })
+                .param("openNow", input.openNow)
+                .param("latitude", input.latitude)
+                .param("longitude", input.longitude)
+                .param("dataStatus", Timestamp.from(now))
+                .update(),
+            id,
+        )
+        return Site(
+            id,
+            input.tenantId,
+            input.name.trim(),
+            input.siteType.trim(),
+            input.address.trim(),
+            input.openingHours.trim(),
+            input.acceptedWasteTypes.map(String::trim).filter(String::isNotBlank),
+            input.openNow,
+            input.latitude,
+            input.longitude,
+            now,
+        )
+    }
+
+    fun updateNotice(
+        id: String,
+        input: NoticeInput,
+    ): Notice {
+        requireUpdated(
+            jdbc
+                .sql(
+                    """
+                    update notice
+                    set address_id = :addressId, notice_type = :noticeType, title = :title,
+                        body = :body, priority = :priority, valid_from = :validFrom,
+                        valid_until = :validUntil
+                    where id = :id and tenant_id = :tenantId
+                    """.trimIndent(),
+                ).param("id", id)
+                .param("tenantId", input.tenantId)
+                .param("addressId", input.addressId)
+                .param("noticeType", input.noticeType.trim())
+                .param("title", input.title.trim())
+                .param("body", input.body.trim())
+                .param("priority", input.priority)
+                .param("validFrom", Timestamp.from(input.validFrom))
+                .param("validUntil", Timestamp.from(input.validUntil))
+                .update(),
+            id,
+        )
+        return Notice(
+            id,
+            input.tenantId,
+            input.addressId,
+            input.noticeType.trim(),
+            input.title.trim(),
+            input.body.trim(),
+            input.priority,
+            input.validFrom,
+            input.validUntil,
+        )
+    }
+
+    fun deleteContent(
+        table: String,
+        id: String,
+        tenantId: String,
+    ) {
+        val allowedTables = setOf("collection_event", "waste_guide_entry", "disposal_site", "notice")
+        require(table in allowedTables)
+        requireUpdated(
+            jdbc
+                .sql("delete from $table where id = :id and tenant_id = :tenantId")
+                .param("id", id)
+                .param("tenantId", tenantId)
+                .update(),
+            id,
+        )
+    }
+
+    private fun requireUpdated(
+        count: Int,
+        id: String,
+    ) {
+        if (count == 0) throw PilotNotFoundException("Der Eintrag $id ist nicht vorhanden.")
     }
 
     private fun mapAddress(
@@ -319,6 +533,8 @@ class ContentRepository(
         openingHours = rs.getString("opening_hours"),
         acceptedWasteTypes = splitValues(rs.getString("accepted_waste_types")),
         openNow = rs.getBoolean("open_now"),
+        latitude = rs.getDouble("latitude"),
+        longitude = rs.getDouble("longitude"),
         dataStatus = rs.getTimestamp("data_status").toInstant(),
     )
 
@@ -344,6 +560,7 @@ class ContentRepository(
 class ContentService(
     private val repository: ContentRepository,
     private val clock: Clock,
+    private val properties: WasteProperties,
 ) {
     private val collectionStatuses = setOf("planned", "moved", "cancelled", "additional")
     private val noticePriorities = setOf("info", "warning", "critical")
@@ -401,6 +618,26 @@ class ContentService(
         return repository.notices(tenantId, addressId, clock.instant())
     }
 
+    fun adminCollections(tenantId: String): List<CollectionEvent> {
+        validateTenant(tenantId)
+        return repository.allCollections(tenantId)
+    }
+
+    fun adminWasteGuide(tenantId: String): List<WasteGuideEntry> {
+        validateTenant(tenantId)
+        return repository.wasteGuideEntries(tenantId)
+    }
+
+    fun adminSites(tenantId: String): List<Site> {
+        validateTenant(tenantId)
+        return repository.sites(tenantId, null)
+    }
+
+    fun adminNotices(tenantId: String): List<Notice> {
+        validateTenant(tenantId)
+        return repository.allNotices(tenantId)
+    }
+
     @Transactional
     fun createCollection(input: CollectionInput): CollectionEvent {
         validateTenant(input.tenantId)
@@ -420,26 +657,97 @@ class ContentService(
     @Transactional
     fun createSite(input: SiteInput): Site {
         validateTenant(input.tenantId)
-        if (input.acceptedWasteTypes.none(String::isNotBlank)) {
-            throw PilotValidationException("Mindestens eine angenommene Abfallart ist erforderlich.")
-        }
+        validateSite(input)
         return repository.createSite(input)
     }
 
     @Transactional
     fun createNotice(input: NoticeInput): Notice {
         validateTenant(input.tenantId)
+        validateNotice(input)
+        return repository.createNotice(input)
+    }
+
+    private fun validateSite(input: SiteInput) {
+        if (input.acceptedWasteTypes.none(String::isNotBlank)) {
+            throw PilotValidationException("Mindestens eine angenommene Abfallart ist erforderlich.")
+        }
+        if (input.latitude !in -90.0..90.0 || input.longitude !in -180.0..180.0) {
+            throw PilotValidationException("Die Kartenkoordinaten liegen außerhalb des gültigen Bereichs.")
+        }
+    }
+
+    private fun validateNotice(input: NoticeInput) {
+        input.addressId?.let { validateAddress(input.tenantId, it) }
         if (input.priority !in noticePriorities) {
             throw PilotValidationException("Unbekannte Priorität: ${input.priority}")
         }
         if (!input.validUntil.isAfter(input.validFrom)) {
             throw PilotValidationException("Das Ende der Meldung muss nach dem Beginn liegen.")
         }
-        return repository.createNotice(input)
+    }
+
+    @Transactional
+    fun updateCollection(
+        id: String,
+        input: CollectionInput,
+    ): CollectionEvent {
+        validateTenant(input.tenantId)
+        validateAddress(input.tenantId, input.addressId)
+        if (input.status !in collectionStatuses) {
+            throw PilotValidationException("Unbekannter Terminstatus: ${input.status}")
+        }
+        return repository.updateCollection(id, input)
+    }
+
+    @Transactional
+    fun updateWasteGuideEntry(
+        id: String,
+        input: WasteGuideInput,
+    ): WasteGuideEntry {
+        validateTenant(input.tenantId)
+        return repository.updateWasteGuideEntry(id, input)
+    }
+
+    @Transactional
+    fun updateSite(
+        id: String,
+        input: SiteInput,
+    ): Site {
+        validateTenant(input.tenantId)
+        validateSite(input)
+        return repository.updateSite(id, input)
+    }
+
+    @Transactional
+    fun updateNotice(
+        id: String,
+        input: NoticeInput,
+    ): Notice {
+        validateTenant(input.tenantId)
+        validateNotice(input)
+        return repository.updateNotice(id, input)
+    }
+
+    @Transactional
+    fun deleteContent(
+        resource: String,
+        id: String,
+        tenantId: String,
+    ) {
+        validateTenant(tenantId)
+        val table =
+            mapOf(
+                "collections" to "collection_event",
+                "waste-guide" to "waste_guide_entry",
+                "sites" to "disposal_site",
+                "notices" to "notice",
+            )[resource] ?: throw PilotValidationException("Unbekannter Inhaltstyp: $resource")
+        repository.deleteContent(table, id, tenantId)
     }
 
     private fun validateTenant(tenantId: String) {
-        if (tenantId != "demo") {
+        if (tenantId !in properties.tenants) {
             throw PilotNotFoundException("Der Pilotmandant '$tenantId' ist nicht vorhanden.")
         }
     }

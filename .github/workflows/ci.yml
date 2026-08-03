@@ -22,8 +22,14 @@ jobs:
     env:
       CI: "true"
       GRADLE_OPTS: -Dorg.gradle.daemon=false
+      MAILPIT_EXTERNAL_URL: http://127.0.0.1:18025
       POSTGRES_EXTERNAL_URL: jdbc:postgresql://127.0.0.1:55432/waste_app
     services:
+      mailpit:
+        image: axllent/mailpit:v1.30.6@sha256:7f33095f80e901f6ad08028f06ca284aa58fe84942be5496008d041d3b9f4d4d
+        ports:
+          - 11025:1025
+          - 18025:8025
       postgres:
         image: postgres:17.10
         env:

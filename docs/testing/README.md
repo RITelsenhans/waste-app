@@ -1,7 +1,8 @@
 # Teststruktur
 
 - `apps/web/tests`: TypeScript-Unit- und Basiskomponententests mit Vitest sowie
-  Browserwege unter `apps/web/tests/browser` mit Playwright.
+  Browserwege unter `apps/web/tests/browser` und die isolierte Codespaces-Anmeldung
+  unter `apps/web/tests/demo-auth-browser` mit Playwright.
 - `packages/api-client/tests`: Vertragstyp-, Request- und Fehlerabbildungstests für den generierten Client.
 - `packages/design-tokens/tests`: Driftprüfung zwischen JSON-Quelle und generiertem CSS.
 - `packages/ui/tests`: serverseitige Markup- und Semantiktests für UI-Zustände.
@@ -27,6 +28,9 @@ pnpm test:visual
 ```
 
 `pnpm test:browser` führt die gesamte Browserbaseline aus und wird in CI verwendet.
+Sie enthält zusätzlich Anmeldung, Abmeldung, Cookie-Manipulation/-Ablauf,
+gleichursprünglichen API-Zugriff, deaktivierte Pflege und die Accessibility-Prüfung der
+Anmeldeseite. Nur diesen Teil führt `pnpm test:demo-auth` aus.
 
 Vertragsprüfungen:
 

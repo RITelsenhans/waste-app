@@ -100,3 +100,23 @@ test("Dependabot coordinates Kotlin plugins and defers incompatible version upda
     );
   }
 });
+
+test("Codespaces shares only the protected web port and pins its data service", async () => {
+  const configuration = JSON.parse(await readRepositoryFile(".devcontainer/devcontainer.json"));
+  const compose = await readRepositoryFile(".devcontainer/compose.yml");
+  const packageManifest = JSON.parse(await readRepositoryFile("package.json"));
+
+  assert.deepEqual(configuration.forwardPorts, [3000]);
+  for (const port of ["3001", "8080", "55432", "8025"]) {
+    assert.equal(configuration.portsAttributes[port].onAutoForward, "ignore");
+  }
+  assert.doesNotMatch(compose, /^\s+ports:/m);
+  assert.match(compose, /postgres:17\.10-bookworm@sha256:[0-9a-f]{64}/);
+  assert.equal(packageManifest.scripts["dev:codespace"], "node tooling/scripts/codespace-dev.mjs");
+});
+
+test("CI uses a digest-pinned Mailpit service for the existing mail browser test", async () => {
+  const workflow = await readRepositoryFile(".github/workflows/ci.yml");
+  assert.match(workflow, /axllent\/mailpit:v1\.30\.6@sha256:[0-9a-f]{64}/);
+  assert.match(workflow, /MAILPIT_EXTERNAL_URL: http:\/\/127\.0\.0\.1:18025/);
+});

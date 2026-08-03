@@ -50,6 +50,32 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /v1/tenants:
+    get:
+      operationId: getMunicipalities
+      summary: Listet alle öffentlich auswählbaren teilnehmenden Kommunen.
+      tags: [Tenants]
+      responses:
+        "200":
+          description: Alphabetische Kommunenliste.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MunicipalitySummary"
+        "503":
+          description: Kommunenverzeichnis ist vorübergehend nicht verfügbar.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          description: Zu viele Anfragen.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /v1/tenants/{tenantKey}/config:
     get:
       operationId: getTenantConfig
@@ -196,6 +222,20 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/collections:
+    get:
+      operationId: getAdminCollections
+      summary: Listet alle synthetischen Abholtermine zur Pflege.
+      tags: [Admin]
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200":
+          description: Vollständige Terminliste.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CollectionEvent" }
+        "400": { $ref: "#/components/responses/BadRequest" }
     post:
       operationId: createCollection
       summary: Legt einen synthetischen Abholtermin an.
@@ -215,7 +255,65 @@ paths:
                 $ref: "#/components/schemas/CollectionEvent"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /v1/admin/tenants/{tenantKey}:
+    get:
+      operationId: getAdminMunicipalityCustomization
+      summary: Lädt das kommunale Customizing zur Pflege.
+      tags: [Admin]
+      parameters:
+        - name: tenantKey
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Kommunales Customizing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MunicipalityCustomization"
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      operationId: updateAdminMunicipalityCustomization
+      summary: Aktualisiert Namen, Kontaktwege und Farben einer Kommune.
+      tags: [Admin]
+      parameters:
+        - name: tenantKey
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MunicipalityCustomizationInput"
+      responses:
+        "200":
+          description: Aktualisiertes kommunales Customizing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MunicipalityCustomization"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/waste-guide:
+    get:
+      operationId: getAdminWasteGuide
+      summary: Listet alle synthetischen ABC-Einträge zur Pflege.
+      tags: [Admin]
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200":
+          description: Vollständiges Abfall-ABC.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/WasteGuideEntry" }
+        "400": { $ref: "#/components/responses/BadRequest" }
     post:
       operationId: createWasteGuideEntry
       summary: Legt einen synthetischen ABC-Eintrag an.
@@ -236,6 +334,20 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/sites:
+    get:
+      operationId: getAdminSites
+      summary: Listet alle synthetischen Standorte zur Pflege.
+      tags: [Admin]
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200":
+          description: Vollständige Standortliste.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Site" }
+        "400": { $ref: "#/components/responses/BadRequest" }
     post:
       operationId: createSite
       summary: Legt einen synthetischen Entsorgungsstandort an.
@@ -256,6 +368,20 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/notices:
+    get:
+      operationId: getAdminNotices
+      summary: Listet aktive, künftige und abgelaufene Hinweise zur Pflege.
+      tags: [Admin]
+      parameters: [{ $ref: "#/components/parameters/TenantId" }]
+      responses:
+        "200":
+          description: Vollständige Hinweisliste.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notice" }
+        "400": { $ref: "#/components/responses/BadRequest" }
     post:
       operationId: createNotice
       summary: Legt eine synthetische Meldung an.
@@ -275,6 +401,122 @@ paths:
                 $ref: "#/components/schemas/Notice"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /v1/admin/collections/{id}:
+    put:
+      operationId: updateCollection
+      summary: Korrigiert einen synthetischen Abholtermin.
+      tags: [Admin]
+      parameters: [{ $ref: "#/components/parameters/ContentId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CollectionInput" }
+      responses:
+        "200":
+          description: Aktualisierter Termin.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CollectionEvent" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: deleteCollection
+      summary: Löscht einen synthetischen Abholtermin.
+      tags: [Admin]
+      parameters:
+        - { $ref: "#/components/parameters/ContentId" }
+        - { $ref: "#/components/parameters/TenantId" }
+      responses:
+        "204": { description: Termin gelöscht. }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/admin/waste-guide/{id}:
+    put:
+      operationId: updateWasteGuideEntry
+      summary: Korrigiert einen synthetischen ABC-Eintrag.
+      tags: [Admin]
+      parameters: [{ $ref: "#/components/parameters/ContentId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/WasteGuideInput" }
+      responses:
+        "200":
+          description: Aktualisierter ABC-Eintrag.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WasteGuideEntry" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: deleteWasteGuideEntry
+      summary: Löscht einen synthetischen ABC-Eintrag.
+      tags: [Admin]
+      parameters:
+        - { $ref: "#/components/parameters/ContentId" }
+        - { $ref: "#/components/parameters/TenantId" }
+      responses:
+        "204": { description: ABC-Eintrag gelöscht. }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/admin/sites/{id}:
+    put:
+      operationId: updateSite
+      summary: Korrigiert einen synthetischen Standort.
+      tags: [Admin]
+      parameters: [{ $ref: "#/components/parameters/ContentId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SiteInput" }
+      responses:
+        "200":
+          description: Aktualisierter Standort.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Site" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: deleteSite
+      summary: Löscht einen synthetischen Standort.
+      tags: [Admin]
+      parameters:
+        - { $ref: "#/components/parameters/ContentId" }
+        - { $ref: "#/components/parameters/TenantId" }
+      responses:
+        "204": { description: Standort gelöscht. }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /v1/admin/notices/{id}:
+    put:
+      operationId: updateNotice
+      summary: Korrigiert einen synthetischen Hinweis.
+      tags: [Admin]
+      parameters: [{ $ref: "#/components/parameters/ContentId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NoticeInput" }
+      responses:
+        "200":
+          description: Aktualisierter Hinweis.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Notice" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: deleteNotice
+      summary: Löscht einen synthetischen Hinweis.
+      tags: [Admin]
+      parameters:
+        - { $ref: "#/components/parameters/ContentId" }
+        - { $ref: "#/components/parameters/TenantId" }
+      responses:
+        "204": { description: Hinweis gelöscht. }
+        "404": { $ref: "#/components/responses/NotFound" }
   /v1/cases/defects:
     post:
       operationId: createDefectCase
@@ -438,6 +680,12 @@ paths:
           $ref: "#/components/responses/NotFound"
 components:
   parameters:
+    ContentId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
     TenantId:
       name: tenantId
       in: query
@@ -535,8 +783,25 @@ components:
       required:
         - label
         - email
+        - phone
       properties:
         label:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+    ServiceArea:
+      type: object
+      additionalProperties: false
+      required: [city, reportingOffice, phone, email]
+      properties:
+        city:
+          type: string
+        reportingOffice:
+          type: string
+        phone:
           type: string
         email:
           type: string
@@ -553,6 +818,7 @@ components:
         - locales
         - enabledFeatures
         - legalLinks
+        - serviceArea
         - supportContacts
         - contentVersion
       properties:
@@ -577,12 +843,44 @@ components:
             type: boolean
         legalLinks:
           $ref: "#/components/schemas/LegalLinks"
+        serviceArea:
+          $ref: "#/components/schemas/ServiceArea"
         supportContacts:
           type: array
           items:
             $ref: "#/components/schemas/SupportContact"
         contentVersion:
           type: string
+    MunicipalityCustomizationInput:
+      type: object
+      additionalProperties: false
+      required: [name, shortName, city, reportingOffice, phone, email, primaryColor, infoColor]
+      properties:
+        name: { type: string, minLength: 1 }
+        shortName: { type: string, minLength: 1 }
+        city: { type: string, minLength: 1 }
+        reportingOffice: { type: string, minLength: 1 }
+        phone: { type: string, minLength: 1 }
+        email: { type: string, format: email }
+        primaryColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+        infoColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+    MunicipalityCustomization:
+      allOf:
+        - $ref: "#/components/schemas/MunicipalityCustomizationInput"
+        - type: object
+          required: [tenantId]
+          properties:
+            tenantId: { type: string }
+    MunicipalitySummary:
+      type: object
+      additionalProperties: false
+      required: [tenantId, name, shortName, city, primaryColor]
+      properties:
+        tenantId: { type: string }
+        name: { type: string }
+        shortName: { type: string }
+        city: { type: string }
+        primaryColor: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
     Address:
       type: object
       additionalProperties: false
@@ -723,6 +1021,8 @@ components:
           openingHours,
           acceptedWasteTypes,
           openNow,
+          latitude,
+          longitude,
           dataStatus,
         ]
       properties:
@@ -744,13 +1044,34 @@ components:
             type: string
         openNow:
           type: boolean
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
         dataStatus:
           type: string
           format: date-time
     SiteInput:
       type: object
       additionalProperties: false
-      required: [tenantId, name, siteType, address, openingHours, acceptedWasteTypes, openNow]
+      required:
+        [
+          tenantId,
+          name,
+          siteType,
+          address,
+          openingHours,
+          acceptedWasteTypes,
+          openNow,
+          latitude,
+          longitude,
+        ]
       properties:
         tenantId:
           type: string
@@ -770,6 +1091,16 @@ components:
             type: string
         openNow:
           type: boolean
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
     NoticePriority:
       type: string
       enum: [info, warning, critical]

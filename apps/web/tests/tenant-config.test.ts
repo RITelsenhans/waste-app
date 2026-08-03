@@ -22,6 +22,12 @@ describe("getTenantConfig", () => {
           locales: ["de-DE"],
           enabledFeatures: { home: true },
           legalLinks: { imprint: "#", privacy: "#", accessibility: "#" },
+          serviceArea: {
+            city: "Demo-Stadt",
+            reportingOffice: "Bürgerservice Abfall",
+            phone: "0241 000000",
+            email: "abfall@example.invalid",
+          },
           supportContacts: [],
           contentVersion: "test",
         }),

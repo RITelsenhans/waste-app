@@ -66,6 +66,8 @@ data class Site(
     val openingHours: String,
     val acceptedWasteTypes: List<String>,
     val openNow: Boolean,
+    val latitude: Double,
+    val longitude: Double,
     val dataStatus: Instant,
 )
 
@@ -77,6 +79,8 @@ data class SiteInput(
     @field:NotBlank val openingHours: String,
     @field:Size(min = 1) val acceptedWasteTypes: List<String>,
     val openNow: Boolean,
+    val latitude: Double,
+    val longitude: Double,
 )
 
 data class Notice(

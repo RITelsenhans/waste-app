@@ -51,6 +51,13 @@
   box-shadow: none;
 }
 
+.waste-icon {
+  block-size: 1.4em;
+  display: block;
+  flex: 0 0 auto;
+  inline-size: 1.4em;
+}
+
 .waste-status-badge {
   align-items: center;
   color: var(--text-muted);

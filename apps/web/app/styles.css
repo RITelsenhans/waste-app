@@ -14,6 +14,7 @@ body {
   font-family: var(--typography-family-sans);
   font-size: var(--typography-size-base);
   line-height: var(--typography-line-height-body);
+  overflow-x: clip;
 }
 
 a {
@@ -65,6 +66,12 @@ button:hover,
   max-width: 44rem;
 }
 
+.search-hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0.6rem 0 0;
+}
+
 .search-form label,
 .pilot-form label {
   display: grid;
@@ -87,6 +94,11 @@ textarea {
   width: 100%;
 }
 
+select {
+  max-width: 100%;
+  text-overflow: ellipsis;
+}
+
 input[type="file"] {
   overflow: hidden;
 }
@@ -101,6 +113,51 @@ textarea {
   flex-wrap: wrap;
   gap: 0.7rem;
   margin-top: 1rem;
+}
+
+.address-results {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  margin-top: 1rem;
+  max-width: 55rem;
+  padding: 1rem;
+}
+
+.address-results:focus {
+  outline: var(--focus-width) solid var(--focus-color);
+  outline-offset: var(--focus-offset);
+}
+
+.address-results__head {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.address-results__head h3 {
+  margin: 0;
+}
+
+.address-results__head button {
+  background: transparent;
+  color: var(--tenant-primary);
+  min-height: 2.5rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.result-button {
+  align-items: center;
+  gap: 0.45rem;
+  text-align: left;
+}
+
+.result-button .waste-icon {
+  flex: 0 0 1.1rem;
+  height: 1.1rem;
+  width: 1.1rem;
 }
 
 .result-button {
@@ -135,6 +192,16 @@ textarea {
 .pilot-form {
   display: grid;
   gap: 1rem;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(1.1rem, 4vw, 2rem);
+}
+
+.pilot-form > *,
+.pilot-form label > * {
+  max-width: 100%;
   min-width: 0;
 }
 
@@ -152,6 +219,19 @@ textarea {
 
 .confirmation {
   background: #e6f5ed;
+}
+
+.mail-confirmation {
+  background: white;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  max-width: 48rem;
+  padding: 0.9rem 1rem;
+}
+
+.mail-confirmation a {
+  color: var(--tenant-primary);
+  font-weight: var(--typography-weight-bold);
 }
 
 h1,
@@ -223,9 +303,9 @@ h3 {
 .header-inner {
   align-items: center;
   display: grid;
-  gap: clamp(1rem, 3vw, 2.5rem);
-  grid-template-columns: auto 1fr auto;
-  min-height: 5rem;
+  column-gap: clamp(1rem, 3vw, 2.5rem);
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-top: 0.75rem;
 }
 
 .header-inner > *,
@@ -239,6 +319,18 @@ h3 {
 .brand-link {
   align-items: center;
   display: inline-flex;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.municipality-name {
+  border-left: 1px solid var(--border-default);
+  color: var(--text-strong);
+  font-size: 0.9rem;
+  font-weight: var(--typography-weight-bold);
+  line-height: 1.15;
+  max-width: 8rem;
+  padding-left: 0.75rem;
 }
 
 .brand-logo {
@@ -248,15 +340,21 @@ h3 {
 
 .desktop-nav {
   align-items: center;
+  border-top: 1px solid var(--border-default);
   display: flex;
-  gap: clamp(0.8rem, 2.2vw, 1.75rem);
+  gap: clamp(0.35rem, 1.5vw, 1rem);
+  grid-column: 1 / -1;
   justify-content: center;
+  margin-top: 0.7rem;
+  min-height: 3.2rem;
+  width: 100%;
 }
 
 .desktop-nav a {
+  border-radius: var(--radius-pill);
   font-size: 0.94rem;
   font-weight: var(--typography-weight-semibold);
-  padding-block: 1.75rem;
+  padding: 0.55rem clamp(0.75rem, 1.8vw, 1.25rem);
   text-decoration: none;
 }
 
@@ -266,7 +364,37 @@ h3 {
 }
 
 .desktop-nav a[aria-current="page"] {
-  box-shadow: inset 0 -3px 0 var(--tenant-primary);
+  background: color-mix(in srgb, var(--tenant-primary) 9%, white);
+}
+
+.header-context {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.municipality-switcher {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.municipality-switcher small {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.municipality-switcher select {
+  border-radius: var(--radius-pill);
+  font-size: 0.86rem;
+  font-weight: 700;
+  max-width: 12rem;
+  min-height: 2.45rem;
+  padding-block: 0.35rem;
+  text-overflow: ellipsis;
 }
 
 .address-label {
@@ -352,6 +480,15 @@ h3 {
   position: absolute;
   right: -4rem;
   top: 5.5rem;
+}
+
+.collection-hero__icon {
+  bottom: 1.5rem;
+  color: rgb(255 255 255 / 7%);
+  height: min(18rem, 48vw);
+  position: absolute;
+  right: 1.5rem;
+  width: min(18rem, 48vw);
 }
 
 .collection-hero__topline {
@@ -450,12 +587,11 @@ h3 {
   border-radius: var(--radius-control);
   color: var(--accent-info-strong);
   display: inline-flex;
-  font-size: 0.7rem;
+  font-size: 1.15rem;
   font-weight: 800;
   grid-row: 1 / 3;
   justify-content: center;
   min-height: 2.75rem;
-  text-transform: uppercase;
 }
 
 .quick-actions nav a small {
@@ -464,6 +600,25 @@ h3 {
 
 .home-section {
   padding-block: clamp(2.5rem, 6vw, 5rem);
+}
+
+.section-title {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.section-title > span {
+  align-items: center;
+  background: #dff4f3;
+  border-radius: var(--radius-control);
+  color: var(--accent-info-strong);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 1.3rem;
+  height: 2.6rem;
+  justify-content: center;
+  width: 2.6rem;
 }
 
 .home-section + .home-section {
@@ -488,6 +643,156 @@ h3 {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(3, 1fr);
+}
+
+.calendar-disclosure {
+  align-items: center;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+}
+
+.calendar-disclosure p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.calendar-toggle {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+}
+
+.calendar-toggle .waste-icon {
+  height: 1.15rem;
+  width: 1.15rem;
+}
+
+.quarter-calendar {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1.25rem;
+}
+
+.calendar-month {
+  background: white;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.calendar-month h3 {
+  background: var(--text-strong);
+  color: white;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0.75rem;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  padding: 0.45rem;
+}
+
+.calendar-weekday {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.35rem 0.1rem;
+  text-align: center;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.76rem;
+  justify-content: flex-start;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.25rem;
+}
+
+.calendar-day.has-events {
+  background: color-mix(in srgb, var(--tenant-info) 10%, white);
+  border-color: color-mix(in srgb, var(--tenant-info) 42%, white);
+  font-weight: 800;
+}
+
+.calendar-event {
+  background: var(--tenant-info);
+  border-radius: 0.25rem;
+  color: white;
+  display: block;
+  font-size: 0.56rem;
+  line-height: 1.15;
+  margin-top: 0.12rem;
+  overflow: hidden;
+  padding: 0.15rem;
+  text-overflow: ellipsis;
+}
+
+.calendar-event.is-moved,
+.calendar-event.is-cancelled {
+  background: #8a5a00;
+}
+
+.calendar-agenda {
+  border-top: 1px solid var(--border-default);
+  display: grid;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0.75rem 0.75rem;
+}
+
+.calendar-agenda li {
+  align-items: baseline;
+  border-bottom: 1px solid var(--border-default);
+  display: grid;
+  gap: 0.1rem 0.5rem;
+  grid-template-columns: minmax(6.6rem, auto) 1fr;
+  padding: 0.45rem 0;
+}
+
+.calendar-agenda li:last-child {
+  border-bottom: 0;
+}
+
+.calendar-agenda time,
+.calendar-agenda small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.calendar-agenda strong {
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.calendar-agenda small {
+  grid-column: 2;
+}
+
+.calendar-agenda .is-empty {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.78rem;
+  text-align: center;
 }
 
 .collection-card {
@@ -528,6 +833,38 @@ h3 {
 .notice-card,
 .guide-card {
   padding: clamp(1.35rem, 4vw, 2.25rem);
+}
+
+.updates-card {
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(1.35rem, 4vw, 2.25rem);
+}
+
+.updates-card__head {
+  align-items: start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.updates-card article {
+  border-top: 1px solid var(--border-default);
+  overflow-wrap: anywhere;
+  padding-top: 1rem;
+}
+
+.refresh-button {
+  background: white;
+  border: 1px solid var(--tenant-primary);
+  color: var(--tenant-primary);
+  flex: 0 0 auto;
+}
+
+.updated-at {
+  color: var(--text-muted);
+  display: block;
+  margin-top: 1rem;
 }
 
 .notice-card {
@@ -581,12 +918,84 @@ h3 {
   gap: 0.75rem;
 }
 
+.site-explorer {
+  align-items: start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
+}
+
+.map-panel {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+  overflow: hidden;
+  position: sticky;
+  top: 7rem;
+}
+
+.site-map {
+  background: var(--surface-subtle);
+  border: 0;
+  display: block;
+  height: clamp(22rem, 48vw, 34rem);
+  width: 100%;
+}
+
+.site-map--empty {
+  display: grid;
+  place-items: center;
+}
+
+.map-panel__footer {
+  align-items: center;
+  display: flex;
+  font-size: 0.82rem;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+}
+
+.map-panel__footer span,
+.map-panel__footer a,
+.map-select {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.map-panel__footer span {
+  color: var(--text-muted);
+}
+
+.map-panel__footer a {
+  color: var(--tenant-primary);
+  font-weight: var(--typography-weight-bold);
+  text-decoration: none;
+}
+
+.map-panel__footer .waste-icon,
+.map-select .waste-icon {
+  height: 1rem;
+  width: 1rem;
+}
+
 .site-card {
   align-items: center;
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   padding: 1rem 1.25rem;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.site-card.is-selected {
+  border-color: var(--tenant-info);
+  box-shadow: inset 0 0 0 1px var(--tenant-info);
 }
 
 .site-card__marker {
@@ -610,6 +1019,21 @@ h3 {
 
 .site-card p {
   color: var(--text-muted);
+}
+
+.map-select {
+  background: transparent;
+  color: var(--tenant-primary);
+  font-size: 0.88rem;
+  justify-content: start;
+  margin-top: 0.45rem;
+  min-height: 2.25rem;
+  padding: 0;
+}
+
+.map-select:hover {
+  filter: none;
+  text-decoration: underline;
 }
 
 .site-card > strong {
@@ -640,6 +1064,61 @@ h3 {
   background: var(--text-strong);
   color: var(--text-inverse);
   padding-block: 2.5rem;
+}
+
+.municipality-chooser {
+  align-items: center;
+  background:
+    radial-gradient(circle at 90% 10%, rgb(0 143 140 / 12%), transparent 28rem), var(--surface-page);
+  display: flex;
+  min-height: 100vh;
+  padding: clamp(1rem, 5vw, 4rem);
+}
+
+.municipality-chooser > div {
+  margin-inline: auto;
+  max-width: 64rem;
+  width: 100%;
+}
+
+.municipality-chooser h1 {
+  font-size: clamp(2.2rem, 6vw, 4.8rem);
+  line-height: 1;
+  max-width: 13ch;
+}
+
+.municipality-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  margin-top: 2rem;
+}
+
+.municipality-grid a {
+  background: white;
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-card);
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow: hidden;
+  padding: 1.25rem;
+  text-decoration: none;
+}
+
+.municipality-grid a > span {
+  border-radius: var(--radius-pill);
+  height: 0.45rem;
+  margin-bottom: 0.75rem;
+  width: 3rem;
+}
+
+.municipality-grid strong {
+  font-size: 1.2rem;
+}
+
+.municipality-grid small {
+  color: var(--text-muted);
 }
 
 .footer-inner {
@@ -699,6 +1178,15 @@ h3 {
   .home-hero {
     grid-template-columns: minmax(0, 1.2fr) minmax(17rem, 0.8fr);
   }
+
+  .quarter-calendar {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-day {
+    aspect-ratio: auto;
+    min-height: 4.2rem;
+  }
 }
 
 @media (max-width: 48rem) {
@@ -715,8 +1203,20 @@ h3 {
     min-height: 4.25rem;
   }
 
+  .header-context {
+    gap: 0.35rem;
+  }
+
+  .municipality-switcher select {
+    max-width: min(10.5rem, 42vw);
+  }
+
   .brand-logo {
     width: 7.2rem;
+  }
+
+  .municipality-name {
+    display: none;
   }
 
   .desktop-nav {
@@ -730,13 +1230,28 @@ h3 {
   .home-hero,
   .split-section,
   .feedback-section,
-  .form-grid {
+  .form-grid,
+  .site-explorer {
     grid-template-columns: 1fr;
+  }
+
+  .map-panel {
+    position: static;
   }
 
   .search-form {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .calendar-disclosure {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .calendar-toggle {
+    justify-content: center;
+    width: 100%;
   }
 
   .collection-hero {
@@ -779,7 +1294,7 @@ h3 {
 
   .mobile-nav a {
     align-items: center;
-    display: flex;
+    display: grid;
     font-size: 0.72rem;
     font-weight: var(--typography-weight-semibold);
     justify-content: center;
@@ -787,6 +1302,12 @@ h3 {
     padding: 0.35rem 0.15rem;
     text-align: center;
     text-decoration: none;
+  }
+
+  .mobile-nav .waste-icon {
+    height: 1.25rem;
+    margin-inline: auto;
+    width: 1.25rem;
   }
 
   .mobile-nav a[aria-current="page"] {
@@ -811,6 +1332,10 @@ h3 {
     padding-inline: 0.65rem;
   }
 
+  .address-label {
+    display: none;
+  }
+
   .address-label > span:last-child {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -833,11 +1358,26 @@ h3 {
 
   .site-card {
     align-items: start;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .site-card .waste-status-badge {
+    grid-column: 2;
     justify-self: start;
+  }
+
+  .map-panel__footer {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .updates-card__head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .refresh-button {
+    align-self: start;
   }
 }
 

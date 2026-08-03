@@ -21,9 +21,36 @@ import type {
   CreateWasteGuideEntryData,
   CreateWasteGuideEntryErrors,
   CreateWasteGuideEntryResponses,
+  DeleteCollectionData,
+  DeleteCollectionErrors,
+  DeleteCollectionResponses,
+  DeleteNoticeData,
+  DeleteNoticeErrors,
+  DeleteNoticeResponses,
+  DeleteSiteData,
+  DeleteSiteErrors,
+  DeleteSiteResponses,
+  DeleteWasteGuideEntryData,
+  DeleteWasteGuideEntryErrors,
+  DeleteWasteGuideEntryResponses,
   GetAdminCasesData,
   GetAdminCasesErrors,
   GetAdminCasesResponses,
+  GetAdminCollectionsData,
+  GetAdminCollectionsErrors,
+  GetAdminCollectionsResponses,
+  GetAdminMunicipalityCustomizationData,
+  GetAdminMunicipalityCustomizationErrors,
+  GetAdminMunicipalityCustomizationResponses,
+  GetAdminNoticesData,
+  GetAdminNoticesErrors,
+  GetAdminNoticesResponses,
+  GetAdminSitesData,
+  GetAdminSitesErrors,
+  GetAdminSitesResponses,
+  GetAdminWasteGuideData,
+  GetAdminWasteGuideErrors,
+  GetAdminWasteGuideResponses,
   GetBulkWasteRulesData,
   GetBulkWasteRulesErrors,
   GetBulkWasteRulesResponses,
@@ -36,6 +63,9 @@ import type {
   GetCollectionsData,
   GetCollectionsErrors,
   GetCollectionsResponses,
+  GetMunicipalitiesData,
+  GetMunicipalitiesErrors,
+  GetMunicipalitiesResponses,
   GetNoticesData,
   GetNoticesErrors,
   GetNoticesResponses,
@@ -54,9 +84,24 @@ import type {
   SearchWasteGuideData,
   SearchWasteGuideErrors,
   SearchWasteGuideResponses,
+  UpdateAdminMunicipalityCustomizationData,
+  UpdateAdminMunicipalityCustomizationErrors,
+  UpdateAdminMunicipalityCustomizationResponses,
   UpdateCaseStatusData,
   UpdateCaseStatusErrors,
   UpdateCaseStatusResponses,
+  UpdateCollectionData,
+  UpdateCollectionErrors,
+  UpdateCollectionResponses,
+  UpdateNoticeData,
+  UpdateNoticeErrors,
+  UpdateNoticeResponses,
+  UpdateSiteData,
+  UpdateSiteErrors,
+  UpdateSiteResponses,
+  UpdateWasteGuideEntryData,
+  UpdateWasteGuideEntryErrors,
+  UpdateWasteGuideEntryResponses,
 } from "./types.gen";
 
 export type Options<
@@ -87,6 +132,18 @@ export const getReadiness = <ThrowOnError extends boolean = false>(
     url: "/v1/health/ready",
     ...options,
   });
+
+/**
+ * Listet alle öffentlich auswählbaren teilnehmenden Kommunen.
+ */
+export const getMunicipalities = <ThrowOnError extends boolean = false>(
+  options?: Options<GetMunicipalitiesData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<
+    GetMunicipalitiesResponses,
+    GetMunicipalitiesErrors,
+    ThrowOnError
+  >({ url: "/v1/tenants", ...options });
 
 /**
  * Liefert die öffentliche Laufzeitkonfiguration eines Mandanten.
@@ -155,6 +212,18 @@ export const getNotices = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Listet alle synthetischen Abholtermine zur Pflege.
+ */
+export const getAdminCollections = <ThrowOnError extends boolean = false>(
+  options: Options<GetAdminCollectionsData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<
+    GetAdminCollectionsResponses,
+    GetAdminCollectionsErrors,
+    ThrowOnError
+  >({ url: "/v1/admin/collections", ...options });
+
+/**
  * Legt einen synthetischen Abholtermin an.
  */
 export const createCollection = <ThrowOnError extends boolean = false>(
@@ -168,6 +237,49 @@ export const createCollection = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   });
+
+/**
+ * Lädt das kommunale Customizing zur Pflege.
+ */
+export const getAdminMunicipalityCustomization = <ThrowOnError extends boolean = false>(
+  options: Options<GetAdminMunicipalityCustomizationData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<
+    GetAdminMunicipalityCustomizationResponses,
+    GetAdminMunicipalityCustomizationErrors,
+    ThrowOnError
+  >({ url: "/v1/admin/tenants/{tenantKey}", ...options });
+
+/**
+ * Aktualisiert Namen, Kontaktwege und Farben einer Kommune.
+ */
+export const updateAdminMunicipalityCustomization = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateAdminMunicipalityCustomizationData, ThrowOnError>,
+) =>
+  (options.client ?? client).put<
+    UpdateAdminMunicipalityCustomizationResponses,
+    UpdateAdminMunicipalityCustomizationErrors,
+    ThrowOnError
+  >({
+    url: "/v1/admin/tenants/{tenantKey}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Listet alle synthetischen ABC-Einträge zur Pflege.
+ */
+export const getAdminWasteGuide = <ThrowOnError extends boolean = false>(
+  options: Options<GetAdminWasteGuideData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<
+    GetAdminWasteGuideResponses,
+    GetAdminWasteGuideErrors,
+    ThrowOnError
+  >({ url: "/v1/admin/waste-guide", ...options });
 
 /**
  * Legt einen synthetischen ABC-Eintrag an.
@@ -189,6 +301,17 @@ export const createWasteGuideEntry = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Listet alle synthetischen Standorte zur Pflege.
+ */
+export const getAdminSites = <ThrowOnError extends boolean = false>(
+  options: Options<GetAdminSitesData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetAdminSitesResponses, GetAdminSitesErrors, ThrowOnError>({
+    url: "/v1/admin/sites",
+    ...options,
+  });
+
+/**
  * Legt einen synthetischen Entsorgungsstandort an.
  */
 export const createSite = <ThrowOnError extends boolean = false>(
@@ -204,6 +327,17 @@ export const createSite = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Listet aktive, künftige und abgelaufene Hinweise zur Pflege.
+ */
+export const getAdminNotices = <ThrowOnError extends boolean = false>(
+  options: Options<GetAdminNoticesData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<GetAdminNoticesResponses, GetAdminNoticesErrors, ThrowOnError>({
+    url: "/v1/admin/notices",
+    ...options,
+  });
+
+/**
  * Legt eine synthetische Meldung an.
  */
 export const createNotice = <ThrowOnError extends boolean = false>(
@@ -211,6 +345,116 @@ export const createNotice = <ThrowOnError extends boolean = false>(
 ) =>
   (options.client ?? client).post<CreateNoticeResponses, CreateNoticeErrors, ThrowOnError>({
     url: "/v1/admin/notices",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Löscht einen synthetischen Abholtermin.
+ */
+export const deleteCollection = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteCollectionData, ThrowOnError>,
+) =>
+  (options.client ?? client).delete<
+    DeleteCollectionResponses,
+    DeleteCollectionErrors,
+    ThrowOnError
+  >({ url: "/v1/admin/collections/{id}", ...options });
+
+/**
+ * Korrigiert einen synthetischen Abholtermin.
+ */
+export const updateCollection = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateCollectionData, ThrowOnError>,
+) =>
+  (options.client ?? client).put<UpdateCollectionResponses, UpdateCollectionErrors, ThrowOnError>({
+    url: "/v1/admin/collections/{id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Löscht einen synthetischen ABC-Eintrag.
+ */
+export const deleteWasteGuideEntry = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteWasteGuideEntryData, ThrowOnError>,
+) =>
+  (options.client ?? client).delete<
+    DeleteWasteGuideEntryResponses,
+    DeleteWasteGuideEntryErrors,
+    ThrowOnError
+  >({ url: "/v1/admin/waste-guide/{id}", ...options });
+
+/**
+ * Korrigiert einen synthetischen ABC-Eintrag.
+ */
+export const updateWasteGuideEntry = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateWasteGuideEntryData, ThrowOnError>,
+) =>
+  (options.client ?? client).put<
+    UpdateWasteGuideEntryResponses,
+    UpdateWasteGuideEntryErrors,
+    ThrowOnError
+  >({
+    url: "/v1/admin/waste-guide/{id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Löscht einen synthetischen Standort.
+ */
+export const deleteSite = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteSiteData, ThrowOnError>,
+) =>
+  (options.client ?? client).delete<DeleteSiteResponses, DeleteSiteErrors, ThrowOnError>({
+    url: "/v1/admin/sites/{id}",
+    ...options,
+  });
+
+/**
+ * Korrigiert einen synthetischen Standort.
+ */
+export const updateSite = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateSiteData, ThrowOnError>,
+) =>
+  (options.client ?? client).put<UpdateSiteResponses, UpdateSiteErrors, ThrowOnError>({
+    url: "/v1/admin/sites/{id}",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Löscht einen synthetischen Hinweis.
+ */
+export const deleteNotice = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteNoticeData, ThrowOnError>,
+) =>
+  (options.client ?? client).delete<DeleteNoticeResponses, DeleteNoticeErrors, ThrowOnError>({
+    url: "/v1/admin/notices/{id}",
+    ...options,
+  });
+
+/**
+ * Korrigiert einen synthetischen Hinweis.
+ */
+export const updateNotice = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateNoticeData, ThrowOnError>,
+) =>
+  (options.client ?? client).put<UpdateNoticeResponses, UpdateNoticeErrors, ThrowOnError>({
+    url: "/v1/admin/notices/{id}",
     ...options,
     headers: {
       "Content-Type": "application/json",

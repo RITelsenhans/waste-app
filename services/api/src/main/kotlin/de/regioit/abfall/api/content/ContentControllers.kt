@@ -3,9 +3,11 @@ package de.regioit.abfall.api.content
 import de.regioit.abfall.api.support.PilotAdminGuard
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -54,6 +56,38 @@ class AdminContentController(
     private val guard: PilotAdminGuard,
     private val service: ContentService,
 ) {
+    @GetMapping("/collections")
+    fun collections(
+        @RequestParam tenantId: String,
+    ): List<CollectionEvent> {
+        guard.check()
+        return service.adminCollections(tenantId)
+    }
+
+    @GetMapping("/waste-guide")
+    fun wasteGuide(
+        @RequestParam tenantId: String,
+    ): List<WasteGuideEntry> {
+        guard.check()
+        return service.adminWasteGuide(tenantId)
+    }
+
+    @GetMapping("/sites")
+    fun sites(
+        @RequestParam tenantId: String,
+    ): List<Site> {
+        guard.check()
+        return service.adminSites(tenantId)
+    }
+
+    @GetMapping("/notices")
+    fun notices(
+        @RequestParam tenantId: String,
+    ): List<Notice> {
+        guard.check()
+        return service.adminNotices(tenantId)
+    }
+
     @PostMapping("/collections")
     @ResponseStatus(HttpStatus.CREATED)
     fun createCollection(
@@ -88,5 +122,52 @@ class AdminContentController(
     ): Notice {
         guard.check()
         return service.createNotice(input)
+    }
+
+    @PutMapping("/collections/{id}")
+    fun updateCollection(
+        @PathVariable id: String,
+        @Valid @RequestBody input: CollectionInput,
+    ): CollectionEvent {
+        guard.check()
+        return service.updateCollection(id, input)
+    }
+
+    @PutMapping("/waste-guide/{id}")
+    fun updateWasteGuideEntry(
+        @PathVariable id: String,
+        @Valid @RequestBody input: WasteGuideInput,
+    ): WasteGuideEntry {
+        guard.check()
+        return service.updateWasteGuideEntry(id, input)
+    }
+
+    @PutMapping("/sites/{id}")
+    fun updateSite(
+        @PathVariable id: String,
+        @Valid @RequestBody input: SiteInput,
+    ): Site {
+        guard.check()
+        return service.updateSite(id, input)
+    }
+
+    @PutMapping("/notices/{id}")
+    fun updateNotice(
+        @PathVariable id: String,
+        @Valid @RequestBody input: NoticeInput,
+    ): Notice {
+        guard.check()
+        return service.updateNotice(id, input)
+    }
+
+    @DeleteMapping("/{resource}/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteContent(
+        @PathVariable resource: String,
+        @PathVariable id: String,
+        @RequestParam tenantId: String,
+    ) {
+        guard.check()
+        service.deleteContent(resource, id, tenantId)
     }
 }

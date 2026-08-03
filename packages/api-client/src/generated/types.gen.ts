@@ -24,6 +24,14 @@ export type LegalLinks = {
 export type SupportContact = {
   label: string;
   email: string;
+  phone: string;
+};
+
+export type ServiceArea = {
+  city: string;
+  reportingOffice: string;
+  phone: string;
+  email: string;
 };
 
 export type TenantConfig = {
@@ -37,8 +45,32 @@ export type TenantConfig = {
     [key: string]: boolean;
   };
   legalLinks: LegalLinks;
+  serviceArea: ServiceArea;
   supportContacts: Array<SupportContact>;
   contentVersion: string;
+};
+
+export type MunicipalityCustomizationInput = {
+  name: string;
+  shortName: string;
+  city: string;
+  reportingOffice: string;
+  phone: string;
+  email: string;
+  primaryColor: string;
+  infoColor: string;
+};
+
+export type MunicipalityCustomization = MunicipalityCustomizationInput & {
+  tenantId: string;
+};
+
+export type MunicipalitySummary = {
+  tenantId: string;
+  name: string;
+  shortName: string;
+  city: string;
+  primaryColor: string;
 };
 
 export type Address = {
@@ -104,6 +136,8 @@ export type Site = {
   openingHours: string;
   acceptedWasteTypes: Array<string>;
   openNow: boolean;
+  latitude: number;
+  longitude: number;
   dataStatus: string;
 };
 
@@ -115,6 +149,8 @@ export type SiteInput = {
   openingHours: string;
   acceptedWasteTypes: Array<string>;
   openNow: boolean;
+  latitude: number;
+  longitude: number;
 };
 
 export type NoticePriority = "info" | "warning" | "critical";
@@ -241,6 +277,8 @@ export type Root = unknown;
 
 export type ReadyResponseRoot = unknown;
 
+export type ContentId = string;
+
 export type TenantId = string;
 
 export type AddressId = string;
@@ -279,6 +317,36 @@ export type GetReadinessResponses = {
 };
 
 export type GetReadinessResponse = GetReadinessResponses[keyof GetReadinessResponses];
+
+export type GetMunicipalitiesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/tenants";
+};
+
+export type GetMunicipalitiesErrors = {
+  /**
+   * Zu viele Anfragen.
+   */
+  429: Problem;
+  /**
+   * Kommunenverzeichnis ist vorübergehend nicht verfügbar.
+   */
+  503: Problem;
+};
+
+export type GetMunicipalitiesError = GetMunicipalitiesErrors[keyof GetMunicipalitiesErrors];
+
+export type GetMunicipalitiesResponses = {
+  /**
+   * Alphabetische Kommunenliste.
+   */
+  200: Array<MunicipalitySummary>;
+};
+
+export type GetMunicipalitiesResponse =
+  GetMunicipalitiesResponses[keyof GetMunicipalitiesResponses];
 
 export type GetTenantConfigData = {
   body?: never;
@@ -451,6 +519,34 @@ export type GetNoticesResponses = {
 
 export type GetNoticesResponse = GetNoticesResponses[keyof GetNoticesResponses];
 
+export type GetAdminCollectionsData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/collections";
+};
+
+export type GetAdminCollectionsErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminCollectionsError = GetAdminCollectionsErrors[keyof GetAdminCollectionsErrors];
+
+export type GetAdminCollectionsResponses = {
+  /**
+   * Vollständige Terminliste.
+   */
+  200: Array<CollectionEvent>;
+};
+
+export type GetAdminCollectionsResponse =
+  GetAdminCollectionsResponses[keyof GetAdminCollectionsResponses];
+
 export type CreateCollectionData = {
   body: CollectionInput;
   path?: never;
@@ -475,6 +571,96 @@ export type CreateCollectionResponses = {
 };
 
 export type CreateCollectionResponse = CreateCollectionResponses[keyof CreateCollectionResponses];
+
+export type GetAdminMunicipalityCustomizationData = {
+  body?: never;
+  path: {
+    tenantKey: string;
+  };
+  query?: never;
+  url: "/v1/admin/tenants/{tenantKey}";
+};
+
+export type GetAdminMunicipalityCustomizationErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type GetAdminMunicipalityCustomizationError =
+  GetAdminMunicipalityCustomizationErrors[keyof GetAdminMunicipalityCustomizationErrors];
+
+export type GetAdminMunicipalityCustomizationResponses = {
+  /**
+   * Kommunales Customizing.
+   */
+  200: MunicipalityCustomization;
+};
+
+export type GetAdminMunicipalityCustomizationResponse =
+  GetAdminMunicipalityCustomizationResponses[keyof GetAdminMunicipalityCustomizationResponses];
+
+export type UpdateAdminMunicipalityCustomizationData = {
+  body: MunicipalityCustomizationInput;
+  path: {
+    tenantKey: string;
+  };
+  query?: never;
+  url: "/v1/admin/tenants/{tenantKey}";
+};
+
+export type UpdateAdminMunicipalityCustomizationErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateAdminMunicipalityCustomizationError =
+  UpdateAdminMunicipalityCustomizationErrors[keyof UpdateAdminMunicipalityCustomizationErrors];
+
+export type UpdateAdminMunicipalityCustomizationResponses = {
+  /**
+   * Aktualisiertes kommunales Customizing.
+   */
+  200: MunicipalityCustomization;
+};
+
+export type UpdateAdminMunicipalityCustomizationResponse =
+  UpdateAdminMunicipalityCustomizationResponses[keyof UpdateAdminMunicipalityCustomizationResponses];
+
+export type GetAdminWasteGuideData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/waste-guide";
+};
+
+export type GetAdminWasteGuideErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminWasteGuideError = GetAdminWasteGuideErrors[keyof GetAdminWasteGuideErrors];
+
+export type GetAdminWasteGuideResponses = {
+  /**
+   * Vollständiges Abfall-ABC.
+   */
+  200: Array<WasteGuideEntry>;
+};
+
+export type GetAdminWasteGuideResponse =
+  GetAdminWasteGuideResponses[keyof GetAdminWasteGuideResponses];
 
 export type CreateWasteGuideEntryData = {
   body: WasteGuideInput;
@@ -503,6 +689,33 @@ export type CreateWasteGuideEntryResponses = {
 export type CreateWasteGuideEntryResponse =
   CreateWasteGuideEntryResponses[keyof CreateWasteGuideEntryResponses];
 
+export type GetAdminSitesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/sites";
+};
+
+export type GetAdminSitesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminSitesError = GetAdminSitesErrors[keyof GetAdminSitesErrors];
+
+export type GetAdminSitesResponses = {
+  /**
+   * Vollständige Standortliste.
+   */
+  200: Array<Site>;
+};
+
+export type GetAdminSitesResponse = GetAdminSitesResponses[keyof GetAdminSitesResponses];
+
 export type CreateSiteData = {
   body: SiteInput;
   path?: never;
@@ -528,6 +741,33 @@ export type CreateSiteResponses = {
 
 export type CreateSiteResponse = CreateSiteResponses[keyof CreateSiteResponses];
 
+export type GetAdminNoticesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/notices";
+};
+
+export type GetAdminNoticesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminNoticesError = GetAdminNoticesErrors[keyof GetAdminNoticesErrors];
+
+export type GetAdminNoticesResponses = {
+  /**
+   * Vollständige Hinweisliste.
+   */
+  200: Array<Notice>;
+};
+
+export type GetAdminNoticesResponse = GetAdminNoticesResponses[keyof GetAdminNoticesResponses];
+
 export type CreateNoticeData = {
   body: NoticeInput;
   path?: never;
@@ -552,6 +792,250 @@ export type CreateNoticeResponses = {
 };
 
 export type CreateNoticeResponse = CreateNoticeResponses[keyof CreateNoticeResponses];
+
+export type DeleteCollectionData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/collections/{id}";
+};
+
+export type DeleteCollectionErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type DeleteCollectionError = DeleteCollectionErrors[keyof DeleteCollectionErrors];
+
+export type DeleteCollectionResponses = {
+  /**
+   * Termin gelöscht.
+   */
+  204: void;
+};
+
+export type DeleteCollectionResponse = DeleteCollectionResponses[keyof DeleteCollectionResponses];
+
+export type UpdateCollectionData = {
+  body: CollectionInput;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/admin/collections/{id}";
+};
+
+export type UpdateCollectionErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateCollectionError = UpdateCollectionErrors[keyof UpdateCollectionErrors];
+
+export type UpdateCollectionResponses = {
+  /**
+   * Aktualisierter Termin.
+   */
+  200: CollectionEvent;
+};
+
+export type UpdateCollectionResponse = UpdateCollectionResponses[keyof UpdateCollectionResponses];
+
+export type DeleteWasteGuideEntryData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/waste-guide/{id}";
+};
+
+export type DeleteWasteGuideEntryErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type DeleteWasteGuideEntryError =
+  DeleteWasteGuideEntryErrors[keyof DeleteWasteGuideEntryErrors];
+
+export type DeleteWasteGuideEntryResponses = {
+  /**
+   * ABC-Eintrag gelöscht.
+   */
+  204: void;
+};
+
+export type DeleteWasteGuideEntryResponse =
+  DeleteWasteGuideEntryResponses[keyof DeleteWasteGuideEntryResponses];
+
+export type UpdateWasteGuideEntryData = {
+  body: WasteGuideInput;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/admin/waste-guide/{id}";
+};
+
+export type UpdateWasteGuideEntryErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateWasteGuideEntryError =
+  UpdateWasteGuideEntryErrors[keyof UpdateWasteGuideEntryErrors];
+
+export type UpdateWasteGuideEntryResponses = {
+  /**
+   * Aktualisierter ABC-Eintrag.
+   */
+  200: WasteGuideEntry;
+};
+
+export type UpdateWasteGuideEntryResponse =
+  UpdateWasteGuideEntryResponses[keyof UpdateWasteGuideEntryResponses];
+
+export type DeleteSiteData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/sites/{id}";
+};
+
+export type DeleteSiteErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type DeleteSiteError = DeleteSiteErrors[keyof DeleteSiteErrors];
+
+export type DeleteSiteResponses = {
+  /**
+   * Standort gelöscht.
+   */
+  204: void;
+};
+
+export type DeleteSiteResponse = DeleteSiteResponses[keyof DeleteSiteResponses];
+
+export type UpdateSiteData = {
+  body: SiteInput;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/admin/sites/{id}";
+};
+
+export type UpdateSiteErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateSiteError = UpdateSiteErrors[keyof UpdateSiteErrors];
+
+export type UpdateSiteResponses = {
+  /**
+   * Aktualisierter Standort.
+   */
+  200: Site;
+};
+
+export type UpdateSiteResponse = UpdateSiteResponses[keyof UpdateSiteResponses];
+
+export type DeleteNoticeData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/notices/{id}";
+};
+
+export type DeleteNoticeErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type DeleteNoticeError = DeleteNoticeErrors[keyof DeleteNoticeErrors];
+
+export type DeleteNoticeResponses = {
+  /**
+   * Hinweis gelöscht.
+   */
+  204: void;
+};
+
+export type DeleteNoticeResponse = DeleteNoticeResponses[keyof DeleteNoticeResponses];
+
+export type UpdateNoticeData = {
+  body: NoticeInput;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/admin/notices/{id}";
+};
+
+export type UpdateNoticeErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateNoticeError = UpdateNoticeErrors[keyof UpdateNoticeErrors];
+
+export type UpdateNoticeResponses = {
+  /**
+   * Aktualisierter Hinweis.
+   */
+  200: Notice;
+};
+
+export type UpdateNoticeResponse = UpdateNoticeResponses[keyof UpdateNoticeResponses];
 
 export type CreateDefectCaseData = {
   body: DefectCaseInput;

@@ -80,6 +80,19 @@ Die Pflege-Unit besitzt im lokalen Pilot bewusst noch keine Anmeldung und darf n
 öffentlich erreichbar gemacht werden. Die Web-App verwendet standardmäßig
 `http://localhost:8080` als API. Eine andere Basis-URL kann mit `API_BASE_URL` gesetzt werden.
 
+## Geschützt im Browser teilen
+
+Für die zeitlich begrenzte Kollegenvorführung steht eine GitHub-Codespaces-Konfiguration
+bereit. Nach Anlage zweier Codespaces-Secrets genügt im Codespace:
+
+```bash
+pnpm dev:codespace
+```
+
+Die genaue GitHub-Klickfolge, Portfreigabe und der Rückbau stehen in der
+[Codespaces-Demo-Anleitung](docs/operations/codespaces-demo.md). Diese Lösung ist nur für
+synthetische Testdaten vorgesehen und kein produktives Deployment.
+
 Beim ersten Browser-Test wird der versionierte Chromium-Browser installiert:
 
 ```bash

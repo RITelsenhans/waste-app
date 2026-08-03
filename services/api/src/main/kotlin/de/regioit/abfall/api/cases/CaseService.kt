@@ -4,6 +4,7 @@ import de.regioit.abfall.api.content.ContentRepository
 import de.regioit.abfall.api.support.PilotConflictException
 import de.regioit.abfall.api.support.PilotNotFoundException
 import de.regioit.abfall.api.support.PilotValidationException
+import de.regioit.abfall.api.tenant.WasteProperties
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -16,6 +17,7 @@ class CaseService(
     private val repository: CaseRepository,
     private val contentRepository: ContentRepository,
     private val clock: Clock,
+    private val properties: WasteProperties,
 ) {
     private val defectCategories =
         setOf("bin-not-emptied", "damaged-bin", "illegal-dumping", "dirty-site", "depot-container", "other")
@@ -55,6 +57,15 @@ class CaseService(
         repository.insertCase(case, input.contactEmail)
         repository.insertDefect(case.id, input)
         insertCaseFoundation(case, "defect", idempotencyKey, "Meldung eingegangen")
+        if (!input.contactEmail.isNullOrBlank()) {
+            repository.insertOutboxEvent(
+                id = UUID.randomUUID().toString(),
+                aggregateId = case.id,
+                eventType = "defect-confirmation-requested",
+                payload = "{\"reference\":\"${case.reference}\"}",
+                createdAt = case.createdAt,
+            )
+        }
         val persistedCase =
             requireNotNull(repository.findIdempotentCase(input.tenantId, "defect", idempotencyKey)) {
                 "Der angelegte Pilotvorgang konnte nicht erneut gelesen werden."
@@ -251,7 +262,7 @@ class CaseService(
     }
 
     private fun validateTenant(tenantId: String) {
-        if (tenantId != "demo") {
+        if (tenantId !in properties.tenants) {
             throw PilotNotFoundException("Der Pilotmandant '$tenantId' ist nicht vorhanden.")
         }
     }

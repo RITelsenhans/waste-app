@@ -1,0 +1,32 @@
+{
+  "name": "Abfall APP Demo",
+  "dockerComposeFile": "compose.yml",
+  "service": "workspace",
+  "workspaceFolder": "/workspaces/waste-app",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    }
+  },
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Geschützte Abfall-APP-Demo",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "onAutoForward": "ignore"
+    },
+    "8080": {
+      "onAutoForward": "ignore"
+    },
+    "55432": {
+      "onAutoForward": "ignore"
+    },
+    "8025": {
+      "onAutoForward": "ignore"
+    }
+  },
+  "postCreateCommand": "sudo corepack enable && corepack prepare pnpm@11.9.0 --activate && pnpm install --frozen-lockfile",
+  "remoteUser": "vscode"
+}

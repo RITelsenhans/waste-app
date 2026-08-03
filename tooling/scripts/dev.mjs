@@ -9,12 +9,21 @@ const apiPort = readPort("SERVER_PORT", "8080");
 const webPort = readPort("PORT", "3000");
 const adminPort = readPort("ADMIN_PORT", "3001");
 const databasePort = readPort("POSTGRES_PORT", "55432");
+const mailSmtpPort = readPort("MAIL_SMTP_PORT", "1025");
+const mailUiPort = readPort("MAIL_UI_PORT", "8025");
+const sharedDemo = process.env.DEMO_SHARE_MODE === "true";
+const nextTestBuildDirectory = readNextTestBuildDirectory();
 const apiReadyUrl = `http://127.0.0.1:${apiPort}/v1/health/ready`;
-const databaseRoot = resolve("build/dev-postgres");
+const databaseRoot = resolve(
+  process.env.POSTGRES_DATA_ROOT ??
+    (nextTestBuildDirectory ? `build/dev-postgres-${databasePort}` : "build/dev-postgres"),
+);
 const databaseData = resolve(databaseRoot, "data");
 const databaseSocket = resolve(databaseRoot, "socket");
-const playwrightBuild = process.env.NEXT_DIST_DIR === ".next-playwright";
-const playwrightSourceSnapshots = playwrightBuild
+const mailpitRoot = resolve(
+  nextTestBuildDirectory ? `build/mailpit-${mailUiPort}` : "build/mailpit",
+);
+const playwrightSourceSnapshots = nextTestBuildDirectory
   ? [
       "apps/web/next-env.d.ts",
       "apps/web/tsconfig.json",
@@ -23,16 +32,18 @@ const playwrightSourceSnapshots = playwrightBuild
     ].map((file) => ({ file, content: readFileSync(file, "utf8") }))
   : [];
 const externalDatabaseUrl = process.env.POSTGRES_EXTERNAL_URL;
+const externalMailboxUrl = process.env.MAILPIT_EXTERNAL_URL?.replace(/\/+$/, "");
 const postgresBin = externalDatabaseUrl ? undefined : findPostgresBin();
+const mailpitBin = sharedDemo || externalMailboxUrl ? undefined : findMailpitBin();
 const postgresProcessEnvironment = {
   LANG: "C",
   LC_ALL: "C",
 };
 const databaseEnvironment = {
-  SPRING_DATASOURCE_PASSWORD: "",
+  SPRING_DATASOURCE_PASSWORD: process.env.SPRING_DATASOURCE_PASSWORD ?? "",
   SPRING_DATASOURCE_URL:
     externalDatabaseUrl ?? `jdbc:postgresql://127.0.0.1:${databasePort}/waste_app`,
-  SPRING_DATASOURCE_USERNAME: "waste_app",
+  SPRING_DATASOURCE_USERNAME: process.env.SPRING_DATASOURCE_USERNAME ?? "waste_app",
 };
 const apiBaseUrl = `http://127.0.0.1:${apiPort}`;
 
@@ -42,6 +53,13 @@ const services = {
     env: {
       ...databaseEnvironment,
       WASTE_ADMIN_ORIGIN: `http://localhost:${adminPort}`,
+      SPRING_MAIL_HOST: "127.0.0.1",
+      SPRING_MAIL_PORT: String(mailSmtpPort),
+      WASTE_MAIL_APP_BASE_URL: `http://localhost:${webPort}/demo`,
+      WASTE_MAIL_ENABLED: sharedDemo ? "false" : (process.env.WASTE_MAIL_ENABLED ?? "true"),
+      WASTE_PILOT_ADMIN_ENABLED: sharedDemo
+        ? "false"
+        : (process.env.WASTE_PILOT_ADMIN_ENABLED ?? "true"),
       WASTE_WEB_ORIGIN: `http://localhost:${webPort}`,
     },
     executable: "./gradlew",
@@ -51,7 +69,13 @@ const services = {
   web: {
     args: ["node_modules/next/dist/bin/next", "dev", "-p", String(webPort)],
     cwd: "apps/web",
-    env: { API_BASE_URL: apiBaseUrl, NEXT_PUBLIC_API_BASE_URL: apiBaseUrl },
+    env: {
+      API_BASE_URL: apiBaseUrl,
+      API_PROXY_TARGET: process.env.API_PROXY_TARGET ?? apiBaseUrl,
+      NEXT_PUBLIC_API_BASE_URL: sharedDemo
+        ? ""
+        : (process.env.NEXT_PUBLIC_API_BASE_URL ?? apiBaseUrl),
+    },
     executable: process.execPath,
     label: "Bürgeransicht",
     url: `http://localhost:${webPort}/demo`,
@@ -64,6 +88,23 @@ const services = {
     label: "Pilotpflege",
     url: `http://localhost:${adminPort}`,
   },
+  mailbox: mailpitBin
+    ? {
+        args: [
+          "--database",
+          resolve(mailpitRoot, "mailpit.db"),
+          "--listen",
+          `127.0.0.1:${mailUiPort}`,
+          "--smtp",
+          `127.0.0.1:${mailSmtpPort}`,
+          "--label",
+          "Regio IT Abfall APP · Lokales Testpostfach",
+        ],
+        executable: mailpitBin,
+        label: "Testpostfach",
+        url: `http://localhost:${mailUiPort}`,
+      }
+    : undefined,
   database: postgresBin
     ? {
         args: [
@@ -86,26 +127,44 @@ const services = {
 
 const children = new Set();
 let stopping = false;
-let playwrightBuildCleaned = false;
+let testBuildCleaned = false;
 
 process.on("SIGINT", () => stopAll("SIGTERM"));
 process.on("SIGTERM", () => stopAll("SIGTERM"));
 
 try {
-  const localPorts = externalDatabaseUrl
-    ? [apiPort, webPort, adminPort]
-    : [apiPort, webPort, adminPort, databasePort];
+  const localPorts = [apiPort, webPort];
+  if (!sharedDemo) localPorts.push(adminPort);
+  if (!externalDatabaseUrl) localPorts.push(databasePort);
+  if (services.mailbox) localPorts.push(mailSmtpPort, mailUiPort);
   if (new Set(localPorts).size !== localPorts.length)
     throw new Error("Web, Pilotpflege, API und PostgreSQL benötigen unterschiedliche Ports.");
   const portChecks = [
     assertPortAvailable(apiPort, "API"),
     assertPortAvailable(webPort, "Bürgeransicht"),
-    assertPortAvailable(adminPort, "Pilotpflege"),
   ];
+  if (!sharedDemo) portChecks.push(assertPortAvailable(adminPort, "Pilotpflege"));
+  if (services.mailbox) {
+    portChecks.push(
+      assertPortAvailable(mailSmtpPort, "Testpostfach-SMTP"),
+      assertPortAvailable(mailUiPort, "Testpostfach-Oberfläche"),
+    );
+  }
   if (!externalDatabaseUrl) portChecks.push(assertPortAvailable(databasePort, "PostgreSQL"));
   await Promise.all(portChecks);
 
   await buildDesignTokens();
+  if (services.mailbox) {
+    await mkdir(mailpitRoot, { recursive: true });
+    startService(services.mailbox);
+    console.log("[warte] Lokales Testpostfach wird initialisiert …");
+    await waitUntilReady(`http://127.0.0.1:${mailUiPort}/readyz`, 15_000);
+  } else if (externalMailboxUrl) {
+    console.log("[verwenden] Extern bereitgestelltes Testpostfach für den Testlauf.");
+    await waitUntilReady(`${externalMailboxUrl}/readyz`, 15_000);
+  } else {
+    console.log("[überspringen] Mailversand und Testpostfach sind im Freigabemodus deaktiviert.");
+  }
   if (services.database) {
     await prepareDatabase();
     startService(services.database);
@@ -123,11 +182,19 @@ try {
   if (!stopping) {
     console.log(`[bereit] API: ${apiReadyUrl}`);
     startService(services.web);
-    startService(services.admin);
-    console.log("\n[bereit] Funktionaler Pilot gestartet:");
-    console.log(`         Bürgeransicht: ${services.web.url}`);
-    console.log(`         Pflege-Unit:    ${services.admin.url}`);
-    console.log("         Beenden:        Ctrl+C\n");
+    if (sharedDemo) {
+      console.log("\n[bereit] Geschützte Demo gestartet:");
+      console.log(`         Bürgeransicht: ${services.web.url}`);
+      console.log("         Nur Port 3000 darf im Codespace öffentlich freigegeben werden.");
+      console.log("         Beenden: Ctrl+C\n");
+    } else {
+      startService(services.admin);
+      console.log("\n[bereit] Funktionaler Pilot gestartet:");
+      console.log(`         Bürgeransicht: ${services.web.url}`);
+      console.log(`         Pflege-Unit:    ${services.admin.url}`);
+      console.log(`         Testpostfach:   ${externalMailboxUrl ?? services.mailbox?.url}`);
+      console.log("         Beenden:        Ctrl+C\n");
+    }
   }
 } catch (error) {
   console.error(`[fehler] ${error instanceof Error ? error.message : String(error)}`);
@@ -142,6 +209,13 @@ function readPort(variableName, fallback) {
   return port;
 }
 
+function readNextTestBuildDirectory() {
+  const value = process.env.NEXT_DIST_DIR;
+  if (!value) return undefined;
+  if (!/^\.next-[a-z0-9-]+$/.test(value)) return undefined;
+  return value;
+}
+
 function findPostgresBin() {
   const candidates = [
     process.env.POSTGRES_BIN_DIR,
@@ -154,6 +228,20 @@ function findPostgresBin() {
   if (!match)
     throw new Error(
       "PostgreSQL 17 wurde nicht gefunden. Installiere es einmalig mit `brew install postgresql@17` oder setze POSTGRES_BIN_DIR.",
+    );
+  return match;
+}
+
+function findMailpitBin() {
+  const candidates = [
+    process.env.MAILPIT_BIN,
+    "/opt/homebrew/bin/mailpit",
+    "/usr/local/bin/mailpit",
+  ].filter(Boolean);
+  const match = candidates.find((candidate) => existsSync(candidate));
+  if (!match)
+    throw new Error(
+      "Mailpit wurde nicht gefunden. Installiere es einmalig mit `brew install mailpit` oder setze MAILPIT_BIN.",
     );
   return match;
 }
@@ -206,7 +294,7 @@ async function waitForPostgres() {
   while (!stopping && Date.now() < deadline) {
     const result = await run(
       `${postgresBin}/pg_isready`,
-      ["-h", "127.0.0.1", "-p", String(databasePort), "-U", "waste_app"],
+      ["-h", "127.0.0.1", "-p", String(databasePort), "-U", "waste_app", "-d", "postgres"],
       { allowFailure: true, env: postgresProcessEnvironment, quiet: true },
     );
     if (result.code === 0) return;
@@ -341,15 +429,15 @@ function terminateProcessTree(child, signal) {
 
 function exitWhenStopped() {
   if (stopping && children.size === 0) {
-    cleanupPlaywrightBuild();
+    cleanupTestBuild();
     process.exit(process.exitCode ?? 0);
   }
 }
 
-function cleanupPlaywrightBuild() {
-  if (!playwrightBuild || playwrightBuildCleaned) return;
-  playwrightBuildCleaned = true;
+function cleanupTestBuild() {
+  if (!nextTestBuildDirectory || testBuildCleaned) return;
+  testBuildCleaned = true;
   for (const snapshot of playwrightSourceSnapshots) writeFileSync(snapshot.file, snapshot.content);
-  rmSync(resolve("apps/web/.next-playwright"), { force: true, recursive: true });
-  rmSync(resolve("apps/admin/.next-playwright"), { force: true, recursive: true });
+  rmSync(resolve("apps/web", nextTestBuildDirectory), { force: true, recursive: true });
+  rmSync(resolve("apps/admin", nextTestBuildDirectory), { force: true, recursive: true });
 }
