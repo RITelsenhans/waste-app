@@ -24,6 +24,7 @@ console.log("[sicher] Pilotpflege, Mailversand und öffentliche API-Ports bleibe
 const child = spawn(process.execPath, ["tooling/scripts/dev.mjs"], {
   env: {
     ...process.env,
+    API_READY_TIMEOUT_MS: process.env.API_READY_TIMEOUT_MS ?? "600000",
     DEMO_AUTH_REQUIRED: "true",
     DEMO_COOKIE_SECURE: process.env.DEMO_COOKIE_SECURE ?? "true",
     DEMO_SHARE_MODE: "true",

@@ -12,6 +12,7 @@ const databasePort = readPort("POSTGRES_PORT", "55432");
 const mailSmtpPort = readPort("MAIL_SMTP_PORT", "1025");
 const mailUiPort = readPort("MAIL_UI_PORT", "8025");
 const sharedDemo = process.env.DEMO_SHARE_MODE === "true";
+const apiReadyTimeout = readPositiveInteger("API_READY_TIMEOUT_MS", 120_000);
 const nextTestBuildDirectory = readNextTestBuildDirectory();
 const apiReadyUrl = `http://127.0.0.1:${apiPort}/v1/health/ready`;
 const databaseRoot = resolve(
@@ -158,10 +159,10 @@ try {
     await mkdir(mailpitRoot, { recursive: true });
     startService(services.mailbox);
     console.log("[warte] Lokales Testpostfach wird initialisiert …");
-    await waitUntilReady(`http://127.0.0.1:${mailUiPort}/readyz`, 15_000);
+    await waitUntilReady(`http://127.0.0.1:${mailUiPort}/readyz`, 15_000, "Testpostfach");
   } else if (externalMailboxUrl) {
     console.log("[verwenden] Extern bereitgestelltes Testpostfach für den Testlauf.");
-    await waitUntilReady(`${externalMailboxUrl}/readyz`, 15_000);
+    await waitUntilReady(`${externalMailboxUrl}/readyz`, 15_000, "Testpostfach");
   } else {
     console.log("[überspringen] Mailversand und Testpostfach sind im Freigabemodus deaktiviert.");
   }
@@ -177,7 +178,7 @@ try {
 
   startService(services.api);
   console.log("[warte] API und Datenmigrationen werden initialisiert …");
-  await waitUntilReady(apiReadyUrl, 120_000);
+  await waitUntilReady(apiReadyUrl, apiReadyTimeout, "API");
 
   if (!stopping) {
     console.log(`[bereit] API: ${apiReadyUrl}`);
@@ -207,6 +208,15 @@ function readPort(variableName, fallback) {
   if (!Number.isInteger(port) || port < 1 || port > 65_535)
     throw new Error(`${variableName} muss ein gültiger TCP-Port sein, erhalten: ${value}`);
   return port;
+}
+
+function readPositiveInteger(variableName, fallback) {
+  const value = process.env[variableName];
+  if (value === undefined) return fallback;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1)
+    throw new Error(`${variableName} muss eine positive Ganzzahl sein, erhalten: ${value}`);
+  return number;
 }
 
 function readNextTestBuildDirectory() {
@@ -356,8 +366,10 @@ function startService({ args, cwd, env, executable, label, url }) {
   return child;
 }
 
-async function waitUntilReady(url, timeout) {
+async function waitUntilReady(url, timeout, label) {
+  const startedAt = Date.now();
   const deadline = Date.now() + timeout;
+  let nextProgressAt = startedAt + 30_000;
   while (!stopping && Date.now() < deadline) {
     try {
       const response = await fetch(url, { signal: AbortSignal.timeout(1_000) });
@@ -365,9 +377,17 @@ async function waitUntilReady(url, timeout) {
     } catch {
       /* kontrollierter Start */
     }
+    if (Date.now() >= nextProgressAt) {
+      const elapsedSeconds = Math.round((Date.now() - startedAt) / 1_000);
+      console.log(`[warte] ${label} wird noch initialisiert (${elapsedSeconds} Sekunden) …`);
+      nextProgressAt += 30_000;
+    }
     await delay(250);
   }
-  if (!stopping) throw new Error("Die API wurde innerhalb von 120 Sekunden nicht bereit.");
+  if (!stopping)
+    throw new Error(
+      `${label} wurde innerhalb von ${Math.round(timeout / 1_000)} Sekunden nicht bereit.`,
+    );
 }
 
 function run(

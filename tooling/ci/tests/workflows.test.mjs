@@ -117,6 +117,13 @@ test("Codespaces shares only the protected web port and pins its data service", 
 
   const codespaceStart = await readRepositoryFile("tooling/scripts/codespace-dev.mjs");
   assert.match(codespaceStart, /"install", "--frozen-lockfile"/);
+  assert.match(
+    codespaceStart,
+    /API_READY_TIMEOUT_MS: process\.env\.API_READY_TIMEOUT_MS \?\? "600000"/,
+  );
+
+  const localStart = await readRepositoryFile("tooling/scripts/dev.mjs");
+  assert.match(localStart, /readPositiveInteger\("API_READY_TIMEOUT_MS", 120_000\)/);
 });
 
 test("CI uses a digest-pinned Mailpit service for the existing mail browser test", async () => {

@@ -24,6 +24,10 @@ fehlenden Rollen- und Benutzeranmeldung nicht veröffentlicht werden.
 - `pnpm dev:codespace` aktiviert einen fehlertoleranten, aber sicher geschlossenen
   Freigabemodus. Fehlen `DEMO_ACCESS_PASSWORD` oder `DEMO_SESSION_SECRET`, startet die
   Demo nicht.
+- Der erste API-Start darf im Codespace wegen des initial leeren Gradle-Caches bis zu
+  zehn Minuten auf Abhängigkeitsauflösung und Kompilierung warten. Der lokale Start
+  behält sein zweiminütiges Fehlerzeitfenster; beide Grenzen bleiben per Umgebung
+  ausdrücklich überschreibbar.
 - Port 3000 veröffentlicht genau die Next.js-Anwendung. Sie leitet `/v1/*` intern an
   Spring Boot weiter. API-Port 8080, PostgreSQL, Mailpit und Port 3001 werden nicht
   veröffentlicht; die Pflegeoberfläche wird nicht gestartet und alle

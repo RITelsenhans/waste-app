@@ -109,6 +109,10 @@ nicht mehr über den Link erreichbar. Die Portfreigabe nach jedem Neustart kontr
   freigegebene Laufzeit bitten.
 - **Link zeigt nach Neustart GitHub-Anmeldung oder 404**: Port 3000 ist wieder privat
   oder der Prozess läuft nicht. Startbefehl und Portsichtbarkeit erneut prüfen.
+- **Gradle zeigt lange `Resolve dependencies` oder `IDLE`**: Beim ersten Start lädt
+  Gradle die reproduzierbar festgelegten API-Abhängigkeiten. Der Codespaces-Start wartet
+  dafür bis zu zehn Minuten und meldet alle 30 Sekunden den Fortschritt. Das Terminal
+  geöffnet lassen; nachfolgende Starts verwenden den Gradle-Cache.
 
 Aktuelle GitHub-Referenzen: [Codespaces-Secrets](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/managing-development-environment-secrets-for-your-repository-or-organization),
 [Ports weiterleiten und teilen](https://docs.github.com/en/codespaces/developing-in-a-codespace/forwarding-ports-in-your-codespace?tool=webui),
