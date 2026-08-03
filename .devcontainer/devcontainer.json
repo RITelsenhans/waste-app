@@ -27,6 +27,6 @@
       "onAutoForward": "ignore"
     }
   },
-  "postCreateCommand": "sudo corepack enable && corepack prepare pnpm@11.9.0 --activate && pnpm install --frozen-lockfile",
+  "postCreateCommand": "corepack pnpm install --frozen-lockfile",
   "remoteUser": "vscode"
 }

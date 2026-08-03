@@ -113,6 +113,10 @@ test("Codespaces shares only the protected web port and pins its data service", 
   assert.doesNotMatch(compose, /^\s+ports:/m);
   assert.match(compose, /postgres:17\.10-bookworm@sha256:[0-9a-f]{64}/);
   assert.equal(packageManifest.scripts["dev:codespace"], "node tooling/scripts/codespace-dev.mjs");
+  assert.equal(configuration.postCreateCommand, "corepack pnpm install --frozen-lockfile");
+
+  const codespaceStart = await readRepositoryFile("tooling/scripts/codespace-dev.mjs");
+  assert.match(codespaceStart, /"install", "--frozen-lockfile"/);
 });
 
 test("CI uses a digest-pinned Mailpit service for the existing mail browser test", async () => {

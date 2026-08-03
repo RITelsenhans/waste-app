@@ -52,7 +52,9 @@ pnpm dev:codespace
 
 Der Befehl bricht bei fehlenden Secrets ab. Bei Erfolg startet er PostgreSQL, API und
 die Bürgeransicht. Die Pflege-Unit und Mailpit werden nicht gestartet; die
-administrative API ist deaktiviert.
+administrative API ist deaktiviert. Falls der automatische Installationsschritt des
+Dev Containers nicht gelaufen ist, führt derselbe Befehl vorher selbstständig
+`pnpm install --frozen-lockfile` aus.
 
 ## 4. Nur Port 3000 freigeben
 
