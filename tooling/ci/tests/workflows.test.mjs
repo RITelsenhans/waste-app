@@ -121,6 +121,8 @@ test("Codespaces shares only the protected web port and pins its data service", 
     codespaceStart,
     /API_READY_TIMEOUT_MS: process\.env\.API_READY_TIMEOUT_MS \?\? "600000"/,
   );
+  assert.match(codespaceStart, /DEMO_PUBLIC_ORIGIN:/);
+  assert.match(codespaceStart, /`https:\/\/\$\{codespaceName\}-\$\{webPort\}\.app\.github\.dev`/);
 
   const localStart = await readRepositoryFile("tooling/scripts/dev.mjs");
   assert.match(localStart, /readPositiveInteger\("API_READY_TIMEOUT_MS", 120_000\)/);

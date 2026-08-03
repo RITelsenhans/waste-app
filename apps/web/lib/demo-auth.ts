@@ -85,7 +85,14 @@ export function safeDemoReturnTo(value: FormDataEntryValue | string | null): str
   return value;
 }
 
-export function demoRequestUrl(request: Request, path: string): URL {
+export function demoRequestUrl(
+  request: Request,
+  path: string,
+  environment: DemoEnvironment = process.env,
+): URL {
+  const publicOrigin = configuredDemoPublicOrigin(environment);
+  if (publicOrigin) return new URL(path, publicOrigin);
+
   const requestUrl = new URL(request.url);
   const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
   const host = forwardedHost || request.headers.get("host") || requestUrl.host;
@@ -98,9 +105,34 @@ export function demoRequestUrl(request: Request, path: string): URL {
   return new URL(path, `${protocol}://${host}`);
 }
 
-export function hasDemoSameOrigin(request: Request): boolean {
+export function hasDemoSameOrigin(
+  request: Request,
+  environment: DemoEnvironment = process.env,
+): boolean {
   const origin = request.headers.get("origin");
-  return origin !== null && origin === demoRequestUrl(request, "/").origin;
+  return origin !== null && origin === demoRequestUrl(request, "/", environment).origin;
+}
+
+function configuredDemoPublicOrigin(environment: DemoEnvironment): URL | undefined {
+  const value = environment.DEMO_PUBLIC_ORIGIN;
+  if (!value) return undefined;
+
+  try {
+    const url = new URL(value);
+    if (
+      (url.protocol !== "https:" && url.protocol !== "http:") ||
+      url.username ||
+      url.password ||
+      url.pathname !== "/" ||
+      url.search ||
+      url.hash
+    ) {
+      return undefined;
+    }
+    return url;
+  } catch {
+    return undefined;
+  }
 }
 
 function sign(payload: string, secret: string): string {

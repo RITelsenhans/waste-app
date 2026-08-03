@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   createDemoSession,
   DEMO_SESSION_MAX_AGE_SECONDS,
+  demoRequestUrl,
+  hasDemoSameOrigin,
   isDemoAuthConfigured,
   isDemoAuthRequired,
   safeDemoReturnTo,
@@ -61,5 +63,22 @@ describe("demo authentication", () => {
     expect(safeDemoReturnTo("https://example.invalid")).toBe("/demo");
     expect(safeDemoReturnTo("//example.invalid")).toBe("/demo");
     expect(safeDemoReturnTo("/login")).toBe("/demo");
+  });
+
+  it("uses and validates the explicit Codespaces origin behind the HTTPS tunnel", () => {
+    const publicOrigin = "https://synthetic-codespace-3000.app.github.dev";
+    const environment = { DEMO_PUBLIC_ORIGIN: publicOrigin };
+    const sameOriginRequest = new Request("http://127.0.0.1:3000/demo-auth/login", {
+      headers: { origin: publicOrigin },
+    });
+    const foreignOriginRequest = new Request("http://127.0.0.1:3000/demo-auth/login", {
+      headers: { origin: "https://attacker.invalid" },
+    });
+
+    expect(demoRequestUrl(sameOriginRequest, "/demo", environment).toString()).toBe(
+      `${publicOrigin}/demo`,
+    );
+    expect(hasDemoSameOrigin(sameOriginRequest, environment)).toBe(true);
+    expect(hasDemoSameOrigin(foreignOriginRequest, environment)).toBe(false);
   });
 });

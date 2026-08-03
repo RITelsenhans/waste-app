@@ -31,8 +31,10 @@ export default defineConfig({
     command: "exec node tooling/scripts/codespace-dev.mjs",
     env: {
       ADMIN_PORT: "14001",
+      CODESPACE_NAME: "synthetic-test-codespace",
       DEMO_ACCESS_PASSWORD: TEST_ACCESS_PASSWORD,
       DEMO_COOKIE_SECURE: "false",
+      DEMO_PUBLIC_ORIGIN: "http://127.0.0.1:14000",
       DEMO_SESSION_SECRET: TEST_SESSION_SECRET,
       NEXT_DIST_DIR: ".next-demo-auth-playwright",
       PORT: "14000",

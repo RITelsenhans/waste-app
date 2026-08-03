@@ -47,7 +47,10 @@ function problem(status: number, title: string): NextResponse {
     { detail: title, status, title, type: "/problems/demo-authentication" },
     {
       status,
-      headers: { "Cache-Control": "no-store", "Content-Type": "application/problem+json" },
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/problem+json; charset=utf-8",
+      },
     },
   );
 }

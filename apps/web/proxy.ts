@@ -55,7 +55,7 @@ function apiProblem(status: number, title: string): NextResponse {
       status,
       headers: {
         "Cache-Control": "no-store",
-        "Content-Type": "application/problem+json",
+        "Content-Type": "application/problem+json; charset=utf-8",
       },
     },
   );
