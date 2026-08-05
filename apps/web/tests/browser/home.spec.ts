@@ -37,6 +37,32 @@ test("lädt personalisierte Pilotdaten und durchsucht das Abfall-ABC", async ({ 
   await expect(page.getByText("Nicht in den Restabfall werfen.")).toBeVisible();
 });
 
+test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu", async ({
+  page,
+}) => {
+  await page.goto("/demo");
+  await expect(page.getByRole("link", { name: /SortierKompass testen/ })).toHaveAttribute(
+    "href",
+    "#sortierkompass",
+  );
+  const sorter = page.locator("#sortierkompass");
+
+  await expect(sorter.getByRole("heading", { name: "SortierKompass" })).toBeVisible();
+  await expect(sorter.getByRole("button", { name: /Alter Toaster/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await sorter.getByRole("button", { name: "Beispielfoto prüfen" }).click();
+  await expect(sorter.getByText("Beispiel zugeordnet")).toBeVisible();
+  await expect(sorter.getByRole("heading", { name: "Elektrogeräte" })).toBeVisible();
+  await expect(sorter.getByText(/Am Recyclinghof oder über die Rücknahme/)).toBeVisible();
+
+  await sorter.getByRole("button", { name: /Batterien AA-Zellen/ }).click();
+  await sorter.getByRole("button", { name: "Beispielfoto prüfen" }).click();
+  await expect(sorter.getByRole("heading", { name: "Batterien" })).toBeVisible();
+  await expect(sorter.getByText("Nicht in den Restabfall werfen.")).toBeVisible();
+});
+
 test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ page }) => {
   await page.goto("/demo");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("August");
@@ -53,6 +79,37 @@ test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ 
   await expect(page.getByRole("heading", { name: /Ihr Vorgang: DEMO-/ })).toBeVisible();
   await page.getByRole("button", { name: "Status abrufen" }).click();
   await expect(page.getByText("Meldung eingegangen")).toBeVisible();
+});
+
+test("simuliert den 24-7-Zugang vom Antrag bis zur geschlossenen Ausfahrt", async ({ page }) => {
+  await page.goto("/demo");
+  const showcase = page.locator("#nachtzugang");
+
+  await expect(
+    showcase.getByRole("link", { name: "Grafische Simulation mit Auto direkt ansehen" }),
+  ).toHaveAttribute("href", "#nachtzufahrt");
+  await expect(
+    showcase.getByRole("heading", { name: "24/7-Zugang zum Recyclinghof" }),
+  ).toBeVisible();
+  await expect(showcase.getByText("Hardware-Simulation.")).toBeVisible();
+  await expect(showcase.getByText("Schranke geschlossen", { exact: true })).toBeVisible();
+  await expect(showcase.locator(".journey-card")).toHaveCount(4);
+  await showcase.getByLabel(/synthetische Testdaten/).check();
+  await showcase.getByRole("button", { name: "Zugang verbindlich simulieren" }).click();
+
+  await expect(showcase.getByText("DEMO-TV-22", { exact: true })).toBeVisible();
+  await expect(showcase.getByText("Zugang erteilt", { exact: true })).toBeVisible();
+  await showcase.getByRole("button", { name: "Ankunft jetzt scannen" }).click();
+  await expect(showcase.getByText("Schranke geöffnet", { exact: true })).toBeVisible();
+  await showcase.getByRole("button", { name: "Einfahrt jetzt bestätigen" }).click();
+  await showcase.getByRole("button", { name: "Ausfahrt jetzt freigeben" }).click();
+  await showcase.getByRole("button", { name: "Ausfahrt jetzt abschließen" }).click();
+
+  await expect(showcase.getByText("Besuch abgeschlossen", { exact: true })).toBeVisible();
+  await expect(showcase.locator(".journey-card.is-complete")).toHaveCount(4);
+  await expect(showcase.locator(".gate-message")).toContainText(
+    "Ausfahrt abgeschlossen – Schranke geschlossen",
+  );
 });
 
 test("versendet eine Beschwerdebestätigung in das lokale Testpostfach", async ({

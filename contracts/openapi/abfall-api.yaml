@@ -614,6 +614,76 @@ paths:
                 $ref: "#/components/schemas/Problem"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /v1/recycling-access/requests:
+    post:
+      operationId: createRecyclingAccessRequest
+      summary: Beantragt einen synthetischen, zeitgebundenen Zugang zum Demo-Recyclinghof.
+      description: >-
+        Pilotendpunkt ohne reale Kennzeichenerkennung oder Schrankenansteuerung. Kennzeichen
+        müssen mit DEMO- beginnen; alle Scanner- und Torereignisse sind Simulationen.
+      tags: [Recycling access]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecyclingAccessRequestInput"
+      responses:
+        "201":
+          description: Synthetische Zufahrtsberechtigung wurde ausgestellt.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecyclingAccessRequest"
+        "200":
+          description: Bereits idempotent angelegte Zufahrtsberechtigung; der Zugangscode wird nicht erneut ausgegeben.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecyclingAccessRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /v1/recycling-access/requests/{reference}/simulation-events:
+    post:
+      operationId: simulateRecyclingAccessEvent
+      summary: Führt genau ein synthetisches Scanner- oder Torereignis aus.
+      description: >-
+        Ausschließlich für den lokalen Showcase. Eine reale Hardwareintegration benötigt einen
+        authentifizierten Gerätekanal, Safety-Sensorik und ein separates Threat Model.
+      tags: [Recycling access]
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^DEMO-Z-[A-F0-9]{12}$"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecyclingAccessSimulationInput"
+      responses:
+        "200":
+          description: Aktualisierter Zustand der synthetischen Zufahrt.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecyclingAccessRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Das Ereignis passt nicht zum aktuellen Zustand.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /v1/cases/{reference}:
     get:
       operationId: getCase
@@ -1255,6 +1325,151 @@ components:
           type: string
           minLength: 3
           maxLength: 240
+    RecyclingAccessIdentificationMethod:
+      type: string
+      enum: [code, license-plate]
+    RecyclingAccessStatus:
+      type: string
+      enum: [authorized, entry-granted, on-site, exit-granted, completed]
+    RecyclingGateState:
+      type: string
+      enum: [closed, open-entry, open-exit]
+    RecyclingAccessSimulationEventType:
+      type: string
+      enum: [arrival-scan, entry-confirmed, exit-scan, exit-confirmed]
+    RecyclingAccessRequestInput:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          tenantId,
+          siteId,
+          plannedArrivalAt,
+          wasteType,
+          itemDescription,
+          identificationMethod,
+          syntheticDataConfirmed,
+        ]
+      properties:
+        tenantId:
+          type: string
+        siteId:
+          type: string
+        plannedArrivalAt:
+          type: string
+          format: date-time
+        wasteType:
+          type: string
+          enum: [electronics]
+        itemDescription:
+          type: string
+          minLength: 3
+          maxLength: 160
+        identificationMethod:
+          $ref: "#/components/schemas/RecyclingAccessIdentificationMethod"
+        syntheticLicensePlate:
+          type: [string, "null"]
+          pattern: "^DEMO-[A-Z0-9-]{2,20}$"
+        syntheticDataConfirmed:
+          type: boolean
+    RecyclingAccessSimulationInput:
+      type: object
+      additionalProperties: false
+      required: [accessToken, eventType, credential]
+      properties:
+        accessToken:
+          type: string
+          minLength: 32
+        eventType:
+          $ref: "#/components/schemas/RecyclingAccessSimulationEventType"
+        credential:
+          type: string
+          minLength: 4
+          maxLength: 32
+    RecyclingAccessEvent:
+      type: object
+      additionalProperties: false
+      required: [eventType, label, occurredAt]
+      properties:
+        eventType:
+          type: string
+        label:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+    RecyclingAccessRequest:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          reference,
+          accessToken,
+          tenantId,
+          siteId,
+          siteName,
+          plannedArrivalAt,
+          accessWindowStart,
+          accessWindowEnd,
+          wasteType,
+          itemDescription,
+          identificationMethod,
+          credentialHint,
+          status,
+          gateState,
+          nextSimulationEvent,
+          events,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        reference:
+          type: string
+          pattern: "^DEMO-Z-[A-F0-9]{12}$"
+        accessToken:
+          type: string
+        tenantId:
+          type: string
+        siteId:
+          type: string
+        siteName:
+          type: string
+        plannedArrivalAt:
+          type: string
+          format: date-time
+        accessWindowStart:
+          type: string
+          format: date-time
+        accessWindowEnd:
+          type: string
+          format: date-time
+        wasteType:
+          type: string
+        itemDescription:
+          type: string
+        identificationMethod:
+          $ref: "#/components/schemas/RecyclingAccessIdentificationMethod"
+        credential:
+          type: [string, "null"]
+          description: Wird nur bei der erstmaligen Ausstellung zurückgegeben.
+        credentialHint:
+          type: string
+        status:
+          $ref: "#/components/schemas/RecyclingAccessStatus"
+        gateState:
+          $ref: "#/components/schemas/RecyclingGateState"
+        nextSimulationEvent:
+          type: [string, "null"]
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecyclingAccessEvent"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     BulkWasteItemRule:
       type: object
       additionalProperties: false

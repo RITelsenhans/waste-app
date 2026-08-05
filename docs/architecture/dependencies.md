@@ -53,19 +53,19 @@ Ziel-Repositories.
 
 Sicherheitsbedingte transitive Overrides:
 
-| Komponente      | Erzwungene Version | Bedarf                                                          | Lizenz     |
-| --------------- | ------------------ | --------------------------------------------------------------- | ---------- |
-| brace-expansion | 5.0.8              | schließt CVE-2026-14257 im ESLint/Minimatch-Pfad                | MIT        |
-| js-yaml         | 4.3.0              | schließt die im OpenAPI-Tooling gemeldete High-Severity-Lücke   | MIT        |
-| postcss         | 8.5.25             | schließt die im Next.js-Buildpfad gemeldete High-Severity-Lücke | MIT        |
-| sharp           | 0.35.0             | schließt die im Next.js-Bildpfad gemeldete High-Severity-Lücke  | Apache-2.0 |
+| Komponente      | Erzwungene Version | Bedarf                                                                   | Lizenz     |
+| --------------- | ------------------ | ------------------------------------------------------------------------ | ---------- |
+| brace-expansion | 5.0.9              | schließt CVE-2026-14257 und GHSA-rgw5-rvv9-x895 im ESLint/Minimatch-Pfad | MIT        |
+| js-yaml         | 4.3.0              | schließt die im OpenAPI-Tooling gemeldete High-Severity-Lücke            | MIT        |
+| postcss         | 8.5.25             | schließt die im Next.js-Buildpfad gemeldete High-Severity-Lücke          | MIT        |
+| sharp           | 0.35.0             | schließt die im Next.js-Bildpfad gemeldete High-Severity-Lücke           | Apache-2.0 |
 
 Die Overrides bleiben nur so lange bestehen, bis die direkten Upstream-Abhängigkeiten
 selbst sichere Versionen auflösen. `sharp` wird zusätzlich mit dem
 Next.js-Produktionsbuild und der Bildroute getestet.
 
 `minimatch@3.1.5` erwartet historisch den CommonJS-Default-Export von
-`brace-expansion`. Die sichere Major-Version 5.0.8 exportiert stattdessen die Funktion
+`brace-expansion`. Die sichere Major-Version 5.0.9 exportiert stattdessen die Funktion
 benannt als `expand`. Der minimale, eingecheckte pnpm-Patch unter `patches/` akzeptiert
 beide Exportformen, verändert keine Matching-Logik und ermöglicht so die sichere
 Version ohne inkompatiblen ESLint-Lauf. Der Patch wird entfernt, sobald ESLint diese

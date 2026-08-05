@@ -54,6 +54,7 @@ waste:
         notices: true
         defectCases: true
         bulkWaste: true
+        recyclingAccessShowcase: true
       legal-links:
         imprint: "#impressum"
         privacy: "#datenschutz"

@@ -14,6 +14,8 @@ import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 import tools.jackson.databind.ObjectMapper
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
 
 @SpringBootTest(classes = [ApiApplication::class])
@@ -254,6 +256,95 @@ class ApiHttpIntegrationTests {
             }.andExpect {
                 status { isCreated() }
                 jsonPath("$.status") { value("received") }
+            }
+    }
+
+    @Test
+    fun `recycling access showcase runs through entry and exit`() {
+        val plannedArrival = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS)
+        val created =
+            mockMvc
+                .post("/v1/recycling-access/requests") {
+                    header("Idempotency-Key", "integration-access-0001")
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "tenantId":"demo",
+                          "siteId":"site-north",
+                          "plannedArrivalAt":"$plannedArrival",
+                          "wasteType":"electronics",
+                          "itemDescription":"Fernseher",
+                          "identificationMethod":"license-plate",
+                          "syntheticLicensePlate":"DEMO-TV-22",
+                          "syntheticDataConfirmed":true
+                        }
+                        """.trimIndent()
+                }.andExpect {
+                    status { isCreated() }
+                    jsonPath("$.reference") { value(matchesPattern("^DEMO-Z-[A-F0-9]{12}$")) }
+                    jsonPath("$.credential") { value("DEMO-TV-22") }
+                    jsonPath("$.status") { value("authorized") }
+                    jsonPath("$.gateState") { value("closed") }
+                    jsonPath("$.nextSimulationEvent") { value("arrival-scan") }
+                }.andReturn()
+                .response.contentAsString
+
+        val access = objectMapper.readTree(created)
+        val reference = access["reference"].asText()
+        val accessToken = access["accessToken"].asText()
+        val sequence =
+            listOf(
+                Triple("arrival-scan", "entry-granted", "open-entry"),
+                Triple("entry-confirmed", "on-site", "closed"),
+                Triple("exit-scan", "exit-granted", "open-exit"),
+                Triple("exit-confirmed", "completed", "closed"),
+            )
+        sequence.forEachIndexed { index, (eventType, statusValue, gateState) ->
+            mockMvc
+                .post("/v1/recycling-access/requests/$reference/simulation-events") {
+                    header("Idempotency-Key", "integration-access-event-${index + 1}")
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "accessToken":"$accessToken",
+                          "eventType":"$eventType",
+                          "credential":"DEMO-TV-22"
+                        }
+                        """.trimIndent()
+                }.andExpect {
+                    status { isOk() }
+                    jsonPath("$.status") { value(statusValue) }
+                    jsonPath("$.gateState") { value(gateState) }
+                    jsonPath("$.events.length()") { value(index + 2) }
+                }
+        }
+    }
+
+    @Test
+    fun `recycling access rejects a real-looking license plate`() {
+        val plannedArrival = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS)
+        mockMvc
+            .post("/v1/recycling-access/requests") {
+                header("Idempotency-Key", "integration-access-invalid-0001")
+                contentType = MediaType.APPLICATION_JSON
+                content =
+                    """
+                    {
+                      "tenantId":"demo",
+                      "siteId":"site-north",
+                      "plannedArrivalAt":"$plannedArrival",
+                      "wasteType":"electronics",
+                      "itemDescription":"Fernseher",
+                      "identificationMethod":"license-plate",
+                      "syntheticLicensePlate":"AC-AB-123",
+                      "syntheticDataConfirmed":true
+                    }
+                    """.trimIndent()
+            }.andExpect {
+                status { isBadRequest() }
+                jsonPath("$.detail") { value("Das synthetische Kennzeichen muss mit 'DEMO-' beginnen.") }
             }
     }
 }

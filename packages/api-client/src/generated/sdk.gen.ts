@@ -15,6 +15,9 @@ import type {
   CreateNoticeData,
   CreateNoticeErrors,
   CreateNoticeResponses,
+  CreateRecyclingAccessRequestData,
+  CreateRecyclingAccessRequestErrors,
+  CreateRecyclingAccessRequestResponses,
   CreateSiteData,
   CreateSiteErrors,
   CreateSiteResponses,
@@ -84,6 +87,9 @@ import type {
   SearchWasteGuideData,
   SearchWasteGuideErrors,
   SearchWasteGuideResponses,
+  SimulateRecyclingAccessEventData,
+  SimulateRecyclingAccessEventErrors,
+  SimulateRecyclingAccessEventResponses,
   UpdateAdminMunicipalityCustomizationData,
   UpdateAdminMunicipalityCustomizationErrors,
   UpdateAdminMunicipalityCustomizationResponses,
@@ -509,6 +515,48 @@ export const createBulkWasteOrder = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     url: "/v1/bulk-waste/orders",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Beantragt einen synthetischen, zeitgebundenen Zugang zum Demo-Recyclinghof.
+ *
+ * Pilotendpunkt ohne reale Kennzeichenerkennung oder Schrankenansteuerung. Kennzeichen müssen mit DEMO- beginnen; alle Scanner- und Torereignisse sind Simulationen.
+ */
+export const createRecyclingAccessRequest = <ThrowOnError extends boolean = false>(
+  options: Options<CreateRecyclingAccessRequestData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<
+    CreateRecyclingAccessRequestResponses,
+    CreateRecyclingAccessRequestErrors,
+    ThrowOnError
+  >({
+    url: "/v1/recycling-access/requests",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+/**
+ * Führt genau ein synthetisches Scanner- oder Torereignis aus.
+ *
+ * Ausschließlich für den lokalen Showcase. Eine reale Hardwareintegration benötigt einen authentifizierten Gerätekanal, Safety-Sensorik und ein separates Threat Model.
+ */
+export const simulateRecyclingAccessEvent = <ThrowOnError extends boolean = false>(
+  options: Options<SimulateRecyclingAccessEventData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<
+    SimulateRecyclingAccessEventResponses,
+    SimulateRecyclingAccessEventErrors,
+    ThrowOnError
+  >({
+    url: "/v1/recycling-access/requests/{reference}/simulation-events",
     ...options,
     headers: {
       "Content-Type": "application/json",

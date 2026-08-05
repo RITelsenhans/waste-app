@@ -230,6 +230,64 @@ export type CaseStatusInput = {
   publicLabel: string;
 };
 
+export type RecyclingAccessIdentificationMethod = "code" | "license-plate";
+
+export type RecyclingAccessStatus =
+  "authorized" | "entry-granted" | "on-site" | "exit-granted" | "completed";
+
+export type RecyclingGateState = "closed" | "open-entry" | "open-exit";
+
+export type RecyclingAccessSimulationEventType =
+  "arrival-scan" | "entry-confirmed" | "exit-scan" | "exit-confirmed";
+
+export type RecyclingAccessRequestInput = {
+  tenantId: string;
+  siteId: string;
+  plannedArrivalAt: string;
+  wasteType: "electronics";
+  itemDescription: string;
+  identificationMethod: RecyclingAccessIdentificationMethod;
+  syntheticLicensePlate?: string | null;
+  syntheticDataConfirmed: boolean;
+};
+
+export type RecyclingAccessSimulationInput = {
+  accessToken: string;
+  eventType: RecyclingAccessSimulationEventType;
+  credential: string;
+};
+
+export type RecyclingAccessEvent = {
+  eventType: string;
+  label: string;
+  occurredAt: string;
+};
+
+export type RecyclingAccessRequest = {
+  reference: string;
+  accessToken: string;
+  tenantId: string;
+  siteId: string;
+  siteName: string;
+  plannedArrivalAt: string;
+  accessWindowStart: string;
+  accessWindowEnd: string;
+  wasteType: string;
+  itemDescription: string;
+  identificationMethod: RecyclingAccessIdentificationMethod;
+  /**
+   * Wird nur bei der erstmaligen Ausstellung zurückgegeben.
+   */
+  credential?: string | null;
+  credentialHint: string;
+  status: RecyclingAccessStatus;
+  gateState: RecyclingGateState;
+  nextSimulationEvent: string | null;
+  events: Array<RecyclingAccessEvent>;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type BulkWasteItemRule = {
   id: string;
   label: string;
@@ -1163,6 +1221,80 @@ export type CreateBulkWasteOrderResponses = {
 
 export type CreateBulkWasteOrderResponse =
   CreateBulkWasteOrderResponses[keyof CreateBulkWasteOrderResponses];
+
+export type CreateRecyclingAccessRequestData = {
+  body: RecyclingAccessRequestInput;
+  headers: {
+    "Idempotency-Key": string;
+  };
+  path?: never;
+  query?: never;
+  url: "/v1/recycling-access/requests";
+};
+
+export type CreateRecyclingAccessRequestErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateRecyclingAccessRequestError =
+  CreateRecyclingAccessRequestErrors[keyof CreateRecyclingAccessRequestErrors];
+
+export type CreateRecyclingAccessRequestResponses = {
+  /**
+   * Bereits idempotent angelegte Zufahrtsberechtigung; der Zugangscode wird nicht erneut ausgegeben.
+   */
+  200: RecyclingAccessRequest;
+  /**
+   * Synthetische Zufahrtsberechtigung wurde ausgestellt.
+   */
+  201: RecyclingAccessRequest;
+};
+
+export type CreateRecyclingAccessRequestResponse =
+  CreateRecyclingAccessRequestResponses[keyof CreateRecyclingAccessRequestResponses];
+
+export type SimulateRecyclingAccessEventData = {
+  body: RecyclingAccessSimulationInput;
+  headers: {
+    "Idempotency-Key": string;
+  };
+  path: {
+    reference: string;
+  };
+  query?: never;
+  url: "/v1/recycling-access/requests/{reference}/simulation-events";
+};
+
+export type SimulateRecyclingAccessEventErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+  /**
+   * Das Ereignis passt nicht zum aktuellen Zustand.
+   */
+  409: Problem;
+};
+
+export type SimulateRecyclingAccessEventError =
+  SimulateRecyclingAccessEventErrors[keyof SimulateRecyclingAccessEventErrors];
+
+export type SimulateRecyclingAccessEventResponses = {
+  /**
+   * Aktualisierter Zustand der synthetischen Zufahrt.
+   */
+  200: RecyclingAccessRequest;
+};
+
+export type SimulateRecyclingAccessEventResponse =
+  SimulateRecyclingAccessEventResponses[keyof SimulateRecyclingAccessEventResponses];
 
 export type GetCaseData = {
   body?: never;

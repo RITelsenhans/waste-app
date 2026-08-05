@@ -4,7 +4,9 @@ import type { CSSProperties, FormEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
 import type { TenantConfig } from "../lib/tenant-config";
+import { RecyclingAccessShowcase } from "./recycling-access-showcase";
 import { SiteHeader } from "./site-header";
+import { WasteSortingShowcase } from "./waste-sorting-showcase";
 
 const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
@@ -337,12 +339,12 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
             <p className="eyebrow">Direkt erledigen</p>
             <h2>Was möchten Sie tun?</h2>
             <nav aria-label="Schnellaktionen">
-              <a href="#abfall-abc">
+              <a href="#sortierkompass">
                 <span>
-                  <Icon name="search" />
+                  <Icon name="camera" />
                 </span>
-                <strong>Entsorgungsweg suchen</strong>
-                <small>Suche öffnen</small>
+                <strong>SortierKompass testen</strong>
+                <small>Beispielfoto prüfen</small>
               </a>
               <a href="#meldung">
                 <span>
@@ -358,6 +360,15 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
                 <strong>Sperrmüll bestellen</strong>
                 <small>Termin wählen</small>
               </a>
+              {config.enabledFeatures.recyclingAccessShowcase && (
+                <a href="#nachtzugang">
+                  <span>
+                    <Icon name="recycle" />
+                  </span>
+                  <strong>24/7-Zugang testen</strong>
+                  <small>Tor-Simulation starten</small>
+                </a>
+              )}
             </nav>
           </Card>
         </section>
@@ -547,6 +558,7 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
             </div>
           )}
         </section>
+        <WasteSortingShowcase tenantKey={tenantKey} />
         <section className="home-section split-section" id="abfall-abc">
           <Card as="article" className="guide-card">
             <p className="eyebrow">Abfall-ABC</p>
@@ -688,6 +700,12 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
             </div>
           </div>
         </section>
+        {config.enabledFeatures.recyclingAccessShowcase && (
+          <RecyclingAccessShowcase
+            site={sites.find((site) => site.id === "site-north") ?? null}
+            tenantKey={tenantKey}
+          />
+        )}
         <section className="home-section form-grid" id="meldung">
           <div>
             <p className="eyebrow">Reklamation</p>
