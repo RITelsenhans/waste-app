@@ -63,6 +63,10 @@ Sitzungen (mind. 32 Zeichen) und wird niemandem weitergegeben.
    | `WASTE_PILOT_ADMIN_ENABLED`  | `false`                                                                                |
    | `WASTE_MAIL_ENABLED`         | `false`                                                                                |
 
+   Die optionalen, strikt token-geschützten Variablen für den automatischen
+   Qualitätsagenten stehen in der [Betriebsanleitung](quality-agent.md). Sie werden
+   erst nach Einrichtung des identischen GitHub-Secrets aktiviert.
+
    `PORT` setzt Railway selbst; das Dockerfile hört darauf. `WASTE_WEB_ORIGIN`
    kommt in Schritt 3, sobald die Vercel-Adresse bekannt ist.
 

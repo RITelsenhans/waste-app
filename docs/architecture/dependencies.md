@@ -39,13 +39,15 @@ Freigabeprozess gegen die dortige Image-Allowlist geprüft werden.
 
 GitHub-Actions-Komponenten:
 
-| Komponente               | Version | Gepinnter Commit                           | Bedarf                                    | Lizenz |
-| ------------------------ | ------- | ------------------------------------------ | ----------------------------------------- | ------ |
-| actions/checkout         | 7.0.1   | `3d3c42e5aac5ba805825da76410c181273ba90b1` | Repository-Inhalt in CI bereitstellen     | MIT    |
-| actions/setup-node       | 7.0.0   | `820762786026740c76f36085b0efc47a31fe5020` | reproduzierbare Node-22-Laufzeit          | MIT    |
-| actions/setup-java       | 5.6.0   | `03ad4de0992f5dab5e18fcb136590ce7c4a0ac95` | Temurin 21 und Gradle-Cache               | MIT    |
-| dependency-review-action | 5.0.0   | `a1d282b36b6f3519aa1f3fc636f609c47dddb294` | neue Advisories und Lizenzen im PR prüfen | MIT    |
-| github/codeql-action     | 4.37.4  | `f205ea1c3313d32999d8d6a48b4f6530d4437b38` | statische Security-Analyse beider Stacks  | MIT¹   |
+| Komponente               | Version | Gepinnter Commit                           | Bedarf                                                                     | Lizenz     |
+| ------------------------ | ------- | ------------------------------------------ | -------------------------------------------------------------------------- | ---------- |
+| actions/checkout         | 7.0.1   | `3d3c42e5aac5ba805825da76410c181273ba90b1` | Repository-Inhalt in CI bereitstellen                                      | MIT        |
+| actions/setup-node       | 7.0.0   | `820762786026740c76f36085b0efc47a31fe5020` | reproduzierbare Node-22-Laufzeit                                           | MIT        |
+| actions/setup-java       | 5.6.0   | `03ad4de0992f5dab5e18fcb136590ce7c4a0ac95` | Temurin 21 und Gradle-Cache                                                | MIT        |
+| actions/upload-artifact  | 7.0.1   | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | animierten Qualitätsbericht 30 Tage bereitstellen                          | MIT        |
+| dependency-review-action | 5.0.0   | `a1d282b36b6f3519aa1f3fc636f609c47dddb294` | neue Advisories und Lizenzen im PR prüfen                                  | MIT        |
+| github/codeql-action     | 4.37.4  | `f205ea1c3313d32999d8d6a48b4f6530d4437b38` | statische Security-Analyse beider Stacks                                   | MIT¹       |
+| openai/codex-action      | 1       | `b11346a6fa031e2e164ab4b7c7ea201afffd7d59` | optionale read-only Ursachenanalyse nur bei fehlgeschlagenem Qualitätslauf | Apache-2.0 |
 
 ¹ Die Action ist MIT-lizenziert. Nutzung und Verfügbarkeit der enthaltenen
 CodeQL-Analyse unterliegen zusätzlich den GitHub-Bedingungen und dem Tarif des

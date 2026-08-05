@@ -7,5 +7,11 @@ spring:
     locations: classpath:db/migration
 
 waste:
+  monitoring:
+    enabled: true
+    token: integration-monitor-token-00000000000000000000000000000000
+    cleanup-enabled: true
+    retention-days: 30
+    maximum-rows-per-run: 500
   pilot:
     admin-enabled: true

@@ -66,6 +66,9 @@ import type {
   GetCollectionsData,
   GetCollectionsErrors,
   GetCollectionsResponses,
+  GetMonitoringSummaryData,
+  GetMonitoringSummaryErrors,
+  GetMonitoringSummaryResponses,
   GetMunicipalitiesData,
   GetMunicipalitiesErrors,
   GetMunicipalitiesResponses,
@@ -81,6 +84,9 @@ import type {
   GetTenantConfigData,
   GetTenantConfigErrors,
   GetTenantConfigResponses,
+  RunTechnicalMaintenanceData,
+  RunTechnicalMaintenanceErrors,
+  RunTechnicalMaintenanceResponses,
   SearchAddressesData,
   SearchAddressesErrors,
   SearchAddressesResponses,
@@ -136,6 +142,40 @@ export const getReadiness = <ThrowOnError extends boolean = false>(
 ) =>
   (options?.client ?? client).get<GetReadinessResponses, GetReadinessErrors, ThrowOnError>({
     url: "/v1/health/ready",
+    ...options,
+  });
+
+/**
+ * Liefert ausschließlich aggregierte Qualitäts- und Wartungsstatistiken.
+ */
+export const getMonitoringSummary = <ThrowOnError extends boolean = false>(
+  options?: Options<GetMonitoringSummaryData, ThrowOnError>,
+) =>
+  (options?.client ?? client).get<
+    GetMonitoringSummaryResponses,
+    GetMonitoringSummaryErrors,
+    ThrowOnError
+  >({
+    security: [{ name: "X-Monitoring-Token", type: "apiKey" }],
+    url: "/v1/monitoring/summary",
+    ...options,
+  });
+
+/**
+ * Löscht begrenzt abgelaufene technische Zustell- und Idempotenzdaten.
+ *
+ * Fachvorgänge, Termine, Meldungen und Zugangsverläufe werden nicht gelöscht.
+ */
+export const runTechnicalMaintenance = <ThrowOnError extends boolean = false>(
+  options?: Options<RunTechnicalMaintenanceData, ThrowOnError>,
+) =>
+  (options?.client ?? client).post<
+    RunTechnicalMaintenanceResponses,
+    RunTechnicalMaintenanceErrors,
+    ThrowOnError
+  >({
+    security: [{ name: "X-Monitoring-Token", type: "apiKey" }],
+    url: "/v1/monitoring/maintenance",
     ...options,
   });
 

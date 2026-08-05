@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
@@ -31,6 +32,9 @@ class ApiHttpIntegrationTests {
     @Autowired
     lateinit var objectMapper: ObjectMapper
 
+    @Autowired
+    lateinit var jdbc: JdbcClient
+
     @Test
     fun `readiness endpoint reports ready in UTC`() {
         mockMvc
@@ -42,6 +46,52 @@ class ApiHttpIntegrationTests {
                 jsonPath("$.checkedAt") {
                     value(matchesPattern("^\\d{4}-\\d{2}-\\d{2}T.*Z$"))
                 }
+            }
+    }
+
+    @Test
+    fun `monitoring is protected and removes only expired technical records`() {
+        mockMvc
+            .get("/v1/monitoring/summary")
+            .andExpect { status { isForbidden() } }
+
+        jdbc
+            .sql(
+                """
+                insert into outbox_event
+                    (id, aggregate_type, aggregate_id, event_type, payload, created_at,
+                     published_at, attempt_count, next_attempt_at)
+                values
+                    ('integration-expired-outbox', 'case', 'integration', 'test', '{}',
+                     '2026-01-01T00:00:00Z', '2026-01-02T00:00:00Z', 0,
+                     '2026-01-01T00:00:00Z')
+                """.trimIndent(),
+            ).update()
+
+        mockMvc
+            .post("/v1/monitoring/maintenance") {
+                header(
+                    "X-Monitoring-Token",
+                    "integration-monitor-token-00000000000000000000000000000000",
+                )
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.status") { value("completed") }
+                jsonPath("$.deletedOutboxEvents") { value(1) }
+                jsonPath("$.deletedTotal") { value(1) }
+            }
+
+        mockMvc
+            .get("/v1/monitoring/summary") {
+                header(
+                    "X-Monitoring-Token",
+                    "integration-monitor-token-00000000000000000000000000000000",
+                )
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.status") { value("ready") }
+                jsonPath("$.statistics.upcomingCollectionEvents") { exists() }
+                jsonPath("$.lastMaintenance.status") { value("completed") }
             }
     }
 

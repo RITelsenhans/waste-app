@@ -9,6 +9,39 @@ export type ReadyResponse = {
   checkedAt: string;
 };
 
+export type MonitoringStatistics = {
+  upcomingCollectionEvents: number;
+  outdatedCollectionEvents: number;
+  activeNotices: number;
+  expiredNotices: number;
+  openCases: number;
+  completedCases: number;
+  pendingOutboxEvents: number;
+  failedOutboxEvents: number;
+  completedRecyclingAccessRequests: number;
+  cleanupCandidates: number;
+};
+
+export type MaintenanceResult = {
+  status: "completed" | "disabled" | "blocked";
+  executedAt: string;
+  cutoffAt: string;
+  candidateCount: number;
+  deletedOutboxEvents: number;
+  deletedCaseIdempotencyRecords: number;
+  deletedAccessIdempotencyRecords: number;
+  readonly deletedTotal: number;
+  finding: string;
+};
+
+export type MonitoringSummary = {
+  status: "ready";
+  generatedAt: string;
+  retentionDays: number;
+  statistics: MonitoringStatistics;
+  lastMaintenance?: MaintenanceResult | null;
+};
+
 export type Branding = {
   logoUrl: string;
   primaryColor: string;
@@ -335,6 +368,25 @@ export type Root = unknown;
 
 export type ReadyResponseRoot = unknown;
 
+export type MaintenanceResultWritable = {
+  status: "completed" | "disabled" | "blocked";
+  executedAt: string;
+  cutoffAt: string;
+  candidateCount: number;
+  deletedOutboxEvents: number;
+  deletedCaseIdempotencyRecords: number;
+  deletedAccessIdempotencyRecords: number;
+  finding: string;
+};
+
+export type MonitoringSummaryWritable = {
+  status: "ready";
+  generatedAt: string;
+  retentionDays: number;
+  statistics: MonitoringStatistics;
+  lastMaintenance?: MaintenanceResultWritable | null;
+};
+
 export type ContentId = string;
 
 export type TenantId = string;
@@ -375,6 +427,64 @@ export type GetReadinessResponses = {
 };
 
 export type GetReadinessResponse = GetReadinessResponses[keyof GetReadinessResponses];
+
+export type GetMonitoringSummaryData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/monitoring/summary";
+};
+
+export type GetMonitoringSummaryErrors = {
+  /**
+   * Das Monitoring-Geheimnis fehlt oder ist ungültig.
+   */
+  403: Problem;
+  /**
+   * Monitoring ist in dieser Laufzeit nicht aktiviert.
+   */
+  404: unknown;
+};
+
+export type GetMonitoringSummaryError =
+  GetMonitoringSummaryErrors[keyof GetMonitoringSummaryErrors];
+
+export type GetMonitoringSummaryResponses = {
+  /**
+   * Aggregierter Betriebsstand ohne fachliche Inhalte oder personenbezogene Daten.
+   */
+  200: MonitoringSummary;
+};
+
+export type GetMonitoringSummaryResponse =
+  GetMonitoringSummaryResponses[keyof GetMonitoringSummaryResponses];
+
+export type RunTechnicalMaintenanceData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/monitoring/maintenance";
+};
+
+export type RunTechnicalMaintenanceErrors = {
+  /**
+   * Das Monitoring-Geheimnis fehlt oder ist ungültig.
+   */
+  403: Problem;
+};
+
+export type RunTechnicalMaintenanceError =
+  RunTechnicalMaintenanceErrors[keyof RunTechnicalMaintenanceErrors];
+
+export type RunTechnicalMaintenanceResponses = {
+  /**
+   * Ergebnis der ausgeführten, deaktivierten oder blockierten Wartung.
+   */
+  200: MaintenanceResult;
+};
+
+export type RunTechnicalMaintenanceResponse =
+  RunTechnicalMaintenanceResponses[keyof RunTechnicalMaintenanceResponses];
 
 export type GetMunicipalitiesData = {
   body?: never;

@@ -23,6 +23,12 @@ spring:
       enabled: true
 
 waste:
+  monitoring:
+    enabled: ${WASTE_MONITORING_ENABLED:false}
+    token: ${WASTE_MONITORING_TOKEN:}
+    cleanup-enabled: ${WASTE_MONITORING_CLEANUP_ENABLED:false}
+    retention-days: ${WASTE_MONITORING_RETENTION_DAYS:30}
+    maximum-rows-per-run: ${WASTE_MONITORING_MAXIMUM_ROWS_PER_RUN:500}
   mail:
     enabled: ${WASTE_MAIL_ENABLED:false}
     from: ${WASTE_MAIL_FROM:abfall-app@demo.invalid}

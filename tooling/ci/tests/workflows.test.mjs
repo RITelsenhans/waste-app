@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const workflowNames = ["ci.yml", "dependency-review.yml", "security.yml"];
+const workflowNames = ["ci.yml", "dependency-review.yml", "quality-agent.yml", "security.yml"];
 
 async function readRepositoryFile(path) {
   return readFile(resolve(repositoryRoot, path), "utf8");
@@ -132,4 +132,20 @@ test("CI uses a digest-pinned Mailpit service for the existing mail browser test
   const workflow = await readRepositoryFile(".github/workflows/ci.yml");
   assert.match(workflow, /axllent\/mailpit:v1\.30\.6@sha256:[0-9a-f]{64}/);
   assert.match(workflow, /MAILPIT_EXTERNAL_URL: http:\/\/127\.0\.0\.1:18025/);
+});
+
+test("quality agent is read-only for GitHub and publishes an animated report", async () => {
+  const workflow = await readRepositoryFile(".github/workflows/quality-agent.yml");
+  const packageManifest = JSON.parse(await readRepositoryFile("package.json"));
+
+  assert.match(workflow, /cron: "30 7,18 \* \* \*"/);
+  assert.match(workflow, /timezone: Europe\/Berlin/);
+  assert.match(workflow, /safety-strategy: read-only/);
+  assert.match(workflow, /continue-on-error: true/);
+  assert.match(workflow, /quality-agent-report/);
+  assert.doesNotMatch(workflow, /^\s+(?:contents|pull-requests): write$/m);
+  assert.equal(
+    packageManifest.scripts["test:monitor:live"],
+    "playwright test --config playwright.live-monitor.config.ts",
+  );
 });

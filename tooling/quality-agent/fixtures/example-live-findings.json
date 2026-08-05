@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-05T17:30:00Z",
+  "target": "https://waste-app-web.vercel.app",
+  "mode": "safe-maintenance-and-read-only-live",
+  "findings": [
+    {
+      "id": "login",
+      "area": "Zugriff",
+      "title": "Geschützte Demo öffnen",
+      "status": "passed",
+      "finding": "Anmeldung, Sitzung und Weiterleitung nach /demo funktionieren.",
+      "durationMs": 684
+    },
+    {
+      "id": "maintenance",
+      "area": "Datenpflege",
+      "title": "Technische Alt-Daten begrenzt bereinigen",
+      "status": "passed",
+      "finding": "3 technische Alt-Datensätze gelöscht; Fachhistorien unverändert.",
+      "durationMs": 219
+    },
+    {
+      "id": "dates",
+      "area": "Termine",
+      "title": "Nächste Abholung plausibilisieren",
+      "status": "passed",
+      "finding": "Alle gelieferten Abholtermine liegen am aktuellen oder einem späteren Berliner Kalendertag.",
+      "durationMs": 171
+    },
+    {
+      "id": "workflow",
+      "area": "Soll-Workflows",
+      "title": "Bürgerwege kontrollieren",
+      "status": "passed",
+      "finding": "Adresssuche, Abfall-ABC, SortierKompass, Standorte und sichere Formzustände reagieren wie erwartet.",
+      "durationMs": 1238
+    }
+  ]
+}

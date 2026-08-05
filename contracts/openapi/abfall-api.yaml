@@ -21,6 +21,8 @@ tags:
     description: Synthetische Phase-2-Pilotvorgänge und Statuszugriff.
   - name: Admin
     description: Ausschließlich lokal aktivierte Pflege synthetischer Pilotdaten.
+  - name: Monitoring
+    description: Token-geschützte aggregierte Qualitätsstatistik und begrenzte technische Wartung.
 paths:
   /v1/health/ready:
     get:
@@ -50,6 +52,41 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /v1/monitoring/summary:
+    get:
+      operationId: getMonitoringSummary
+      summary: Liefert ausschließlich aggregierte Qualitäts- und Wartungsstatistiken.
+      tags: [Monitoring]
+      security:
+        - monitoringToken: []
+      responses:
+        "200":
+          description: Aggregierter Betriebsstand ohne fachliche Inhalte oder personenbezogene Daten.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonitoringSummary"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Monitoring ist in dieser Laufzeit nicht aktiviert.
+  /v1/monitoring/maintenance:
+    post:
+      operationId: runTechnicalMaintenance
+      summary: Löscht begrenzt abgelaufene technische Zustell- und Idempotenzdaten.
+      description: Fachvorgänge, Termine, Meldungen und Zugangsverläufe werden nicht gelöscht.
+      tags: [Monitoring]
+      security:
+        - monitoringToken: []
+      responses:
+        "200":
+          description: Ergebnis der ausgeführten, deaktivierten oder blockierten Wartung.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /v1/tenants:
     get:
       operationId: getMunicipalities
@@ -749,6 +786,12 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 components:
+  securitySchemes:
+    monitoringToken:
+      type: apiKey
+      in: header
+      name: X-Monitoring-Token
+      description: Separates, mindestens 32 Zeichen langes Geheimnis für den Qualitätsagenten.
   parameters:
     ContentId:
       name: id
@@ -803,6 +846,12 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Problem"
+    Forbidden:
+      description: Das Monitoring-Geheimnis fehlt oder ist ungültig.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
   schemas:
     ReadyResponse:
       type: object
@@ -817,6 +866,76 @@ components:
         checkedAt:
           type: string
           format: date-time
+    MonitoringStatistics:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          upcomingCollectionEvents,
+          outdatedCollectionEvents,
+          activeNotices,
+          expiredNotices,
+          openCases,
+          completedCases,
+          pendingOutboxEvents,
+          failedOutboxEvents,
+          completedRecyclingAccessRequests,
+          cleanupCandidates,
+        ]
+      properties:
+        upcomingCollectionEvents: { type: integer, minimum: 0 }
+        outdatedCollectionEvents: { type: integer, minimum: 0 }
+        activeNotices: { type: integer, minimum: 0 }
+        expiredNotices: { type: integer, minimum: 0 }
+        openCases: { type: integer, minimum: 0 }
+        completedCases: { type: integer, minimum: 0 }
+        pendingOutboxEvents: { type: integer, minimum: 0 }
+        failedOutboxEvents: { type: integer, minimum: 0 }
+        completedRecyclingAccessRequests: { type: integer, minimum: 0 }
+        cleanupCandidates: { type: integer, minimum: 0 }
+    MaintenanceResult:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          status,
+          executedAt,
+          cutoffAt,
+          candidateCount,
+          deletedOutboxEvents,
+          deletedCaseIdempotencyRecords,
+          deletedAccessIdempotencyRecords,
+          deletedTotal,
+          finding,
+        ]
+      properties:
+        status:
+          type: string
+          enum: [completed, disabled, blocked]
+        executedAt: { type: string, format: date-time }
+        cutoffAt: { type: string, format: date-time }
+        candidateCount: { type: integer, minimum: 0 }
+        deletedOutboxEvents: { type: integer, minimum: 0 }
+        deletedCaseIdempotencyRecords: { type: integer, minimum: 0 }
+        deletedAccessIdempotencyRecords: { type: integer, minimum: 0 }
+        deletedTotal: { type: integer, minimum: 0, readOnly: true }
+        finding: { type: string }
+    MonitoringSummary:
+      type: object
+      additionalProperties: false
+      required: [status, generatedAt, retentionDays, statistics]
+      properties:
+        status:
+          type: string
+          const: ready
+        generatedAt: { type: string, format: date-time }
+        retentionDays: { type: integer, minimum: 1 }
+        statistics:
+          $ref: "#/components/schemas/MonitoringStatistics"
+        lastMaintenance:
+          oneOf:
+            - $ref: "#/components/schemas/MaintenanceResult"
+            - type: "null"
     Branding:
       type: object
       additionalProperties: false

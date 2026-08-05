@@ -137,3 +137,10 @@ enthalten.
 
 Weitere Entscheidungen und offene Voraussetzungen stehen im
 [Decision Log](docs/decision-log.md) und in den [ADRs](docs/adr/).
+
+## Automatischer Qualitätsbericht
+
+Der getrennte Qualitätsagent kann die veröffentlichte Demo zweimal täglich prüfen,
+technische Alt-Daten begrenzt warten und einen selbstständig animierten HTML-Bericht
+als GitHub-Artefakt bereitstellen. Einrichtung, Secrets und Sicherheitsgrenzen stehen
+in der [Qualitätsagent-Anleitung](docs/operations/quality-agent.md).

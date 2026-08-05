@@ -52,7 +52,7 @@ class PilotWebConfiguration(
                 .addMapping("/v1/**")
                 .allowedOrigins(*properties.allowedOrigins.toTypedArray())
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("Content-Type", "Idempotency-Key", "Accept")
+                .allowedHeaders("Content-Type", "Idempotency-Key", "X-Monitoring-Token", "Accept")
         }
     }
 }

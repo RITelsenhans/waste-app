@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "likelyCause", "recommendedChecks", "pullRequestRecommendation"],
+  "properties": {
+    "summary": { "type": "string" },
+    "likelyCause": { "type": "string" },
+    "recommendedChecks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 5
+    },
+    "pullRequestRecommendation": {
+      "type": "string",
+      "enum": ["none", "investigate-first", "draft-pr-after-confirmation"]
+    }
+  }
+}
