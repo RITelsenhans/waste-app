@@ -1,6 +1,6 @@
 # Decision Log
 
-Stand: 4. August 2026
+Stand: 5. August 2026
 
 ## Fehlende Voraussetzungen
 
@@ -57,6 +57,7 @@ Stand: 4. August 2026
 | D-034 | Der Pilot wird um einen mandantenabhängigen 24/7-Recyclinghof-Zugangs-Showcase mit Antrag, Code oder `DEMO-`-Kennzeichen und einer persistenten Scanner-/Schranken-Simulation erweitert.                  | Der Auftraggeber hat diesen Showcase am 4. August 2026 ausdrücklich freigegeben. Zustandsfolge und Kennungsprüfung liegen in der API; reale ANPR-, Tor- und Safety-Technik sowie echte Kennzeichen bleiben gesperrt; siehe ADR-0009.                                              |
 | D-035 | Die öffentliche Bürgeransicht übernimmt die Petrol-, Türkis- und Amber-Designsprache des 24/7-Showcases; die interne Pflegeoberfläche bleibt vorerst sachlich getrennt.                                   | Der Auftraggeber hat die Angleichung am 4. August 2026 ausdrücklich gewünscht. Regio-IT-Logo und Primärrot bleiben erhalten, Kontrast und mobile Bedienbarkeit bleiben blockierende Qualitätsmerkmale.                                                                            |
 | D-036 | Der Pilot erhält mit „SortierKompass“ einen visuellen Entsorgungsassistenten, der vorerst ausschließlich drei synthetische Beispielfotos transparent mit dem vorhandenen kommunalen Abfall-ABC abgleicht. | Schafft einen sichtbaren, testbaren Hero ohne eine nicht vorhandene Foto-KI vorzutäuschen. Eigene Fotos, Modellauswahl und produktive Bilderkennung bleiben bis zur Datenschutz-, Lizenz-, Qualitäts- und Betriebsentscheidung gesperrt.                                          |
+| D-037 | Die öffentliche Termin-API liefert nur Abholungen ab dem aktuellen Kalendertag in der Zeitzone des Mandanten; die Pflege-Unit behält auch historische Termine.                                            | „Nächste Abholung“ darf keinen vergangenen Termin anzeigen. Die Mandantenzeitzone verhindert Datumsfehler rund um UTC-Tageswechsel, während historische Daten weiterhin korrigierbar bleiben.                                                                                     |
 
 ## Offene Entscheidungen
 

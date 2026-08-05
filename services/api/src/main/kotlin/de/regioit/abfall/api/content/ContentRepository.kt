@@ -12,6 +12,7 @@ import java.sql.Timestamp
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Locale
 import java.util.UUID
 import kotlin.math.min
@@ -54,6 +55,7 @@ class ContentRepository(
     fun collections(
         tenantId: String,
         addressId: String,
+        fromDate: LocalDate,
     ): List<CollectionEvent> =
         jdbc
             .sql(
@@ -61,11 +63,14 @@ class ContentRepository(
                 select id, address_id, waste_type_id, waste_type_label, planned_date, effective_date,
                        status, last_modified
                 from collection_event
-                where tenant_id = :tenantId and address_id = :addressId
+                where tenant_id = :tenantId
+                  and address_id = :addressId
+                  and effective_date >= :fromDate
                 order by effective_date, waste_type_label
                 """.trimIndent(),
             ).param("tenantId", tenantId)
             .param("addressId", addressId)
+            .param("fromDate", fromDate)
             .query(::mapCollection)
             .list()
 
@@ -581,7 +586,9 @@ class ContentService(
         addressId: String,
     ): List<CollectionEvent> {
         validateAddress(tenantId, addressId)
-        return repository.collections(tenantId, addressId)
+        val timezone = properties.tenants.getValue(tenantId).timezone
+        val today = LocalDate.now(clock.withZone(ZoneId.of(timezone)))
+        return repository.collections(tenantId, addressId, today)
     }
 
     fun searchWasteGuide(

@@ -15,8 +15,11 @@ import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
 import tools.jackson.databind.ObjectMapper
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @SpringBootTest(classes = [ApiApplication::class])
 @AutoConfigureMockMvc
@@ -80,14 +83,24 @@ class ApiHttpIntegrationTests {
                 jsonPath("$[0].id") { value("demo-musterstrasse-12") }
             }
 
-        mockMvc
-            .get("/v1/addresses/demo-musterstrasse-12/collections") {
-                param("tenantId", "demo")
-            }.andExpect {
-                status { isOk() }
-                jsonPath("$[0].wasteTypeLabel") { value("Restabfall") }
-                jsonPath("$[2].status") { value("moved") }
+        val collections =
+            mockMvc
+                .get("/v1/addresses/demo-musterstrasse-12/collections") {
+                    param("tenantId", "demo")
+                }.andExpect {
+                    status { isOk() }
+                    jsonPath("$[0].wasteTypeLabel") { value("Bioabfall") }
+                    jsonPath("$[1].status") { value("moved") }
+                }.andReturn()
+        val today = LocalDate.now(ZoneId.of("Europe/Berlin"))
+        val collectionTree = objectMapper.readTree(collections.response.contentAsString)
+        val collectionDates =
+            (0 until collectionTree.size()).map { index ->
+                LocalDate.parse(collectionTree[index]["effectiveDate"].asText())
             }
+        assertTrue(collectionDates.isNotEmpty())
+        assertTrue(collectionDates.all { !it.isBefore(today) })
+        assertEquals(collectionDates.sorted(), collectionDates)
 
         mockMvc
             .get("/v1/waste-guide/search") {

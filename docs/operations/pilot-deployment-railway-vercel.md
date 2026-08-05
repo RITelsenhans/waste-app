@@ -55,16 +55,17 @@ Sitzungen (mind. 32 Zeichen) und wird niemandem weitergegeben.
    `${{Postgres.*}}`-Referenzen zieht Railway automatisch aus dem Datenbankdienst
    (Servicename ggf. anpassen, falls nicht „Postgres"):
 
-   | Name | Wert |
-   |------|------|
-   | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}` |
-   | `SPRING_DATASOURCE_USERNAME` | `${{Postgres.PGUSER}}` |
-   | `SPRING_DATASOURCE_PASSWORD` | `${{Postgres.PGPASSWORD}}` |
-   | `WASTE_PILOT_ADMIN_ENABLED` | `false` |
-   | `WASTE_MAIL_ENABLED` | `false` |
+   | Name                         | Wert                                                                                   |
+   | ---------------------------- | -------------------------------------------------------------------------------------- |
+   | `SPRING_DATASOURCE_URL`      | `jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}` |
+   | `SPRING_DATASOURCE_USERNAME` | `${{Postgres.PGUSER}}`                                                                 |
+   | `SPRING_DATASOURCE_PASSWORD` | `${{Postgres.PGPASSWORD}}`                                                             |
+   | `WASTE_PILOT_ADMIN_ENABLED`  | `false`                                                                                |
+   | `WASTE_MAIL_ENABLED`         | `false`                                                                                |
 
    `PORT` setzt Railway selbst; das Dockerfile hört darauf. `WASTE_WEB_ORIGIN`
    kommt in Schritt 3, sobald die Vercel-Adresse bekannt ist.
+
 5. Öffentliche Adresse erzeugen: Service → **Settings** → **Networking** →
    **Generate Domain**. Ergebnis sieht z. B. so aus:
    `https://waste-app-api-production.up.railway.app`. **Diese URL notieren** —
@@ -85,15 +86,15 @@ Sitzungen (mind. 32 Zeichen) und wird niemandem weitergegeben.
    (Project → **Settings → Git**). Node-Version 22 einstellen, falls abgefragt.
 4. **Environment Variables** setzen (für „Production"):
 
-   | Name | Wert |
-   |------|------|
-   | `DEMO_AUTH_REQUIRED` | `true` |
-   | `DEMO_SHARE_MODE` | `true` |
-   | `DEMO_COOKIE_SECURE` | `true` |
-   | `DEMO_ACCESS_PASSWORD` | *(Ergebnis von `openssl rand -base64 24`)* |
-   | `DEMO_SESSION_SECRET` | *(Ergebnis von `openssl rand -hex 32`)* |
-   | `API_BASE_URL` | *(Railway-URL aus Schritt 1.5)* |
-   | `NEXT_PUBLIC_API_BASE_URL` | *(leer lassen)* |
+   | Name                       | Wert                                       |
+   | -------------------------- | ------------------------------------------ |
+   | `DEMO_AUTH_REQUIRED`       | `true`                                     |
+   | `DEMO_SHARE_MODE`          | `true`                                     |
+   | `DEMO_COOKIE_SECURE`       | `true`                                     |
+   | `DEMO_ACCESS_PASSWORD`     | _(Ergebnis von `openssl rand -base64 24`)_ |
+   | `DEMO_SESSION_SECRET`      | _(Ergebnis von `openssl rand -hex 32`)_    |
+   | `API_BASE_URL`             | _(Railway-URL aus Schritt 1.5)_            |
+   | `NEXT_PUBLIC_API_BASE_URL` | _(leer lassen)_                            |
 
 5. **Deploy** anstoßen. Nach dem Build zeigt Vercel die Adresse an, z. B.
    `https://waste-app-web.vercel.app`. **Diese URL notieren.**
@@ -141,4 +142,3 @@ nachtragen:
 - **Governance:** Dies ist der zugriffsgeschützte Pilotweg, nicht die abgenommene
   Zielumgebung. Der strategische Zielpfad (SAP BTP Cloud Foundry, OIDC/SSO,
   Rollen, Betrieb) bleibt davon unberührt — siehe Decision Log und ADRs.
-```

@@ -29,6 +29,7 @@ test("lädt personalisierte Pilotdaten und durchsucht das Abfall-ABC", async ({ 
 
   await expect(page.getByText("Lokaler Pilot", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("August");
+  await expect(page.getByRole("heading", { level: 1 })).not.toContainText("04. August");
   await expect(page.getByText("Musterstraße 12, 52062 Demo-Stadt").first()).toBeVisible();
 
   await page.getByLabel("Gegenstand", { exact: true }).first().fill("Akku");
