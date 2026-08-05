@@ -43,17 +43,18 @@ New repository secret**:
 
 ### 4. Workflow aktivieren
 
-GitHub startet `schedule` ausschließlich aus dem Default-Branch. Der Workflow muss
-daher geprüft nach `main` übernommen werden. Solange das noch nicht erfolgt ist:
+GitHub führt sowohl `schedule` als auch den manuellen `workflow_dispatch` nur aus,
+wenn die Workflow-Datei im Default-Branch vorhanden ist. Der geprüfte Pull Request
+muss deshalb zuerst nach `main` übernommen werden. Erst danach:
 
 1. **Actions → Qualitätsagent** öffnen.
-2. **Run workflow** wählen.
-3. Branch `feat/phase1-phase2-functional-pilot` auswählen.
-4. **Run workflow** bestätigen.
+2. Für einen ersten Kontrolllauf **Run workflow** wählen und bestätigen.
+3. Ergebnis und Artefakt prüfen.
 
-Nach Übernahme nach `main` läuft er automatisch um 07:30 und 18:30 Uhr Berliner Zeit.
-Der Checkout bleibt ausdrücklich auf dem bei Vercel/Railway eingestellten
-Produktionsbranch.
+Danach läuft er automatisch um 07:30 und 18:30 Uhr Berliner Zeit. Der Checkout bleibt
+ausdrücklich auf dem bei Vercel/Railway eingestellten Produktionsbranch. Vor dem Merge
+ist der Workflow vollständig inaktiv; ein direktes, ungeprüftes Umgehen dieser Grenze
+ist nicht vorgesehen.
 
 ## Bericht öffnen
 

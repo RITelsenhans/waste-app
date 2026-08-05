@@ -49,7 +49,8 @@ ohne Testpersonen zu verfolgen oder die Demo mit Monitorvorgängen zu verschmutz
 Die technische Wartung ist reversibilitätsbewusst begrenzt; für fachliche Löschung
 bleibt ein abgestimmtes Datenschutz- und Aufbewahrungskonzept erforderlich.
 
-Geplante GitHub-Workflows werden ausschließlich aus dem Default-Branch gestartet.
-Solange `quality-agent.yml` noch nicht nach `main` übernommen wurde, ist nur der
-manuelle Lauf auf dem Produktionsbranch möglich. Diese Aktivierungsgrenze darf nicht
-durch ein ungeprüftes direktes Merge umgangen werden.
+Geplante GitHub-Workflows und deren manueller `workflow_dispatch` werden nur
+ausgeführt, wenn die Workflow-Datei im Default-Branch vorhanden ist. Solange
+`quality-agent.yml` noch nicht geprüft nach `main` übernommen wurde, bleibt der
+GitHub-Lauf deshalb vollständig inaktiv. Diese Aktivierungsgrenze darf nicht durch ein
+ungeprüftes direktes Merge umgangen werden.
