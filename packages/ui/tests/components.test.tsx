@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { Action, Card, StatusBadge } from "../src";
+import { Action, Card, Icon, StatusBadge } from "../src";
 
 describe("Action", () => {
   it("renders navigation as a native link with its accessible text", () => {
@@ -44,5 +44,14 @@ describe("StatusBadge", () => {
     expect(markup).toContain("waste-status-badge--success");
     expect(markup).toContain('aria-hidden="true"');
     expect(markup).toContain("Planmäßig");
+  });
+});
+
+describe("Icon", () => {
+  it("keeps decorative pictograms out of the accessibility tree", () => {
+    const markup = renderToStaticMarkup(<Icon name="map-pin" />);
+
+    expect(markup).toContain('aria-hidden="true"');
+    expect(markup).toContain('viewBox="0 0 24 24"');
   });
 });

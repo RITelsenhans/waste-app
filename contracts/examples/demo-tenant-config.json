@@ -24,10 +24,17 @@
       "privacy": "#datenschutz",
       "accessibility": "#barrierefreiheit"
     },
+    "serviceArea": {
+      "city": "Demo-Stadt",
+      "reportingOffice": "Bürgerservice Abfall",
+      "phone": "0241 000000",
+      "email": "abfall@example.invalid"
+    },
     "supportContacts": [
       {
         "label": "Demo-Support",
-        "email": "support@example.invalid"
+        "email": "support@example.invalid",
+        "phone": "0241 000000"
       }
     ],
     "contentVersion": "demo-2026-07-30"

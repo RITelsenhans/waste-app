@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const workflowNames = ["ci.yml", "dependency-review.yml", "security.yml"];
+const workflowNames = ["ci.yml", "dependency-review.yml", "quality-agent.yml", "security.yml"];
 
 async function readRepositoryFile(path) {
   return readFile(resolve(repositoryRoot, path), "utf8");
@@ -99,4 +99,53 @@ test("Dependabot coordinates Kotlin plugins and defers incompatible version upda
       ),
     );
   }
+});
+
+test("Codespaces shares only the protected web port and pins its data service", async () => {
+  const configuration = JSON.parse(await readRepositoryFile(".devcontainer/devcontainer.json"));
+  const compose = await readRepositoryFile(".devcontainer/compose.yml");
+  const packageManifest = JSON.parse(await readRepositoryFile("package.json"));
+
+  assert.deepEqual(configuration.forwardPorts, [3000]);
+  for (const port of ["3001", "8080", "55432", "8025"]) {
+    assert.equal(configuration.portsAttributes[port].onAutoForward, "ignore");
+  }
+  assert.doesNotMatch(compose, /^\s+ports:/m);
+  assert.match(compose, /postgres:17\.10-bookworm@sha256:[0-9a-f]{64}/);
+  assert.equal(packageManifest.scripts["dev:codespace"], "node tooling/scripts/codespace-dev.mjs");
+  assert.equal(configuration.postCreateCommand, "corepack pnpm install --frozen-lockfile");
+
+  const codespaceStart = await readRepositoryFile("tooling/scripts/codespace-dev.mjs");
+  assert.match(codespaceStart, /"install", "--frozen-lockfile"/);
+  assert.match(
+    codespaceStart,
+    /API_READY_TIMEOUT_MS: process\.env\.API_READY_TIMEOUT_MS \?\? "600000"/,
+  );
+  assert.match(codespaceStart, /DEMO_PUBLIC_ORIGIN:/);
+  assert.match(codespaceStart, /`https:\/\/\$\{codespaceName\}-\$\{webPort\}\.app\.github\.dev`/);
+
+  const localStart = await readRepositoryFile("tooling/scripts/dev.mjs");
+  assert.match(localStart, /readPositiveInteger\("API_READY_TIMEOUT_MS", 120_000\)/);
+});
+
+test("CI uses a digest-pinned Mailpit service for the existing mail browser test", async () => {
+  const workflow = await readRepositoryFile(".github/workflows/ci.yml");
+  assert.match(workflow, /axllent\/mailpit:v1\.30\.6@sha256:[0-9a-f]{64}/);
+  assert.match(workflow, /MAILPIT_EXTERNAL_URL: http:\/\/127\.0\.0\.1:18025/);
+});
+
+test("quality agent is read-only for GitHub and publishes an animated report", async () => {
+  const workflow = await readRepositoryFile(".github/workflows/quality-agent.yml");
+  const packageManifest = JSON.parse(await readRepositoryFile("package.json"));
+
+  assert.match(workflow, /cron: "30 7,18 \* \* \*"/);
+  assert.match(workflow, /timezone: Europe\/Berlin/);
+  assert.match(workflow, /safety-strategy: read-only/);
+  assert.match(workflow, /continue-on-error: true/);
+  assert.match(workflow, /quality-agent-report/);
+  assert.doesNotMatch(workflow, /^\s+(?:contents|pull-requests): write$/m);
+  assert.equal(
+    packageManifest.scripts["test:monitor:live"],
+    "playwright test --config playwright.live-monitor.config.ts",
+  );
 });

@@ -9,6 +9,39 @@ export type ReadyResponse = {
   checkedAt: string;
 };
 
+export type MonitoringStatistics = {
+  upcomingCollectionEvents: number;
+  outdatedCollectionEvents: number;
+  activeNotices: number;
+  expiredNotices: number;
+  openCases: number;
+  completedCases: number;
+  pendingOutboxEvents: number;
+  failedOutboxEvents: number;
+  completedRecyclingAccessRequests: number;
+  cleanupCandidates: number;
+};
+
+export type MaintenanceResult = {
+  status: "completed" | "disabled" | "blocked";
+  executedAt: string;
+  cutoffAt: string;
+  candidateCount: number;
+  deletedOutboxEvents: number;
+  deletedCaseIdempotencyRecords: number;
+  deletedAccessIdempotencyRecords: number;
+  readonly deletedTotal: number;
+  finding: string;
+};
+
+export type MonitoringSummary = {
+  status: "ready";
+  generatedAt: string;
+  retentionDays: number;
+  statistics: MonitoringStatistics;
+  lastMaintenance?: MaintenanceResult | null;
+};
+
 export type Branding = {
   logoUrl: string;
   primaryColor: string;
@@ -24,6 +57,14 @@ export type LegalLinks = {
 export type SupportContact = {
   label: string;
   email: string;
+  phone: string;
+};
+
+export type ServiceArea = {
+  city: string;
+  reportingOffice: string;
+  phone: string;
+  email: string;
 };
 
 export type TenantConfig = {
@@ -37,8 +78,281 @@ export type TenantConfig = {
     [key: string]: boolean;
   };
   legalLinks: LegalLinks;
+  serviceArea: ServiceArea;
   supportContacts: Array<SupportContact>;
   contentVersion: string;
+};
+
+export type MunicipalityCustomizationInput = {
+  name: string;
+  shortName: string;
+  city: string;
+  reportingOffice: string;
+  phone: string;
+  email: string;
+  primaryColor: string;
+  infoColor: string;
+};
+
+export type MunicipalityCustomization = MunicipalityCustomizationInput & {
+  tenantId: string;
+};
+
+export type MunicipalitySummary = {
+  tenantId: string;
+  name: string;
+  shortName: string;
+  city: string;
+  primaryColor: string;
+};
+
+export type Address = {
+  id: string;
+  tenantId: string;
+  street: string;
+  houseNumber: string;
+  postalCode: string;
+  city: string;
+  district?: string | null;
+  displayLabel: string;
+};
+
+export type CollectionStatus = "planned" | "moved" | "cancelled" | "additional";
+
+export type CollectionEvent = {
+  id: string;
+  addressId: string;
+  wasteTypeId: string;
+  wasteTypeLabel: string;
+  plannedDate: string;
+  effectiveDate: string;
+  status: CollectionStatus;
+  lastModified: string;
+};
+
+export type CollectionInput = {
+  tenantId: string;
+  addressId: string;
+  wasteTypeId: string;
+  wasteTypeLabel: string;
+  plannedDate: string;
+  effectiveDate: string;
+  status: CollectionStatus;
+};
+
+export type WasteGuideEntry = {
+  id: string;
+  tenantId: string;
+  name: string;
+  category: string;
+  disposalRoute: string;
+  notes: string;
+  synonyms: Array<string>;
+  dataStatus: string;
+};
+
+export type WasteGuideInput = {
+  tenantId: string;
+  name: string;
+  category: string;
+  disposalRoute: string;
+  notes: string;
+  synonyms: Array<string>;
+};
+
+export type Site = {
+  id: string;
+  tenantId: string;
+  name: string;
+  siteType: string;
+  address: string;
+  openingHours: string;
+  acceptedWasteTypes: Array<string>;
+  openNow: boolean;
+  latitude: number;
+  longitude: number;
+  dataStatus: string;
+};
+
+export type SiteInput = {
+  tenantId: string;
+  name: string;
+  siteType: string;
+  address: string;
+  openingHours: string;
+  acceptedWasteTypes: Array<string>;
+  openNow: boolean;
+  latitude: number;
+  longitude: number;
+};
+
+export type NoticePriority = "info" | "warning" | "critical";
+
+export type Notice = {
+  id: string;
+  tenantId: string;
+  addressId?: string | null;
+  noticeType: string;
+  title: string;
+  body: string;
+  priority: NoticePriority;
+  validFrom: string;
+  validUntil: string;
+};
+
+export type NoticeInput = {
+  tenantId: string;
+  addressId?: string | null;
+  noticeType: string;
+  title: string;
+  body: string;
+  priority: NoticePriority;
+  validFrom: string;
+  validUntil: string;
+};
+
+export type DefectCategory =
+  | "bin-not-emptied"
+  | "damaged-bin"
+  | "illegal-dumping"
+  | "dirty-site"
+  | "depot-container"
+  | "other";
+
+export type DefectCaseInput = {
+  tenantId: string;
+  category: DefectCategory;
+  address: string;
+  description: string;
+  occurredAt: string;
+  contactEmail?: string | null;
+  consent: boolean;
+  attachmentNames: Array<string>;
+};
+
+export type CaseStatus =
+  "received" | "in-review" | "needs-info" | "in-progress" | "completed" | "rejected" | "closed";
+
+export type CaseCreated = {
+  reference: string;
+  accessToken: string;
+  status: CaseStatus;
+  createdAt: string;
+};
+
+export type CaseEvent = {
+  status: CaseStatus;
+  publicLabel: string;
+  occurredAt: string;
+};
+
+export type CaseDetail = {
+  reference: string;
+  tenantId: string;
+  caseType: "defect" | "bulk-waste";
+  subject: string;
+  status: CaseStatus;
+  createdAt: string;
+  updatedAt: string;
+  summary: string;
+  events: Array<CaseEvent>;
+};
+
+export type CaseStatusInput = {
+  status: CaseStatus;
+  publicLabel: string;
+};
+
+export type RecyclingAccessIdentificationMethod = "code" | "license-plate";
+
+export type RecyclingAccessStatus =
+  "authorized" | "entry-granted" | "on-site" | "exit-granted" | "completed";
+
+export type RecyclingGateState = "closed" | "open-entry" | "open-exit";
+
+export type RecyclingAccessSimulationEventType =
+  "arrival-scan" | "entry-confirmed" | "exit-scan" | "exit-confirmed";
+
+export type RecyclingAccessRequestInput = {
+  tenantId: string;
+  siteId: string;
+  plannedArrivalAt: string;
+  wasteType: "electronics";
+  itemDescription: string;
+  identificationMethod: RecyclingAccessIdentificationMethod;
+  syntheticLicensePlate?: string | null;
+  syntheticDataConfirmed: boolean;
+};
+
+export type RecyclingAccessSimulationInput = {
+  accessToken: string;
+  eventType: RecyclingAccessSimulationEventType;
+  credential: string;
+};
+
+export type RecyclingAccessEvent = {
+  eventType: string;
+  label: string;
+  occurredAt: string;
+};
+
+export type RecyclingAccessRequest = {
+  reference: string;
+  accessToken: string;
+  tenantId: string;
+  siteId: string;
+  siteName: string;
+  plannedArrivalAt: string;
+  accessWindowStart: string;
+  accessWindowEnd: string;
+  wasteType: string;
+  itemDescription: string;
+  identificationMethod: RecyclingAccessIdentificationMethod;
+  /**
+   * Wird nur bei der erstmaligen Ausstellung zurückgegeben.
+   */
+  credential?: string | null;
+  credentialHint: string;
+  status: RecyclingAccessStatus;
+  gateState: RecyclingGateState;
+  nextSimulationEvent: string | null;
+  events: Array<RecyclingAccessEvent>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BulkWasteItemRule = {
+  id: string;
+  label: string;
+  maxQuantity: number;
+};
+
+export type BulkWasteRules = {
+  tenantId: string;
+  maxTotalItems: number;
+  items: Array<BulkWasteItemRule>;
+  preparationInstructions: string;
+};
+
+export type BulkWasteSlot = {
+  id: string;
+  date: string;
+  timeWindow: string;
+  remainingCapacity: number;
+};
+
+export type BulkWasteOrderItem = {
+  itemTypeId: string;
+  quantity: number;
+};
+
+export type BulkWasteOrderInput = {
+  tenantId: string;
+  addressId: string;
+  slotId: string;
+  items: Array<BulkWasteOrderItem>;
+  contactEmail?: string | null;
+  consent: boolean;
 };
 
 export type Problem = {
@@ -53,6 +367,37 @@ export type Problem = {
 export type Root = unknown;
 
 export type ReadyResponseRoot = unknown;
+
+export type MaintenanceResultWritable = {
+  status: "completed" | "disabled" | "blocked";
+  executedAt: string;
+  cutoffAt: string;
+  candidateCount: number;
+  deletedOutboxEvents: number;
+  deletedCaseIdempotencyRecords: number;
+  deletedAccessIdempotencyRecords: number;
+  finding: string;
+};
+
+export type MonitoringSummaryWritable = {
+  status: "ready";
+  generatedAt: string;
+  retentionDays: number;
+  statistics: MonitoringStatistics;
+  lastMaintenance?: MaintenanceResultWritable | null;
+};
+
+export type ContentId = string;
+
+export type TenantId = string;
+
+export type AddressId = string;
+
+export type AddressIdQuery = string;
+
+export type CaseReference = string;
+
+export type IdempotencyKey = string;
 
 export type GetReadinessData = {
   body?: never;
@@ -83,6 +428,94 @@ export type GetReadinessResponses = {
 
 export type GetReadinessResponse = GetReadinessResponses[keyof GetReadinessResponses];
 
+export type GetMonitoringSummaryData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/monitoring/summary";
+};
+
+export type GetMonitoringSummaryErrors = {
+  /**
+   * Das Monitoring-Geheimnis fehlt oder ist ungültig.
+   */
+  403: Problem;
+  /**
+   * Monitoring ist in dieser Laufzeit nicht aktiviert.
+   */
+  404: unknown;
+};
+
+export type GetMonitoringSummaryError =
+  GetMonitoringSummaryErrors[keyof GetMonitoringSummaryErrors];
+
+export type GetMonitoringSummaryResponses = {
+  /**
+   * Aggregierter Betriebsstand ohne fachliche Inhalte oder personenbezogene Daten.
+   */
+  200: MonitoringSummary;
+};
+
+export type GetMonitoringSummaryResponse =
+  GetMonitoringSummaryResponses[keyof GetMonitoringSummaryResponses];
+
+export type RunTechnicalMaintenanceData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/monitoring/maintenance";
+};
+
+export type RunTechnicalMaintenanceErrors = {
+  /**
+   * Das Monitoring-Geheimnis fehlt oder ist ungültig.
+   */
+  403: Problem;
+};
+
+export type RunTechnicalMaintenanceError =
+  RunTechnicalMaintenanceErrors[keyof RunTechnicalMaintenanceErrors];
+
+export type RunTechnicalMaintenanceResponses = {
+  /**
+   * Ergebnis der ausgeführten, deaktivierten oder blockierten Wartung.
+   */
+  200: MaintenanceResult;
+};
+
+export type RunTechnicalMaintenanceResponse =
+  RunTechnicalMaintenanceResponses[keyof RunTechnicalMaintenanceResponses];
+
+export type GetMunicipalitiesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: "/v1/tenants";
+};
+
+export type GetMunicipalitiesErrors = {
+  /**
+   * Zu viele Anfragen.
+   */
+  429: Problem;
+  /**
+   * Kommunenverzeichnis ist vorübergehend nicht verfügbar.
+   */
+  503: Problem;
+};
+
+export type GetMunicipalitiesError = GetMunicipalitiesErrors[keyof GetMunicipalitiesErrors];
+
+export type GetMunicipalitiesResponses = {
+  /**
+   * Alphabetische Kommunenliste.
+   */
+  200: Array<MunicipalitySummary>;
+};
+
+export type GetMunicipalitiesResponse =
+  GetMunicipalitiesResponses[keyof GetMunicipalitiesResponses];
+
 export type GetTenantConfigData = {
   body?: never;
   path: {
@@ -112,3 +545,950 @@ export type GetTenantConfigResponses = {
 };
 
 export type GetTenantConfigResponse = GetTenantConfigResponses[keyof GetTenantConfigResponses];
+
+export type SearchAddressesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    q: string;
+  };
+  url: "/v1/addresses/search";
+};
+
+export type SearchAddressesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type SearchAddressesError = SearchAddressesErrors[keyof SearchAddressesErrors];
+
+export type SearchAddressesResponses = {
+  /**
+   * Passende synthetische Adressen.
+   */
+  200: Array<Address>;
+};
+
+export type SearchAddressesResponse = SearchAddressesResponses[keyof SearchAddressesResponses];
+
+export type GetCollectionsData = {
+  body?: never;
+  path: {
+    addressId: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/addresses/{addressId}/collections";
+};
+
+export type GetCollectionsErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type GetCollectionsError = GetCollectionsErrors[keyof GetCollectionsErrors];
+
+export type GetCollectionsResponses = {
+  /**
+   * Chronologische Abholtermine.
+   */
+  200: Array<CollectionEvent>;
+};
+
+export type GetCollectionsResponse = GetCollectionsResponses[keyof GetCollectionsResponses];
+
+export type SearchWasteGuideData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    q: string;
+  };
+  url: "/v1/waste-guide/search";
+};
+
+export type SearchWasteGuideErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type SearchWasteGuideError = SearchWasteGuideErrors[keyof SearchWasteGuideErrors];
+
+export type SearchWasteGuideResponses = {
+  /**
+   * Passende ABC-Einträge.
+   */
+  200: Array<WasteGuideEntry>;
+};
+
+export type SearchWasteGuideResponse = SearchWasteGuideResponses[keyof SearchWasteGuideResponses];
+
+export type GetSitesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    wasteType?: string;
+  };
+  url: "/v1/sites";
+};
+
+export type GetSitesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetSitesError = GetSitesErrors[keyof GetSitesErrors];
+
+export type GetSitesResponses = {
+  /**
+   * Filterbare Standortliste.
+   */
+  200: Array<Site>;
+};
+
+export type GetSitesResponse = GetSitesResponses[keyof GetSitesResponses];
+
+export type GetNoticesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    addressId?: string;
+  };
+  url: "/v1/notices";
+};
+
+export type GetNoticesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetNoticesError = GetNoticesErrors[keyof GetNoticesErrors];
+
+export type GetNoticesResponses = {
+  /**
+   * Aktive Meldungen nach Priorität.
+   */
+  200: Array<Notice>;
+};
+
+export type GetNoticesResponse = GetNoticesResponses[keyof GetNoticesResponses];
+
+export type GetAdminCollectionsData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/collections";
+};
+
+export type GetAdminCollectionsErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminCollectionsError = GetAdminCollectionsErrors[keyof GetAdminCollectionsErrors];
+
+export type GetAdminCollectionsResponses = {
+  /**
+   * Vollständige Terminliste.
+   */
+  200: Array<CollectionEvent>;
+};
+
+export type GetAdminCollectionsResponse =
+  GetAdminCollectionsResponses[keyof GetAdminCollectionsResponses];
+
+export type CreateCollectionData = {
+  body: CollectionInput;
+  path?: never;
+  query?: never;
+  url: "/v1/admin/collections";
+};
+
+export type CreateCollectionErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateCollectionError = CreateCollectionErrors[keyof CreateCollectionErrors];
+
+export type CreateCollectionResponses = {
+  /**
+   * Angelegter Termin.
+   */
+  201: CollectionEvent;
+};
+
+export type CreateCollectionResponse = CreateCollectionResponses[keyof CreateCollectionResponses];
+
+export type GetAdminMunicipalityCustomizationData = {
+  body?: never;
+  path: {
+    tenantKey: string;
+  };
+  query?: never;
+  url: "/v1/admin/tenants/{tenantKey}";
+};
+
+export type GetAdminMunicipalityCustomizationErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type GetAdminMunicipalityCustomizationError =
+  GetAdminMunicipalityCustomizationErrors[keyof GetAdminMunicipalityCustomizationErrors];
+
+export type GetAdminMunicipalityCustomizationResponses = {
+  /**
+   * Kommunales Customizing.
+   */
+  200: MunicipalityCustomization;
+};
+
+export type GetAdminMunicipalityCustomizationResponse =
+  GetAdminMunicipalityCustomizationResponses[keyof GetAdminMunicipalityCustomizationResponses];
+
+export type UpdateAdminMunicipalityCustomizationData = {
+  body: MunicipalityCustomizationInput;
+  path: {
+    tenantKey: string;
+  };
+  query?: never;
+  url: "/v1/admin/tenants/{tenantKey}";
+};
+
+export type UpdateAdminMunicipalityCustomizationErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateAdminMunicipalityCustomizationError =
+  UpdateAdminMunicipalityCustomizationErrors[keyof UpdateAdminMunicipalityCustomizationErrors];
+
+export type UpdateAdminMunicipalityCustomizationResponses = {
+  /**
+   * Aktualisiertes kommunales Customizing.
+   */
+  200: MunicipalityCustomization;
+};
+
+export type UpdateAdminMunicipalityCustomizationResponse =
+  UpdateAdminMunicipalityCustomizationResponses[keyof UpdateAdminMunicipalityCustomizationResponses];
+
+export type GetAdminWasteGuideData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/waste-guide";
+};
+
+export type GetAdminWasteGuideErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminWasteGuideError = GetAdminWasteGuideErrors[keyof GetAdminWasteGuideErrors];
+
+export type GetAdminWasteGuideResponses = {
+  /**
+   * Vollständiges Abfall-ABC.
+   */
+  200: Array<WasteGuideEntry>;
+};
+
+export type GetAdminWasteGuideResponse =
+  GetAdminWasteGuideResponses[keyof GetAdminWasteGuideResponses];
+
+export type CreateWasteGuideEntryData = {
+  body: WasteGuideInput;
+  path?: never;
+  query?: never;
+  url: "/v1/admin/waste-guide";
+};
+
+export type CreateWasteGuideEntryErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateWasteGuideEntryError =
+  CreateWasteGuideEntryErrors[keyof CreateWasteGuideEntryErrors];
+
+export type CreateWasteGuideEntryResponses = {
+  /**
+   * Angelegter ABC-Eintrag.
+   */
+  201: WasteGuideEntry;
+};
+
+export type CreateWasteGuideEntryResponse =
+  CreateWasteGuideEntryResponses[keyof CreateWasteGuideEntryResponses];
+
+export type GetAdminSitesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/sites";
+};
+
+export type GetAdminSitesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminSitesError = GetAdminSitesErrors[keyof GetAdminSitesErrors];
+
+export type GetAdminSitesResponses = {
+  /**
+   * Vollständige Standortliste.
+   */
+  200: Array<Site>;
+};
+
+export type GetAdminSitesResponse = GetAdminSitesResponses[keyof GetAdminSitesResponses];
+
+export type CreateSiteData = {
+  body: SiteInput;
+  path?: never;
+  query?: never;
+  url: "/v1/admin/sites";
+};
+
+export type CreateSiteErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateSiteError = CreateSiteErrors[keyof CreateSiteErrors];
+
+export type CreateSiteResponses = {
+  /**
+   * Angelegter Standort.
+   */
+  201: Site;
+};
+
+export type CreateSiteResponse = CreateSiteResponses[keyof CreateSiteResponses];
+
+export type GetAdminNoticesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/notices";
+};
+
+export type GetAdminNoticesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminNoticesError = GetAdminNoticesErrors[keyof GetAdminNoticesErrors];
+
+export type GetAdminNoticesResponses = {
+  /**
+   * Vollständige Hinweisliste.
+   */
+  200: Array<Notice>;
+};
+
+export type GetAdminNoticesResponse = GetAdminNoticesResponses[keyof GetAdminNoticesResponses];
+
+export type CreateNoticeData = {
+  body: NoticeInput;
+  path?: never;
+  query?: never;
+  url: "/v1/admin/notices";
+};
+
+export type CreateNoticeErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateNoticeError = CreateNoticeErrors[keyof CreateNoticeErrors];
+
+export type CreateNoticeResponses = {
+  /**
+   * Angelegte Meldung.
+   */
+  201: Notice;
+};
+
+export type CreateNoticeResponse = CreateNoticeResponses[keyof CreateNoticeResponses];
+
+export type DeleteCollectionData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/collections/{id}";
+};
+
+export type DeleteCollectionErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type DeleteCollectionError = DeleteCollectionErrors[keyof DeleteCollectionErrors];
+
+export type DeleteCollectionResponses = {
+  /**
+   * Termin gelöscht.
+   */
+  204: void;
+};
+
+export type DeleteCollectionResponse = DeleteCollectionResponses[keyof DeleteCollectionResponses];
+
+export type UpdateCollectionData = {
+  body: CollectionInput;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/admin/collections/{id}";
+};
+
+export type UpdateCollectionErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateCollectionError = UpdateCollectionErrors[keyof UpdateCollectionErrors];
+
+export type UpdateCollectionResponses = {
+  /**
+   * Aktualisierter Termin.
+   */
+  200: CollectionEvent;
+};
+
+export type UpdateCollectionResponse = UpdateCollectionResponses[keyof UpdateCollectionResponses];
+
+export type DeleteWasteGuideEntryData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/waste-guide/{id}";
+};
+
+export type DeleteWasteGuideEntryErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type DeleteWasteGuideEntryError =
+  DeleteWasteGuideEntryErrors[keyof DeleteWasteGuideEntryErrors];
+
+export type DeleteWasteGuideEntryResponses = {
+  /**
+   * ABC-Eintrag gelöscht.
+   */
+  204: void;
+};
+
+export type DeleteWasteGuideEntryResponse =
+  DeleteWasteGuideEntryResponses[keyof DeleteWasteGuideEntryResponses];
+
+export type UpdateWasteGuideEntryData = {
+  body: WasteGuideInput;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/admin/waste-guide/{id}";
+};
+
+export type UpdateWasteGuideEntryErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateWasteGuideEntryError =
+  UpdateWasteGuideEntryErrors[keyof UpdateWasteGuideEntryErrors];
+
+export type UpdateWasteGuideEntryResponses = {
+  /**
+   * Aktualisierter ABC-Eintrag.
+   */
+  200: WasteGuideEntry;
+};
+
+export type UpdateWasteGuideEntryResponse =
+  UpdateWasteGuideEntryResponses[keyof UpdateWasteGuideEntryResponses];
+
+export type DeleteSiteData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/sites/{id}";
+};
+
+export type DeleteSiteErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type DeleteSiteError = DeleteSiteErrors[keyof DeleteSiteErrors];
+
+export type DeleteSiteResponses = {
+  /**
+   * Standort gelöscht.
+   */
+  204: void;
+};
+
+export type DeleteSiteResponse = DeleteSiteResponses[keyof DeleteSiteResponses];
+
+export type UpdateSiteData = {
+  body: SiteInput;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/admin/sites/{id}";
+};
+
+export type UpdateSiteErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateSiteError = UpdateSiteErrors[keyof UpdateSiteErrors];
+
+export type UpdateSiteResponses = {
+  /**
+   * Aktualisierter Standort.
+   */
+  200: Site;
+};
+
+export type UpdateSiteResponse = UpdateSiteResponses[keyof UpdateSiteResponses];
+
+export type DeleteNoticeData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/notices/{id}";
+};
+
+export type DeleteNoticeErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type DeleteNoticeError = DeleteNoticeErrors[keyof DeleteNoticeErrors];
+
+export type DeleteNoticeResponses = {
+  /**
+   * Hinweis gelöscht.
+   */
+  204: void;
+};
+
+export type DeleteNoticeResponse = DeleteNoticeResponses[keyof DeleteNoticeResponses];
+
+export type UpdateNoticeData = {
+  body: NoticeInput;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: "/v1/admin/notices/{id}";
+};
+
+export type UpdateNoticeErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateNoticeError = UpdateNoticeErrors[keyof UpdateNoticeErrors];
+
+export type UpdateNoticeResponses = {
+  /**
+   * Aktualisierter Hinweis.
+   */
+  200: Notice;
+};
+
+export type UpdateNoticeResponse = UpdateNoticeResponses[keyof UpdateNoticeResponses];
+
+export type CreateDefectCaseData = {
+  body: DefectCaseInput;
+  headers: {
+    "Idempotency-Key": string;
+  };
+  path?: never;
+  query?: never;
+  url: "/v1/cases/defects";
+};
+
+export type CreateDefectCaseErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateDefectCaseError = CreateDefectCaseErrors[keyof CreateDefectCaseErrors];
+
+export type CreateDefectCaseResponses = {
+  /**
+   * Bereits idempotent angelegter Vorgang.
+   */
+  200: CaseCreated;
+  /**
+   * Vorgang wurde angenommen.
+   */
+  201: CaseCreated;
+};
+
+export type CreateDefectCaseResponse = CreateDefectCaseResponses[keyof CreateDefectCaseResponses];
+
+export type GetBulkWasteRulesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/bulk-waste/rules";
+};
+
+export type GetBulkWasteRulesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetBulkWasteRulesError = GetBulkWasteRulesErrors[keyof GetBulkWasteRulesErrors];
+
+export type GetBulkWasteRulesResponses = {
+  /**
+   * Synthetische Sperrmüllregeln.
+   */
+  200: BulkWasteRules;
+};
+
+export type GetBulkWasteRulesResponse =
+  GetBulkWasteRulesResponses[keyof GetBulkWasteRulesResponses];
+
+export type GetBulkWasteSlotsData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+    addressId: string;
+  };
+  url: "/v1/bulk-waste/slots";
+};
+
+export type GetBulkWasteSlotsErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetBulkWasteSlotsError = GetBulkWasteSlotsErrors[keyof GetBulkWasteSlotsErrors];
+
+export type GetBulkWasteSlotsResponses = {
+  /**
+   * Verfügbare Abholslots.
+   */
+  200: Array<BulkWasteSlot>;
+};
+
+export type GetBulkWasteSlotsResponse =
+  GetBulkWasteSlotsResponses[keyof GetBulkWasteSlotsResponses];
+
+export type CreateBulkWasteOrderData = {
+  body: BulkWasteOrderInput;
+  headers: {
+    "Idempotency-Key": string;
+  };
+  path?: never;
+  query?: never;
+  url: "/v1/bulk-waste/orders";
+};
+
+export type CreateBulkWasteOrderErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Slot oder fachliche Grenze ist nicht mehr verfügbar.
+   */
+  409: Problem;
+};
+
+export type CreateBulkWasteOrderError =
+  CreateBulkWasteOrderErrors[keyof CreateBulkWasteOrderErrors];
+
+export type CreateBulkWasteOrderResponses = {
+  /**
+   * Bereits idempotent angelegter Vorgang.
+   */
+  200: CaseCreated;
+  /**
+   * Sperrmüllvorgang wurde angenommen.
+   */
+  201: CaseCreated;
+};
+
+export type CreateBulkWasteOrderResponse =
+  CreateBulkWasteOrderResponses[keyof CreateBulkWasteOrderResponses];
+
+export type CreateRecyclingAccessRequestData = {
+  body: RecyclingAccessRequestInput;
+  headers: {
+    "Idempotency-Key": string;
+  };
+  path?: never;
+  query?: never;
+  url: "/v1/recycling-access/requests";
+};
+
+export type CreateRecyclingAccessRequestErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type CreateRecyclingAccessRequestError =
+  CreateRecyclingAccessRequestErrors[keyof CreateRecyclingAccessRequestErrors];
+
+export type CreateRecyclingAccessRequestResponses = {
+  /**
+   * Bereits idempotent angelegte Zufahrtsberechtigung; der Zugangscode wird nicht erneut ausgegeben.
+   */
+  200: RecyclingAccessRequest;
+  /**
+   * Synthetische Zufahrtsberechtigung wurde ausgestellt.
+   */
+  201: RecyclingAccessRequest;
+};
+
+export type CreateRecyclingAccessRequestResponse =
+  CreateRecyclingAccessRequestResponses[keyof CreateRecyclingAccessRequestResponses];
+
+export type SimulateRecyclingAccessEventData = {
+  body: RecyclingAccessSimulationInput;
+  headers: {
+    "Idempotency-Key": string;
+  };
+  path: {
+    reference: string;
+  };
+  query?: never;
+  url: "/v1/recycling-access/requests/{reference}/simulation-events";
+};
+
+export type SimulateRecyclingAccessEventErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+  /**
+   * Das Ereignis passt nicht zum aktuellen Zustand.
+   */
+  409: Problem;
+};
+
+export type SimulateRecyclingAccessEventError =
+  SimulateRecyclingAccessEventErrors[keyof SimulateRecyclingAccessEventErrors];
+
+export type SimulateRecyclingAccessEventResponses = {
+  /**
+   * Aktualisierter Zustand der synthetischen Zufahrt.
+   */
+  200: RecyclingAccessRequest;
+};
+
+export type SimulateRecyclingAccessEventResponse =
+  SimulateRecyclingAccessEventResponses[keyof SimulateRecyclingAccessEventResponses];
+
+export type GetCaseData = {
+  body?: never;
+  path: {
+    reference: string;
+  };
+  query: {
+    accessToken: string;
+  };
+  url: "/v1/cases/{reference}";
+};
+
+export type GetCaseErrors = {
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type GetCaseError = GetCaseErrors[keyof GetCaseErrors];
+
+export type GetCaseResponses = {
+  /**
+   * Öffentlicher Vorgangsstatus.
+   */
+  200: CaseDetail;
+};
+
+export type GetCaseResponse = GetCaseResponses[keyof GetCaseResponses];
+
+export type GetAdminCasesData = {
+  body?: never;
+  path?: never;
+  query: {
+    tenantId: string;
+  };
+  url: "/v1/admin/cases";
+};
+
+export type GetAdminCasesErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminCasesError = GetAdminCasesErrors[keyof GetAdminCasesErrors];
+
+export type GetAdminCasesResponses = {
+  /**
+   * Vorgangsliste ohne Gastzugriffsschlüssel.
+   */
+  200: Array<CaseDetail>;
+};
+
+export type GetAdminCasesResponse = GetAdminCasesResponses[keyof GetAdminCasesResponses];
+
+export type UpdateCaseStatusData = {
+  body: CaseStatusInput;
+  path: {
+    reference: string;
+  };
+  query?: never;
+  url: "/v1/admin/cases/{reference}/status";
+};
+
+export type UpdateCaseStatusErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+  /**
+   * Die angeforderte Ressource ist nicht vorhanden.
+   */
+  404: Problem;
+};
+
+export type UpdateCaseStatusError = UpdateCaseStatusErrors[keyof UpdateCaseStatusErrors];
+
+export type UpdateCaseStatusResponses = {
+  /**
+   * Aktualisierter Vorgang.
+   */
+  200: CaseDetail;
+};
+
+export type UpdateCaseStatusResponse = UpdateCaseStatusResponses[keyof UpdateCaseStatusResponses];

@@ -5,6 +5,6 @@ export default [
   ...nextCoreWebVitals,
   ...nextTypeScript,
   {
-    ignores: [".next/**", "coverage/**", "next-env.d.ts"],
+    ignores: [".next*/**", "coverage/**", "next-env.d.ts"],
   },
 ];

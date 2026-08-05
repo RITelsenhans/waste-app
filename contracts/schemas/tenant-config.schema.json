@@ -13,6 +13,7 @@
     "locales",
     "enabledFeatures",
     "legalLinks",
+    "serviceArea",
     "supportContacts",
     "contentVersion"
   ],
@@ -62,6 +63,17 @@
     },
     "legalLinks": {
       "type": "object"
+    },
+    "serviceArea": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["city", "reportingOffice", "phone", "email"],
+      "properties": {
+        "city": { "type": "string" },
+        "reportingOffice": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
+      }
     },
     "supportContacts": {
       "type": "array"

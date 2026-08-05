@@ -1,0 +1,19 @@
+# Klein halten, was in den Docker-Build-Kontext geht (nur für API-Container nötig).
+.git
+node_modules
+**/node_modules
+**/.next
+**/dist
+build
+services/api/build
+.gradle
+.kotlin
+.pnpm-store
+**/*.key
+**/*.pptx
+**/*.docx
+apps/web
+apps/admin
+packages
+playwright-report
+test-results

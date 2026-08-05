@@ -1,0 +1,29 @@
+.bar {
+  align-items: center;
+  background: #222;
+  color: white;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 1rem;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.35rem 1rem;
+}
+
+.bar form {
+  margin: 0;
+}
+
+.bar button {
+  background: transparent;
+  border: 1px solid white;
+  min-height: 2rem;
+  padding: 0.2rem 0.65rem;
+}
+
+@media (max-width: 35rem) {
+  .bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:waste;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    driver-class-name: org.h2.Driver
+  flyway:
+    locations: classpath:db/migration
+
+waste:
+  monitoring:
+    enabled: true
+    token: integration-monitor-token-00000000000000000000000000000000
+    cleanup-enabled: true
+    retention-days: 30
+    maximum-rows-per-run: 500
+  pilot:
+    admin-enabled: true

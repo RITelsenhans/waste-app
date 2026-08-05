@@ -15,12 +15,15 @@ class TenantNotFoundException : RuntimeException()
 @RestController
 @RequestMapping("/v1/tenants")
 class TenantConfigController(
-    private val properties: WasteProperties,
+    private val service: TenantConfigService,
 ) {
+    @GetMapping
+    fun municipalities(): List<MunicipalitySummary> = service.municipalities()
+
     @GetMapping("/{tenantKey}/config")
     fun getConfig(
         @PathVariable tenantKey: String,
-    ): TenantConfig = properties.tenants[tenantKey] ?: throw TenantNotFoundException()
+    ): TenantConfig = service.config(tenantKey)
 }
 
 @RestControllerAdvice

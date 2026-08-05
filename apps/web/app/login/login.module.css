@@ -1,0 +1,66 @@
+.page {
+  align-items: center;
+  background: linear-gradient(145deg, rgb(200 16 46 / 9%), transparent 44%), var(--surface-page);
+  display: grid;
+  min-height: 100vh;
+  padding: clamp(1rem, 5vw, 3rem);
+  place-items: center;
+}
+
+.panel {
+  background: var(--surface-card);
+  border-block-start: 0.45rem solid var(--brand-primary);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  max-width: 34rem;
+  padding: clamp(1.4rem, 5vw, 3rem);
+  width: 100%;
+}
+
+.logo {
+  height: auto;
+  margin-bottom: 1.8rem;
+  max-width: 10.7rem;
+}
+
+.eyebrow {
+  color: var(--brand-primary);
+  font-size: 0.85rem;
+  font-weight: var(--typography-weight-bold);
+  letter-spacing: 0.06em;
+  margin: 0 0 0.4rem;
+  text-transform: uppercase;
+}
+
+.panel h1 {
+  margin-top: 0;
+}
+
+.form {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1.6rem;
+}
+
+.form label {
+  font-weight: var(--typography-weight-semibold);
+}
+
+.form button {
+  margin-top: 0.35rem;
+}
+
+.error {
+  background: #fff0f2;
+  border-inline-start: 0.3rem solid var(--brand-primary);
+  margin: 0 0 0.5rem;
+  padding: 0.8rem 1rem;
+}
+
+.notice {
+  border-block-start: 1px solid var(--border-default);
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  margin: 1.8rem 0 0;
+  padding-top: 1rem;
+}

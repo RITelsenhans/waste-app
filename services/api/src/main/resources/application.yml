@@ -1,11 +1,44 @@
 spring:
   application:
     name: abfall-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://127.0.0.1:55432/waste_app}
+    username: ${SPRING_DATASOURCE_USERNAME:waste_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  flyway:
+    locations: classpath:db/migration
+  mail:
+    host: ${SPRING_MAIL_HOST:127.0.0.1}
+    port: ${SPRING_MAIL_PORT:1025}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      "[mail.smtp.auth]": ${SPRING_MAIL_AUTH:false}
+      "[mail.smtp.starttls.enable]": ${SPRING_MAIL_STARTTLS:false}
+      "[mail.smtp.connectiontimeout]": 3000
+      "[mail.smtp.timeout]": 3000
+      "[mail.smtp.writetimeout]": 3000
   mvc:
     problemdetails:
       enabled: true
 
 waste:
+  monitoring:
+    enabled: ${WASTE_MONITORING_ENABLED:false}
+    token: ${WASTE_MONITORING_TOKEN:}
+    cleanup-enabled: ${WASTE_MONITORING_CLEANUP_ENABLED:false}
+    retention-days: ${WASTE_MONITORING_RETENTION_DAYS:30}
+    maximum-rows-per-run: ${WASTE_MONITORING_MAXIMUM_ROWS_PER_RUN:500}
+  mail:
+    enabled: ${WASTE_MAIL_ENABLED:false}
+    from: ${WASTE_MAIL_FROM:abfall-app@demo.invalid}
+    app-base-url: ${WASTE_MAIL_APP_BASE_URL:http://localhost:3000/demo}
+    poll-interval-ms: ${WASTE_MAIL_POLL_INTERVAL_MS:1000}
+  pilot:
+    admin-enabled: ${WASTE_PILOT_ADMIN_ENABLED:true}
+    allowed-origins:
+      - ${WASTE_WEB_ORIGIN:http://localhost:3000}
+      - ${WASTE_ADMIN_ORIGIN:http://localhost:3001}
   tenants:
     demo:
       tenant-id: demo
@@ -21,15 +54,24 @@ waste:
       enabled-features:
         home: true
         demoPreview: true
-        calendar: false
-        wasteGuide: false
-        sites: false
-        notices: false
+        calendar: true
+        wasteGuide: true
+        sites: true
+        notices: true
+        defectCases: true
+        bulkWaste: true
+        recyclingAccessShowcase: true
       legal-links:
         imprint: "#impressum"
         privacy: "#datenschutz"
         accessibility: "#barrierefreiheit"
+      service-area:
+        city: Demo-Stadt
+        reporting-office: Bürgerservice Abfall
+        phone: 0241 000000
+        email: abfall@example.invalid
       support-contacts:
         - label: Demo-Support
           email: support@example.invalid
+          phone: 0241 000000
       content-version: demo-2026-07-30

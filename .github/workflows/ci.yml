@@ -22,6 +22,27 @@ jobs:
     env:
       CI: "true"
       GRADLE_OPTS: -Dorg.gradle.daemon=false
+      MAILPIT_EXTERNAL_URL: http://127.0.0.1:18025
+      POSTGRES_EXTERNAL_URL: jdbc:postgresql://127.0.0.1:55432/waste_app
+    services:
+      mailpit:
+        image: axllent/mailpit:v1.30.6@sha256:7f33095f80e901f6ad08028f06ca284aa58fe84942be5496008d041d3b9f4d4d
+        ports:
+          - 11025:1025
+          - 18025:8025
+      postgres:
+        image: postgres:17.10
+        env:
+          POSTGRES_DB: waste_app
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_USER: waste_app
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U waste_app -d waste_app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Repository auschecken

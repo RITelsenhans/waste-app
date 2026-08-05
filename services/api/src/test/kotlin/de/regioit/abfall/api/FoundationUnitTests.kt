@@ -1,8 +1,12 @@
 package de.regioit.abfall.api
 
 import de.regioit.abfall.api.health.ReadyController
+import de.regioit.abfall.api.tenant.MunicipalityCustomization
+import de.regioit.abfall.api.tenant.MunicipalityCustomizationInput
 import de.regioit.abfall.api.tenant.TenantConfig
 import de.regioit.abfall.api.tenant.TenantConfigController
+import de.regioit.abfall.api.tenant.TenantConfigService
+import de.regioit.abfall.api.tenant.TenantCustomizationStore
 import de.regioit.abfall.api.tenant.TenantNotFoundException
 import de.regioit.abfall.api.tenant.WasteProperties
 import java.time.Clock
@@ -27,7 +31,16 @@ class FoundationUnitTests {
     @Test
     fun `tenant controller only returns configured tenants`() {
         val demo = TenantConfig(tenantId = "demo", name = "Demo Kommune")
-        val controller = TenantConfigController(WasteProperties(mapOf("demo" to demo)))
+        val store =
+            object : TenantCustomizationStore {
+                override fun find(tenantId: String): MunicipalityCustomization? = null
+
+                override fun update(
+                    tenantId: String,
+                    input: MunicipalityCustomizationInput,
+                ): MunicipalityCustomization = error("not needed")
+            }
+        val controller = TenantConfigController(TenantConfigService(WasteProperties(mapOf("demo" to demo)), store))
 
         assertEquals(demo, controller.getConfig("demo"))
         assertFailsWith<TenantNotFoundException> {
