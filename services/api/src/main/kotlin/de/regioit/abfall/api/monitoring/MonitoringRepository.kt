@@ -74,6 +74,53 @@ class MonitoringRepository(
     fun deleteAccessIdempotencyRecords(cutoff: Instant): Int =
         delete("delete from recycling_access_idempotency where created_at < :cutoff", cutoff)
 
+    fun findRecentQualityAgentAccess(
+        reference: String,
+        syntheticCredential: String,
+        earliestCreatedAt: Instant,
+    ): QualityAgentAccessCandidate? =
+        jdbc
+            .sql(
+                """
+                select id, public_reference
+                from recycling_access_request
+                where public_reference = :reference
+                  and tenant_id = 'demo'
+                  and identification_method = 'license-plate'
+                  and credential_hint = :syntheticCredential
+                  and credential_hint like 'DEMO-QA-%'
+                  and created_at >= :earliestCreatedAt
+                for update
+                """.trimIndent(),
+            ).param("reference", reference)
+            .param("syntheticCredential", syntheticCredential)
+            .param("earliestCreatedAt", Timestamp.from(earliestCreatedAt))
+            .query { rs, _ ->
+                QualityAgentAccessCandidate(
+                    id = rs.getString("id"),
+                    reference = rs.getString("public_reference"),
+                )
+            }.optional()
+            .orElse(null)
+
+    fun deleteQualityAgentAccessIdempotency(requestId: String): Int =
+        jdbc
+            .sql("delete from recycling_access_idempotency where access_request_id = :requestId")
+            .param("requestId", requestId)
+            .update()
+
+    fun deleteQualityAgentAccessEvents(requestId: String): Int =
+        jdbc
+            .sql("delete from recycling_access_event where access_request_id = :requestId")
+            .param("requestId", requestId)
+            .update()
+
+    fun deleteQualityAgentAccessRequest(requestId: String): Int =
+        jdbc
+            .sql("delete from recycling_access_request where id = :requestId")
+            .param("requestId", requestId)
+            .update()
+
     fun save(result: MaintenanceResult) {
         jdbc
             .sql(

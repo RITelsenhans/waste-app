@@ -10,6 +10,18 @@ data class MonitoringProperties(
     val cleanupEnabled: Boolean = false,
     val retentionDays: Long = 30,
     val maximumRowsPerRun: Int = 500,
+    val releaseCommitSha: String = "unknown",
+    val releaseBranch: String = "local",
+)
+
+data class MonitoringRelease(
+    val provider: String,
+    val commitSha: String,
+    val branch: String,
+    val applicationVersion: String,
+    val javaVersion: String,
+    val springBootVersion: String,
+    val kotlinVersion: String,
 )
 
 data class MonitoringStatistics(
@@ -29,6 +41,7 @@ data class MonitoringSummary(
     val status: String,
     val generatedAt: Instant,
     val retentionDays: Long,
+    val release: MonitoringRelease,
     val statistics: MonitoringStatistics,
     val lastMaintenance: MaintenanceResult?,
 )
@@ -49,3 +62,25 @@ data class MaintenanceResult(
                 deletedCaseIdempotencyRecords +
                 deletedAccessIdempotencyRecords
 }
+
+data class QualityAgentAccessCleanupInput(
+    val reference: String,
+    val syntheticCredential: String,
+)
+
+data class QualityAgentAccessCleanupResult(
+    val status: String,
+    val reference: String,
+    val deletedEvents: Int,
+    val deletedIdempotencyRecords: Int,
+    val deletedRequests: Int,
+    val finding: String,
+) {
+    val deletedTotal: Int
+        get() = deletedEvents + deletedIdempotencyRecords + deletedRequests
+}
+
+data class QualityAgentAccessCandidate(
+    val id: String,
+    val reference: String,
+)

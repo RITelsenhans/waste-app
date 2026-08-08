@@ -3,6 +3,9 @@
 import type { Client, Options as Options2, TDataShape } from "./client";
 import { client } from "./client.gen";
 import type {
+  CleanupQualityAgentRecyclingAccessData,
+  CleanupQualityAgentRecyclingAccessErrors,
+  CleanupQualityAgentRecyclingAccessResponses,
   CreateBulkWasteOrderData,
   CreateBulkWasteOrderErrors,
   CreateBulkWasteOrderResponses,
@@ -146,7 +149,7 @@ export const getReadiness = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * Liefert ausschließlich aggregierte Qualitäts- und Wartungsstatistiken.
+ * Liefert aggregierte Qualitäts-, Wartungs- und Releaseinformationen.
  */
 export const getMonitoringSummary = <ThrowOnError extends boolean = false>(
   options?: Options<GetMonitoringSummaryData, ThrowOnError>,
@@ -177,6 +180,28 @@ export const runTechnicalMaintenance = <ThrowOnError extends boolean = false>(
     security: [{ name: "X-Monitoring-Token", type: "apiKey" }],
     url: "/v1/monitoring/maintenance",
     ...options,
+  });
+
+/**
+ * Entfernt ausschließlich einen unmittelbar zuvor erzeugten synthetischen Qualitätsagent-Zugang.
+ *
+ * Der token-geschützte Endpunkt akzeptiert nur höchstens eine Stunde alte Vorgänge des Demo-Mandanten mit einer exakt passenden DEMO-QA-Kennung. Reguläre Demo- und Fachvorgänge werden nicht erfasst.
+ */
+export const cleanupQualityAgentRecyclingAccess = <ThrowOnError extends boolean = false>(
+  options: Options<CleanupQualityAgentRecyclingAccessData, ThrowOnError>,
+) =>
+  (options.client ?? client).post<
+    CleanupQualityAgentRecyclingAccessResponses,
+    CleanupQualityAgentRecyclingAccessErrors,
+    ThrowOnError
+  >({
+    security: [{ name: "X-Monitoring-Token", type: "apiKey" }],
+    url: "/v1/monitoring/quality-agent/recycling-access-cleanup",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
 /**

@@ -43,6 +43,15 @@ test("meldet an, leitet die API gleichursprünglich weiter und deaktiviert Admin
   expect(healthResponse.status()).toBe(200);
   await expect(healthResponse.json()).resolves.toMatchObject({ status: "ready" });
 
+  const releaseResponse = await page.request.get("/demo-auth/release");
+  expect(releaseResponse.status()).toBe(200);
+  await expect(releaseResponse.json()).resolves.toMatchObject({
+    status: "ready",
+    provider: "local",
+    branch: "local",
+    commitSha: "unknown",
+  });
+
   const adminResponse = await page.request.get("/v1/admin/collections?tenantId=demo");
   expect(adminResponse.status()).toBe(403);
 

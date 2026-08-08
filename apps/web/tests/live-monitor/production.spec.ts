@@ -1,4 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import technicalBaseline from "../../../../tooling/quality-agent/technical-baseline.json";
+import type { WebReleaseInfo } from "../../lib/release-info";
 
 type FindingStatus = "passed" | "failed";
 
@@ -13,6 +15,11 @@ type Finding = {
 
 const findings: Finding[] = [];
 const password = process.env.DEMO_MONITOR_PASSWORD;
+const expectedProductionRevision = process.env.EXPECTED_PRODUCTION_REVISION;
+const qualityAgentCredential = `DEMO-QA-${String(process.env.GITHUB_RUN_ID ?? Date.now())
+  .replace(/[^A-Z0-9]/gi, "")
+  .slice(-12)
+  .toUpperCase()}`;
 
 async function record(
   testInfo: TestInfo,
@@ -70,6 +77,43 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     () => login(page),
   );
 
+  let webRelease: WebReleaseInfo | undefined;
+  let webDeploymentFinding = "Die Vercel-Revision entspricht dem GitHub-Produktionsbranch.";
+  await record(
+    testInfo,
+    "web-deployment",
+    "Deployment",
+    "Neuesten Web-Push nachweisen",
+    () => webDeploymentFinding,
+    async () => {
+      expect(expectedProductionRevision, "Erwartete Produktionsrevision fehlt.").toMatch(
+        /^[0-9a-f]{40}$/,
+      );
+      const response = await page.request.get("/demo-auth/release");
+      expect(response.ok()).toBeTruthy();
+      webRelease = (await response.json()) as WebReleaseInfo;
+      expect(webRelease.provider).toBe("vercel");
+      expect(webRelease.branch).toBe(technicalBaseline.productionBranch);
+      expect(webRelease.commitSha).toBe(expectedProductionRevision);
+      webDeploymentFinding = `Vercel liefert Commit ${webRelease.commitSha.slice(0, 12)} aus ${webRelease.branch} aus.`;
+    },
+  );
+
+  let webRuntimeFinding = "Die Web-Laufzeit entspricht der freigegebenen Baseline.";
+  await record(
+    testInfo,
+    "web-runtime",
+    "Laufzeit",
+    "Web-Softwareversionen kontrollieren",
+    () => webRuntimeFinding,
+    async () => {
+      expect(webRelease).toBeDefined();
+      expect(Number(webRelease?.nodeVersion.split(".")[0])).toBe(technicalBaseline.nodeMajor);
+      expect(webRelease?.nextVersion).toBe(technicalBaseline.nextVersion);
+      webRuntimeFinding = `Node.js ${webRelease?.nodeVersion}, Next.js ${webRelease?.nextVersion}, App ${webRelease?.applicationVersion}.`;
+    },
+  );
+
   let maintenanceFinding = "Die technische Wartung wurde ausgeführt.";
   await record(
     testInfo,
@@ -96,6 +140,17 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
   );
 
   let statisticsFinding = "Aggregierte Statistik wurde gelesen.";
+  let apiRelease:
+    | {
+        provider: string;
+        commitSha: string;
+        branch: string;
+        applicationVersion: string;
+        javaVersion: string;
+        springBootVersion: string;
+        kotlinVersion: string;
+      }
+    | undefined;
   await record(
     testInfo,
     "statistics",
@@ -110,6 +165,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
       });
       expect(response.ok()).toBeTruthy();
       const result = (await response.json()) as {
+        release: NonNullable<typeof apiRelease>;
         statistics: {
           upcomingCollectionEvents: number;
           activeNotices: number;
@@ -118,12 +174,48 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
           failedOutboxEvents: number;
         };
       };
+      apiRelease = result.release;
       const statistics = result.statistics;
       expect(statistics.failedOutboxEvents).toBeLessThanOrEqual(statistics.pendingOutboxEvents);
       statisticsFinding =
         `${statistics.upcomingCollectionEvents} künftige Termine, ` +
         `${statistics.activeNotices} aktive Hinweise, ${statistics.openCases} offene Vorgänge, ` +
         `${statistics.pendingOutboxEvents} offene/${statistics.failedOutboxEvents} fehlerhafte Zustellungen.`;
+    },
+  );
+
+  let apiDeploymentFinding = "Die Railway-Revision entspricht dem GitHub-Produktionsbranch.";
+  await record(
+    testInfo,
+    "api-deployment",
+    "Deployment",
+    "Neuesten API-Push nachweisen",
+    () => apiDeploymentFinding,
+    async () => {
+      expect(expectedProductionRevision, "Erwartete Produktionsrevision fehlt.").toMatch(
+        /^[0-9a-f]{40}$/,
+      );
+      expect(apiRelease).toBeDefined();
+      expect(apiRelease?.provider).toBe("railway");
+      expect(apiRelease?.branch).toBe(technicalBaseline.productionBranch);
+      expect(apiRelease?.commitSha).toBe(expectedProductionRevision);
+      apiDeploymentFinding = `Railway liefert Commit ${apiRelease?.commitSha.slice(0, 12)} aus ${apiRelease?.branch} aus.`;
+    },
+  );
+
+  let apiRuntimeFinding = "Die API-Laufzeit entspricht der freigegebenen Baseline.";
+  await record(
+    testInfo,
+    "api-runtime",
+    "Laufzeit",
+    "API-Softwareversionen kontrollieren",
+    () => apiRuntimeFinding,
+    async () => {
+      expect(apiRelease).toBeDefined();
+      expect(Number(apiRelease?.javaVersion.split(".")[0])).toBe(technicalBaseline.javaMajor);
+      expect(apiRelease?.springBootVersion).toBe(technicalBaseline.springBootVersion);
+      expect(apiRelease?.kotlinVersion).toBe(technicalBaseline.kotlinVersion);
+      apiRuntimeFinding = `Java ${apiRelease?.javaVersion}, Spring Boot ${apiRelease?.springBootVersion}, Kotlin ${apiRelease?.kotlinVersion}, API ${apiRelease?.applicationVersion}.`;
     },
   );
 
@@ -220,7 +312,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "forms",
     "Soll-Workflows",
     "Schreibende Wege sicher bereitstellen",
-    "Mängel-, Sperrmüll- und 24/7-Formular sind bedienbar; der Live-Agent sendet bewusst nichts ab.",
+    "Mängel- und Sperrmüllformular sind bedienbar; deren produktive Übertragung bleibt bewusst deaktiviert.",
     async () => {
       await expect(page.getByRole("button", { name: "Meldung absenden" })).toBeEnabled();
       await expect(
@@ -230,6 +322,74 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
       await expect(access.getByText("Hardware-Simulation.")).toBeVisible();
       await expect(access.getByText("Schranke geschlossen", { exact: true })).toBeVisible();
       await expect(access.locator(".journey-card")).toHaveCount(4);
+    },
+  );
+
+  let accessFinding = "Der synthetische 24/7-Zugang wurde vollständig geprüft und bereinigt.";
+  await record(
+    testInfo,
+    "recycling-access-e2e",
+    "Soll-Workflow",
+    "24/7-Zugang buchen, durchlaufen und bereinigen",
+    () => accessFinding,
+    async () => {
+      const token = process.env.MONITORING_API_TOKEN;
+      if (!token) throw new Error("GitHub-Secret MONITORING_API_TOKEN fehlt.");
+      const access = page.locator("#nachtzugang");
+      let reference: string | undefined;
+      let primaryError: unknown;
+      let cleanupError: unknown;
+      try {
+        await access.getByLabel("Demo-Kennzeichen").fill(qualityAgentCredential);
+        await access.getByLabel("Ich verwende ausschließlich synthetische Testdaten.").check();
+        await access.getByRole("button", { name: "Zugang verbindlich simulieren" }).click();
+        const status = access.locator(".gate-message");
+        await expect(status).toContainText(/Zugang DEMO-Z-[A-F0-9]{12} ist ausgestellt/);
+        reference = (await status.innerText()).match(/DEMO-Z-[A-F0-9]{12}/)?.[0];
+        expect(reference, "Die Oberfläche zeigt keine Vorgangsreferenz an.").toMatch(
+          /^DEMO-Z-[A-F0-9]{12}$/,
+        );
+
+        for (const action of [
+          "Ankunft jetzt scannen",
+          "Einfahrt jetzt bestätigen",
+          "Ausfahrt jetzt freigeben",
+          "Ausfahrt jetzt abschließen",
+        ]) {
+          await access.getByRole("button", { name: action }).click();
+        }
+        await expect(access.getByText("Besuch abgeschlossen", { exact: true })).toBeVisible();
+        await expect(status).toContainText("Ausfahrt abgeschlossen – Schranke geschlossen.");
+      } catch (error) {
+        primaryError = error;
+      } finally {
+        if (reference) {
+          try {
+            const cleanup = await page.request.post(
+              "/v1/monitoring/quality-agent/recycling-access-cleanup",
+              {
+                headers: { "X-Monitoring-Token": token },
+                data: { reference, syntheticCredential: qualityAgentCredential },
+              },
+            );
+            expect(cleanup.ok()).toBeTruthy();
+            const result = (await cleanup.json()) as {
+              status: "completed" | "disabled" | "blocked";
+              deletedTotal: number;
+              deletedRequests: number;
+            };
+            expect(result.status).toBe("completed");
+            expect(result.deletedRequests).toBe(1);
+            accessFinding =
+              `${reference} vollständig bis zur geschlossenen Ausfahrt geprüft; ` +
+              `${result.deletedTotal} ausschließlich zugehörige synthetische Datensätze entfernt.`;
+          } catch (error) {
+            cleanupError = error;
+          }
+        }
+      }
+      if (primaryError) throw primaryError;
+      if (cleanupError) throw cleanupError;
     },
   );
 
@@ -271,7 +431,7 @@ test.afterAll(async () => {
         schemaVersion: 1,
         generatedAt: new Date().toISOString(),
         target: process.env.MONITOR_BASE_URL ?? "https://waste-app-web.vercel.app",
-        mode: "safe-maintenance-and-read-only-live",
+        mode: "safe-synthetic-write-and-maintenance-live",
         findings,
       },
       null,

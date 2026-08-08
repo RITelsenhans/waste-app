@@ -12,6 +12,14 @@
 - Dependency Review prüft neu eingeführte Abhängigkeiten und die vorläufige
   Lizenz-Deny-Liste.
 - Dependabot beobachtet npm/pnpm, Gradle und GitHub Actions wöchentlich.
+- Der Qualitätsagent besitzt zusätzlich ausschließlich lesende Rechte für Actions,
+  Pull Requests und Security Events. Er zeigt einen veralteten Security-/CodeQL-Lauf,
+  offene hohe oder kritische Dependabot-Alerts und reguläre Updatevorschläge getrennt
+  an; normale Updates sind kein Sicherheitsfund.
+- Der einzige produktionsnahe Schreibtest verwendet ein zufälliges synthetisches
+  `DEMO-QA-`-Kennzeichen. Die token-geschützte Selbstbereinigung akzeptiert nur den
+  Demo-Mandanten, exakt passende Referenz und Kennung sowie höchstens eine Stunde
+  alte Vorgänge und löscht Kinddatensätze vor dem Antrag in einer Transaktion.
 - Der temporäre Codespaces-Freigabemodus schützt Seiten und gleichursprüngliche API mit
   einem HMAC-signierten, maximal acht Stunden gültigen HttpOnly-/Secure-Cookie. Er
   startet keine Pflegeoberfläche und deaktiviert administrative API-Endpunkte.

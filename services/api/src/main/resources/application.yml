@@ -29,6 +29,8 @@ waste:
     cleanup-enabled: ${WASTE_MONITORING_CLEANUP_ENABLED:false}
     retention-days: ${WASTE_MONITORING_RETENTION_DAYS:30}
     maximum-rows-per-run: ${WASTE_MONITORING_MAXIMUM_ROWS_PER_RUN:500}
+    release-commit-sha: ${RAILWAY_GIT_COMMIT_SHA:unknown}
+    release-branch: ${RAILWAY_GIT_BRANCH:local}
   mail:
     enabled: ${WASTE_MAIL_ENABLED:false}
     from: ${WASTE_MAIL_FROM:abfall-app@demo.invalid}

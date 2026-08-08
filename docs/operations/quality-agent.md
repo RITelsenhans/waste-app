@@ -3,7 +3,9 @@
 Der Qualitätsagent prüft die geschützte Demo unter
 <https://waste-app-web.vercel.app> morgens und abends und stellt anschließend einen
 automatisch animierten HTML-Bericht als GitHub-Artefakt bereit. Er erzeugt keine
-Beschwerden, Sperrmüllaufträge oder 24/7-Zugänge.
+Beschwerden oder Sperrmüllaufträge. Pro Lauf erzeugt er genau einen eindeutig
+markierten synthetischen 24/7-Testzugang und entfernt dessen Datensätze unmittelbar
+nach dem Test wieder.
 
 ## Einmalige Aktivierung
 
@@ -56,21 +58,58 @@ ausdrücklich auf dem bei Vercel/Railway eingestellten Produktionsbranch. Vor de
 ist der Workflow vollständig inaktiv; ein direktes, ungeprüftes Umgehen dieser Grenze
 ist nicht vorgesehen.
 
+Vercel muss unter **Settings → Environment Variables** die Option **Automatically
+expose System Environment Variables** aktiviert haben. Railway stellt seine
+Git-Deploymentvariablen bei GitHub-basierten Deployments automatisch bereit. Der
+Agent gibt weder Commitnachrichten noch Autorendaten aus.
+
+## Technische Prüftiefe
+
+Zusätzlich zu den Bürgerwegen kontrolliert jeder Lauf:
+
+- ob Vercel und Railway exakt den aktuellen Commit des Produktionsbranches ausliefern,
+- ob beide Deployments vom vorgesehenen Produktionsbranch stammen,
+- ob Node.js 22, Java 21 sowie die festgelegten Next.js-, Spring-Boot- und
+  Kotlin-Versionen aktiv sind,
+- ob `pnpm audit` bekannte JavaScript-Advisories ab `high` meldet,
+- ob GitHub offene hohe oder kritische Dependabot-Sicherheitswarnungen meldet,
+- ob der letzte Security-/CodeQL-Lauf erfolgreich und höchstens acht Tage alt ist,
+- ob reguläre Dependabot-Updates auf Prüfung warten.
+- ob sich ein `DEMO-QA-`-Zugang über das echte Browserformular buchen, durch alle
+  vier simulierten Torzustände führen und anschließend vollständig bereinigen lässt.
+
+Reguläre Versionsupdates werden gelb als Hinweis gezeigt und machen den Lauf nicht
+rot. Baselineabweichungen, nicht ausgerollte Commits sowie bekannte hohe oder
+kritische Sicherheitswarnungen sind Fehler. Diese Prüfungen erkennen bekannte und
+maschinell sichtbare Risiken; sie ersetzen weder Container- und Betriebssystemscans
+noch Penetrationstest oder Betriebsfreigabe.
+
+Nach Abschluss jeder Station öffnet **Details & Lösung** den realen Prüfgegenstand,
+die empfohlene Nacharbeit und – bei GitHub-basierten Befunden – die Belegquelle. Die
+Updateprüfung bettet Nummer und Titel der zum Laufzeitpunkt tatsächlich offenen
+Dependabot-PRs in die Offline-Datei ein.
+
 ## Bericht öffnen
 
 1. GitHub → **Actions → Qualitätsagent** → gewünschten Lauf öffnen.
-2. Unter **Artifacts** `quality-agent-report` herunterladen.
+2. In der Laufzusammenfassung unter **Animierten Bericht öffnen** den direkten Link
+   `quality-agent-report direkt herunterladen` anklicken. Alternativ unter
+   **Artifacts** `quality-agent-report` herunterladen.
 3. ZIP entpacken und `quality-report.html` doppelklicken.
 
 Die HTML-Datei benötigt keine Internetverbindung und durchläuft die Findings
-selbstständig von links nach rechts. Sie kann als Datei weitergegeben oder später an
-einen freigegebenen Mailversand angehängt werden. Zusätzlich steht die kompakte
-Ergebnisliste direkt in der GitHub-Laufzusammenfassung.
+selbstständig von links nach rechts. Gesamtergebnis, animierter Prüfer, Stationen und
+das jeweils aktive Finding bleiben dabei auf der ersten Bildschirmansicht. Die Datei
+kann weitergegeben oder später an einen freigegebenen Mailversand angehängt werden.
+Zusätzlich steht die kompakte Ergebnisliste direkt in der
+GitHub-Laufzusammenfassung.
 
 ## Grenzen und Reaktion auf Fehler
 
 - Der Agent sammelt keine Testeridentitäten und keine Forminhalte.
-- Schreibende End-to-End-Wege laufen weiterhin isoliert in CI, nicht gegen Railway.
+- Mängel- und Sperrmüll-End-to-End-Wege laufen weiterhin isoliert in CI. Gegen
+  Railway wird nur der ausdrücklich synthetische, selbstbereinigende 24/7-Weg
+  ausgeführt.
 - Bei mehr als 500 Löschkandidaten wird nichts gelöscht. Ursache und Aufbewahrung sind
   dann manuell zu prüfen.
 - Bei einem roten Lauf zuerst Trace/Fehlertext und HTML-Artefakt prüfen. Codex liefert
