@@ -50,13 +50,16 @@ Aufbewahrungsregeln und ein freigegebener Maildienst liegen noch nicht vor.
   werden. Ereignisse, Idempotenzschlüssel und Antrag werden in einer Transaktion
   gelöscht. Andere Demo- oder Fachvorgänge erfüllen diese Bedingungen nicht.
 - Jeder Lauf erzeugt JSON, eine GitHub-Zusammenfassung und eine selbstständig
-  animierte, eigenständige HTML-Datei. Die erste Bildschirmansicht zeigt
-  Gesamtergebnis, laufenden Prüfer, alle Stationen und das jeweils aktive Finding;
-  ein Durchklicken ist nicht erforderlich. Ergebniszeichen erscheinen erst nach dem
-  sichtbaren Abschluss der jeweiligen Station. Danach öffnet **Details & Lösung**
-  den tatsächlichen Prüfgegenstand, eine Handlungsempfehlung und – sofern vorhanden –
-  die GitHub-Belegquelle. Offene Dependabot-PRs werden mit Nummer und Titel in die
-  Offline-Datei eingebettet. Nach dem Upload ergänzt der Workflow
+  animierte, eigenständige HTML-Datei. Die Showansicht belegt genau eine
+  Bildschirmhöhe ohne vertikales Scrollen und zeigt Gesamtergebnis, laufenden
+  Prüfer, alle Stationen, das jeweils aktive Finding sowie rechts ein während des
+  Rundgangs wachsendes Ergebnisprotokoll. Ein Durchklicken ist nicht erforderlich.
+  Ergebniszeichen und Protokolleinträge erscheinen erst nach dem sichtbaren
+  Abschluss der jeweiligen Station. Station, aktuelles Finding und Protokolleintrag
+  öffnen denselben Dialog **Details & Lösung** mit tatsächlichem Prüfgegenstand,
+  Handlungsempfehlung und – sofern vorhanden – GitHub-Belegquelle. Offene
+  Dependabot-PRs werden mit Nummer und Titel in die Offline-Datei eingebettet. Nach
+  dem Upload ergänzt der Workflow
   die GitHub-Zusammenfassung um den direkten, angemeldeten Artifact-Link. Das
   Artefakt bleibt 30 Tage erhalten. E-Mail-Versand wird erst ergänzt, wenn Empfänger,
   Absender und freigegebener Mailweg verbindlich vorliegen.

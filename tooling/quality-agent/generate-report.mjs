@@ -70,13 +70,15 @@ export function renderHtml(report) {
         </button>`,
     )
     .join("");
-  const staticFindings = report.findings
+  const resultItems = report.findings
     .map(
-      (finding) => `
-        <li class="finding finding--${escapeHtml(finding.status)}">
-          <span aria-hidden="true">${finding.status === "passed" ? "✓" : finding.status === "warning" ? "?" : "!"}</span>
-          <div><strong>${escapeHtml(finding.title)}</strong><p>${escapeHtml(finding.finding)}</p><details><summary>Details und Lösung</summary><p><b>Prüfnachweis:</b> ${escapeHtml(finding.details)}</p><p><b>Empfehlung:</b> ${escapeHtml(finding.recommendation)}</p>${finding.evidenceUrl ? `<a href="${escapeHtml(finding.evidenceUrl)}" target="_blank" rel="noreferrer">Belegquelle öffnen</a>` : ""}</details></div>
-          <time>${formatDuration(finding.durationMs)}</time>
+      (finding, index) => `
+        <li class="result-item result-item--${escapeHtml(finding.status)}" data-index="${index}">
+          <button type="button" aria-label="Details zu ${escapeHtml(finding.title)} öffnen">
+            <span class="result-item__icon" aria-hidden="true">${finding.status === "passed" ? "✓" : finding.status === "warning" ? "?" : "!"}</span>
+            <span class="result-item__copy"><small>${escapeHtml(finding.area)}</small><strong>${escapeHtml(finding.title)}</strong></span>
+            <time>${formatDuration(finding.durationMs)}</time>
+          </button>
         </li>`,
     )
     .join("");
@@ -90,15 +92,15 @@ export function renderHtml(report) {
   <style>
     :root { color-scheme:dark; --petrol:#073b4c; --night:#061a22; --teal:#00a6a6; --amber:#ffb000; --red:#c8102e; --mint:#7be0c3; --ink:#08232d; --paper:#f5fbfa; }
     * { box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
-    body { margin:0; min-width:320px; color:#eefafa; background:radial-gradient(circle at 12% 0,#176879 0,transparent 28rem),linear-gradient(145deg,#052933,var(--night) 72%); font:16px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif; }
-    main { width:min(1240px,calc(100% - 28px)); margin:auto; padding:14px 0 56px; }
+    html,body { width:100%; height:100%; overflow:hidden; }
+    body { margin:0; min-width:320px; color:#eefafa; background:radial-gradient(circle at 12% 0,#176879 0,transparent 28rem),linear-gradient(145deg,#052933,var(--night) 72%); font:16px/1.38 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif; }
+    main { width:min(1500px,100%); height:100dvh; margin:auto; padding:10px; }
     .panel { border:1px solid rgba(255,255,255,.13); border-radius:26px; background:rgba(7,59,76,.78); box-shadow:0 22px 70px rgba(0,0,0,.28); backdrop-filter:blur(18px); }
-    .showcase { min-height:calc(100svh - 28px); padding:clamp(18px,2.4vw,30px); display:grid; grid-template-rows:auto auto minmax(290px,1fr) auto; gap:16px; overflow:hidden; position:relative; }
+    .showcase { height:100%; padding:clamp(14px,1.8vw,24px); display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; gap:clamp(8px,1.1vh,14px); overflow:hidden; position:relative; }
     .showcase::after { content:""; position:absolute; width:240px; height:240px; right:-110px; top:-120px; border:42px solid rgba(0,166,166,.13); border-radius:50%; pointer-events:none; }
     .showcase__header { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:24px; align-items:start; position:relative; z-index:1; }
     .eyebrow { margin:0 0 4px; color:var(--mint); font-size:.78rem; font-weight:900; letter-spacing:.13em; text-transform:uppercase; }
-    h1 { margin:0; font-size:clamp(2rem,4vw,4rem); line-height:.98; letter-spacing:-.035em; }
+    h1 { margin:0; font-size:clamp(1.85rem,3.5vw,3.4rem); line-height:.98; letter-spacing:-.035em; }
     .lead { max-width:700px; margin:8px 0 0; color:#bed6da; font-size:clamp(.92rem,1.5vw,1.06rem); }
     .score { min-width:190px; display:grid; grid-template-columns:66px 1fr; gap:12px; align-items:center; padding:10px 14px; border:1px solid rgba(255,255,255,.12); border-radius:20px; background:rgba(3,29,37,.58); }
     .ring { --score:${Math.round(((report.statistics.passed + (report.statistics.warnings ?? 0)) / Math.max(1, report.statistics.total)) * 100)}%; width:66px; aspect-ratio:1; display:grid; place-items:center; border-radius:50%; background:conic-gradient(${report.overallStatus === "passed" ? "var(--teal)" : report.overallStatus === "warning" ? "var(--amber)" : "var(--red)"} var(--score),rgba(255,255,255,.12) 0); position:relative; }
@@ -108,22 +110,23 @@ export function renderHtml(report) {
     .score span { color:#a9c8cd; font-size:.8rem; }
     .meta { display:flex; flex-wrap:wrap; gap:8px; }
     .pill { padding:6px 11px; border-radius:999px; color:#cce2e5; background:rgba(255,255,255,.075); font-size:.78rem; }
-    .audit-stage { min-height:290px; display:grid; grid-template-rows:auto 138px minmax(112px,1fr); border:1px solid rgba(255,255,255,.11); border-radius:22px; background:linear-gradient(180deg,rgba(2,28,36,.68),rgba(4,42,51,.5)); overflow:hidden; position:relative; }
+    .workspace { min-height:0; display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,26%); gap:clamp(10px,1.2vw,16px); }
+    .audit-stage { min-height:0; display:grid; grid-template-rows:auto minmax(112px,.72fr) minmax(122px,1fr); border:1px solid rgba(255,255,255,.11); border-radius:22px; background:linear-gradient(180deg,rgba(2,28,36,.68),rgba(4,42,51,.5)); overflow:hidden; position:relative; }
     .audit-stage__top { padding:12px 18px 0; display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .audit-stage__top h2 { margin:0; font-size:1rem; }
     .agent-message { margin:0; color:var(--amber); font-size:.82rem; font-weight:800; text-align:right; }
     .track { margin:0 20px; position:relative; }
-    .track::before { content:""; position:absolute; left:2.2%; right:2.2%; top:91px; height:6px; border-radius:999px; background:rgba(255,255,255,.12); }
-    .track__progress { position:absolute; left:2.2%; top:91px; width:0; height:6px; border-radius:999px; background:linear-gradient(90deg,var(--teal),var(--amber)); box-shadow:0 0 22px rgba(0,166,166,.4); transition:width .8s ease; }
-    .stations { position:absolute; inset:69px 0 auto; display:grid; grid-template-columns:repeat(${Math.max(1, report.findings.length)},1fr); align-items:start; }
+    .track::before { content:""; position:absolute; left:2.2%; right:2.2%; top:74px; height:5px; border-radius:999px; background:rgba(255,255,255,.12); }
+    .track__progress { position:absolute; left:2.2%; top:74px; width:0; height:5px; border-radius:999px; background:linear-gradient(90deg,var(--teal),var(--amber)); box-shadow:0 0 22px rgba(0,166,166,.4); transition:width .8s ease; }
+    .stations { position:absolute; inset:57px 0 auto; display:grid; grid-template-columns:repeat(${Math.max(1, report.findings.length)},1fr); align-items:start; }
     .station { appearance:none; min-width:0; padding:0; border:0; color:#89aeb5; background:transparent; cursor:pointer; position:relative; z-index:3; }
-    .station__dot { width:44px; height:44px; margin:auto; display:grid; place-items:center; border:5px solid #123e49; border-radius:50%; background:#0a2831; font-weight:950; transition:.28s ease; }
+    .station__dot { width:36px; height:36px; margin:auto; display:grid; place-items:center; border:4px solid #123e49; border-radius:50%; background:#0a2831; font-size:.78rem; font-weight:950; transition:.28s ease; }
     .station__number { display:block; margin-top:3px; font-size:.68rem; font-weight:800; }
     .station.is-complete[data-status="passed"] .station__dot { color:var(--mint); }
     .station.is-complete[data-status="warning"] .station__dot { color:var(--ink); background:var(--amber); }
     .station.is-complete[data-status="failed"] .station__dot { color:white; background:var(--red); }
     .station.is-active .station__dot { color:var(--ink); border-color:#ffe09a; background:var(--amber); transform:scale(1.16); box-shadow:0 0 0 7px rgba(255,176,0,.14); }
-    .inspector { width:62px; height:76px; position:absolute; left:4.55%; top:5px; transform:translateX(-50%); z-index:5; transition:left .8s cubic-bezier(.2,.9,.24,1); filter:drop-shadow(0 8px 9px rgba(0,0,0,.32)); }
+    .inspector { width:62px; height:76px; position:absolute; left:4.55%; top:-8px; transform:translateX(-50%) scale(.86); transform-origin:center bottom; z-index:5; transition:left .8s cubic-bezier(.2,.9,.24,1); filter:drop-shadow(0 8px 9px rgba(0,0,0,.32)); }
     .inspector__hat { width:34px; height:11px; position:absolute; left:14px; top:0; border-radius:12px 12px 3px 3px; background:var(--amber); }
     .inspector__hat::after { content:""; width:44px; height:5px; position:absolute; left:-5px; bottom:-3px; border-radius:6px; background:#f29f00; }
     .inspector__head { width:28px; height:28px; position:absolute; left:17px; top:9px; border:3px solid #08232d; border-radius:50%; background:#ffd3a3; }
@@ -141,7 +144,7 @@ export function renderHtml(report) {
     .inspector.is-walking .inspector__leg--right { animation:walk-right .28s infinite alternate; }
     @keyframes walk-left { to { transform:rotate(28deg); } }
     @keyframes walk-right { to { transform:rotate(-28deg); } }
-    .spotlight { margin:0 16px 16px; padding:14px 18px; display:grid; grid-template-columns:54px minmax(0,1fr) auto; gap:16px; align-items:center; border-radius:18px; color:var(--ink); background:linear-gradient(135deg,#f8fffe,#d8f7ef); transition:background .25s ease,color .25s ease; }
+    .spotlight { min-height:0; margin:0 16px 16px; padding:clamp(11px,1.5vw,17px); display:grid; grid-template-columns:54px minmax(0,1fr) auto; gap:14px; align-items:center; border-radius:18px; color:var(--ink); background:linear-gradient(135deg,#f8fffe,#d8f7ef); transition:background .25s ease,color .25s ease; }
     .spotlight.is-failed { color:white; background:linear-gradient(135deg,#8d0b22,var(--red)); }
     .spotlight.is-warning { color:var(--ink); background:linear-gradient(135deg,#fff9e8,#ffd777); }
     .spotlight__icon { display:grid; place-items:center; width:50px; height:50px; border-radius:15px; color:white; background:var(--teal); font-size:1.7rem; font-weight:950; box-shadow:0 10px 24px rgba(0,0,0,.15); animation:stamp .36s ease; }
@@ -156,20 +159,24 @@ export function renderHtml(report) {
     .detail-button:hover,.detail-button:focus-visible { color:white; background:var(--petrol); outline:2px solid var(--amber); outline-offset:2px; }
     .showcase__footer { display:flex; justify-content:space-between; align-items:center; gap:14px; color:#9bbdc3; font-size:.77rem; }
     .showcase__footer strong { color:var(--mint); }
-    .details { margin-top:24px; padding:26px; }
-    .details h2 { margin:0 0 6px; font-size:1.4rem; }
-    .stage__hint { margin:0; color:#aac9ce; }
-    .findings { list-style:none; padding:0; margin:20px 0 0; display:grid; gap:10px; }
-    .finding { display:grid; grid-template-columns:38px 1fr auto; gap:14px; align-items:start; padding:16px; border-radius:15px; background:rgba(255,255,255,.06); }
-    .finding > span { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; color:var(--ink); background:var(--mint); font-weight:900; }
-    .finding--failed > span { color:white; background:var(--red); }
-    .finding--warning > span { color:var(--ink); background:var(--amber); }
-    .finding p { margin:3px 0 0; color:#bdd3d7; }
-    .finding details { margin-top:9px; color:#dcecee; }
-    .finding summary { width:max-content; color:var(--mint); font-weight:800; cursor:pointer; }
-    .finding details p { margin-top:7px; }
-    .finding a { color:#8de9d2; }
-    .finding time { color:#8db0b6; white-space:nowrap; }
+    .results-rail { min-height:0; padding:12px; display:grid; grid-template-rows:auto minmax(0,1fr); border:1px solid rgba(255,255,255,.11); border-radius:22px; background:rgba(3,29,37,.64); overflow:hidden; }
+    .results-rail__header { display:flex; align-items:end; justify-content:space-between; gap:10px; padding:1px 3px 9px; }
+    .results-rail__header p { margin:0; color:var(--mint); font-size:.72rem; font-weight:900; letter-spacing:.1em; text-transform:uppercase; }
+    .results-rail__header h2 { margin:1px 0 0; font-size:1rem; }
+    .results-counter { color:#9fc1c7; font-size:.72rem; white-space:nowrap; }
+    .results-list { min-height:0; list-style:none; padding:0; margin:0; display:grid; grid-template-rows:repeat(${Math.max(1, report.findings.length)},minmax(0,1fr)); gap:3px; }
+    .result-item { min-height:0; opacity:0; transform:translateX(16px); transition:opacity .32s ease,transform .32s ease; pointer-events:none; }
+    .result-item.is-revealed { opacity:1; transform:none; pointer-events:auto; }
+    .result-item button { width:100%; height:100%; min-height:0; padding:2px 5px; display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:7px; align-items:center; border:1px solid rgba(255,255,255,.07); border-radius:8px; color:#dff4f1; background:rgba(255,255,255,.045); font:inherit; text-align:left; cursor:pointer; }
+    .result-item button:hover,.result-item button:focus-visible { border-color:var(--amber); background:rgba(255,255,255,.11); outline:none; }
+    .result-item__icon { width:21px; height:21px; display:grid; place-items:center; border-radius:50%; color:var(--ink); background:var(--mint); font-size:.7rem; font-weight:950; }
+    .result-item--warning .result-item__icon { background:var(--amber); }
+    .result-item--failed .result-item__icon { color:white; background:var(--red); }
+    .result-item__copy { min-width:0; display:block; }
+    .result-item__copy small,.result-item__copy strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .result-item__copy small { color:#83adb4; font-size:clamp(.48rem,.6vw,.62rem); line-height:1; text-transform:uppercase; }
+    .result-item__copy strong { margin-top:1px; font-size:clamp(.62rem,.72vw,.76rem); line-height:1.08; }
+    .result-item time { color:#86aeb5; font-size:.6rem; white-space:nowrap; }
     dialog { width:min(720px,calc(100% - 28px)); padding:0; border:1px solid rgba(123,224,195,.45); border-radius:24px; color:#eefafa; background:linear-gradient(145deg,#073b4c,#061a22); box-shadow:0 28px 100px rgba(0,0,0,.58); }
     dialog::backdrop { background:rgba(1,15,20,.76); backdrop-filter:blur(5px); }
     .dialog__body { padding:clamp(22px,4vw,36px); }
@@ -182,8 +189,9 @@ export function renderHtml(report) {
     .dialog__section strong { display:block; margin-bottom:4px; color:var(--mint); }
     .dialog__section p { margin:0; color:#cee2e5; }
     .dialog__link { display:inline-block; margin-top:22px; padding:10px 15px; border-radius:999px; color:var(--ink); background:var(--mint); font-weight:900; text-decoration:none; }
-    footer { margin-top:20px; color:#90acb2; font-size:.86rem; }
-    @media (max-width:760px) { main { width:min(100% - 18px,1240px); padding-top:9px; } .showcase { min-height:auto; grid-template-rows:auto auto auto auto; } .showcase__header { grid-template-columns:1fr; } .score { width:100%; } .audit-stage { min-height:390px; grid-template-rows:auto 150px auto; } .track { margin-inline:8px; overflow-x:auto; } .stations { width:720px; } .track::before,.track__progress { width:688px; right:auto; } .inspector { display:none; } .spotlight { grid-template-columns:48px 1fr; } .spotlight__actions { grid-column:2; align-items:flex-start; } .showcase__footer { align-items:flex-start; flex-direction:column; } .finding { grid-template-columns:34px 1fr; } .finding time { grid-column:2; } }
+    @media (max-height:760px) { .showcase { padding:12px; } .lead { display:none; } .score { grid-template-columns:48px 1fr; min-width:170px; } .ring { width:48px; } .audit-stage { grid-template-rows:auto minmax(96px,.62fr) minmax(108px,1fr); } .spotlight__icon { width:42px; height:42px; } .spotlight h3 { font-size:1.08rem; } .spotlight p { font-size:.78rem; } .showcase__footer { font-size:.67rem; } }
+    @media (max-width:980px) { .showcase__header { grid-template-columns:minmax(0,1fr) 180px; } .workspace { grid-template-columns:minmax(0,1fr) 270px; } .inspector { display:none; } .station__dot { width:30px; height:30px; border-width:3px; } .track::before,.track__progress { top:71px; } .stations { top:58px; } .spotlight { grid-template-columns:44px minmax(0,1fr); } .spotlight__actions { grid-column:2; flex-direction:row; align-items:center; } .result-item time { display:none; } }
+    @media (max-width:700px) { main { padding:5px; } .showcase { padding:9px; border-radius:16px; } .showcase__header { grid-template-columns:1fr auto; gap:8px; } .eyebrow,.lead,.score span,.meta .pill:last-child,.showcase__footer span:last-child { display:none; } h1 { font-size:1.45rem; } .score { min-width:0; padding:6px; grid-template-columns:40px; } .ring { width:40px; } .score > div:last-child { display:none; } .workspace { grid-template-columns:minmax(0,1fr) minmax(190px,42%); gap:6px; } .audit-stage__top { padding-inline:10px; } .agent-message { display:none; } .track { margin-inline:5px; } .station__number { display:none; } .spotlight { margin:0 7px 7px; padding:8px; } .spotlight p { display:none; } .results-rail { padding:6px; } .results-rail__header { padding-bottom:5px; } .results-rail__header p,.results-counter { display:none; } .result-item button { grid-template-columns:20px minmax(0,1fr); gap:4px; } .result-item__icon { width:18px; height:18px; } }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
   </style>
 </head>
@@ -204,29 +212,30 @@ export function renderHtml(report) {
 
       <div class="meta"><span class="pill">Prüflauf ${escapeHtml(formatTimestamp(report.generatedAt))}</span><span class="pill">Revision ${escapeHtml(report.revision)}</span><span class="pill">${escapeHtml(report.target)}</span></div>
 
-      <section class="audit-stage" aria-labelledby="stage-title">
-        <div class="audit-stage__top"><h2 id="stage-title">Live-Prüfbühne</h2><p class="agent-message">Klemmbrett bereit – los geht’s.</p></div>
-        <div class="track" aria-label="Prüfstationen">
-          <div class="track__progress" aria-hidden="true"></div>
-          <div class="inspector" aria-hidden="true"><span class="inspector__hat"></span><span class="inspector__head"></span><span class="inspector__body"></span><span class="inspector__clipboard"></span><span class="inspector__glass"></span><span class="inspector__leg inspector__leg--left"></span><span class="inspector__leg inspector__leg--right"></span></div>
-          <div class="stations">${stations}</div>
-        </div>
-        <article class="spotlight" aria-live="polite">
-          <span class="spotlight__icon">✓</span>
-          <div><small>Prüfung</small><h3>Bericht wird vorbereitet</h3><p>Die Findings erscheinen automatisch.</p></div>
-          <div class="spotlight__actions"><time>0 ms</time><button class="detail-button" type="button" hidden>Details &amp; Lösung</button></div>
-        </article>
-      </section>
+      <div class="workspace">
+        <section class="audit-stage" aria-labelledby="stage-title">
+          <div class="audit-stage__top"><h2 id="stage-title">Live-Prüfbühne</h2><p class="agent-message">Klemmbrett bereit – los geht’s.</p></div>
+          <div class="track" aria-label="Prüfstationen">
+            <div class="track__progress" aria-hidden="true"></div>
+            <div class="inspector" aria-hidden="true"><span class="inspector__hat"></span><span class="inspector__head"></span><span class="inspector__body"></span><span class="inspector__clipboard"></span><span class="inspector__glass"></span><span class="inspector__leg inspector__leg--left"></span><span class="inspector__leg inspector__leg--right"></span></div>
+            <div class="stations">${stations}</div>
+          </div>
+          <article class="spotlight" aria-live="polite">
+            <span class="spotlight__icon">⌕</span>
+            <div><small>Prüfung</small><h3>Bericht wird vorbereitet</h3><p>Die Findings erscheinen automatisch.</p></div>
+            <div class="spotlight__actions"><time>0 ms</time><button class="detail-button" type="button" hidden>Details &amp; Lösung</button></div>
+          </article>
+        </section>
+
+        <aside class="results-rail" aria-labelledby="results-title">
+          <div class="results-rail__header"><div><p>Ergebnisprotokoll</p><h2 id="results-title">Findings im Rundgang</h2></div><span class="results-counter">0/${report.statistics.total}</span></div>
+          <ol class="results-list">${resultItems || "<li>Keine Prüfdaten vorhanden.</li>"}</ol>
+        </aside>
+      </div>
 
       <div class="showcase__footer"><span><strong>Autoplay:</strong> kein Durchklicken erforderlich · Stationen bleiben zusätzlich anwählbar</span><span>Read-only · Keine Testvorgänge · Keine automatische Veröffentlichung</span></div>
     </section>
 
-    <section class="panel details">
-      <h2>Alle Findings auf einen Blick</h2>
-      <p class="stage__hint">Statische, druckbare Fassung für Nachweis und Nacharbeit.</p>
-      <ol class="findings">${staticFindings || "<li>Keine Prüfdaten vorhanden.</li>"}</ol>
-    </section>
-    <footer>Detailnachweis für Nacharbeit und barrierearme statische Ausgabe</footer>
   </main>
   <dialog class="finding-dialog" aria-labelledby="dialog-title">
     <div class="dialog__body">
@@ -247,6 +256,8 @@ export function renderHtml(report) {
     const message = document.querySelector('.agent-message');
     const detailButton = document.querySelector('.detail-button');
     const findingDialog = document.querySelector('.finding-dialog');
+    const resultItems = [...document.querySelectorAll('.result-item')];
+    const resultsCounter = document.querySelector('.results-counter');
     const remarks = ['Ausweis geprüft.', 'Lupe an.', 'Termin sitzt.', 'Kein Datenstau.', 'Karte gefunden.', 'Formular im Blick.', 'Mobil passt.', 'Haken dran.'];
     let active = 0;
     let walkingTimer;
@@ -258,6 +269,8 @@ export function renderHtml(report) {
       const station = stations[index];
       station.classList.add('is-complete');
       station.querySelector('.station__dot').textContent = station.querySelector('.station__dot').dataset.result;
+      resultItems[index].classList.add('is-revealed');
+      resultsCounter.textContent = stations.filter((item) => item.classList.contains('is-complete')).length + '/' + report.findings.length;
       spotlight.classList.toggle('is-failed', finding.status === 'failed');
       spotlight.classList.toggle('is-warning', finding.status === 'warning');
       const icon = spotlight.querySelector('.spotlight__icon');
@@ -274,6 +287,8 @@ export function renderHtml(report) {
       clearTimeout(completionTimer);
       if (index === 0 && stations.some((station) => station.classList.contains('is-complete'))) {
         stations.forEach((station) => { station.classList.remove('is-complete'); station.querySelector('.station__dot').textContent = ''; });
+        resultItems.forEach((item) => item.classList.remove('is-revealed'));
+        resultsCounter.textContent = '0/' + report.findings.length;
         progress.style.width = '0';
       }
       active = index;
@@ -320,9 +335,22 @@ export function renderHtml(report) {
       autoplayPausedUntil = Date.now() + 15000;
       openDetails(active);
     });
+    resultItems.forEach((item) => item.querySelector('button').addEventListener('click', () => {
+      autoplayPausedUntil = Date.now() + 15000;
+      openDetails(Number(item.dataset.index));
+    }));
     findingDialog.querySelector('.dialog__close').addEventListener('click', () => findingDialog.close());
     findingDialog.addEventListener('click', (event) => { if (event.target === findingDialog) findingDialog.close(); });
-    show(active);
+    if (!report.findings.length) {
+      message.textContent = 'Keine Prüfdaten vorhanden.';
+    } else if (reducedMotion) {
+      report.findings.forEach((_, index) => complete(index));
+      show(report.findings.length - 1);
+      clearTimeout(completionTimer);
+      complete(report.findings.length - 1);
+    } else {
+      show(active);
+    }
     if (!reducedMotion && report.findings.length > 1) {
       setInterval(() => {
         if (findingDialog.open || Date.now() < autoplayPausedUntil) return;

@@ -98,11 +98,12 @@ Dependabot-PRs in die Offline-Datei ein.
 3. ZIP entpacken und `quality-report.html` doppelklicken.
 
 Die HTML-Datei benötigt keine Internetverbindung und durchläuft die Findings
-selbstständig von links nach rechts. Gesamtergebnis, animierter Prüfer, Stationen und
-das jeweils aktive Finding bleiben dabei auf der ersten Bildschirmansicht. Die Datei
-kann weitergegeben oder später an einen freigegebenen Mailversand angehängt werden.
-Zusätzlich steht die kompakte Ergebnisliste direkt in der
-GitHub-Laufzusammenfassung.
+selbstständig von links nach rechts. Gesamtergebnis, animierter Prüfer, Stationen,
+aktives Finding und das rechts schrittweise wachsende Ergebnisprotokoll bleiben in
+einer Bildschirmhöhe ohne vertikales Scrollen sichtbar. Erst der aufrufbare
+Detaildialog zeigt längere Nachweise und Handlungsempfehlungen. Die Datei kann
+weitergegeben oder später an einen freigegebenen Mailversand angehängt werden.
+Zusätzlich steht die kompakte Ergebnisliste direkt in der GitHub-Laufzusammenfassung.
 
 ## Grenzen und Reaktion auf Fehler
 
