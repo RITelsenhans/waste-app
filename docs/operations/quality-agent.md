@@ -101,7 +101,12 @@ Die HTML-Datei benötigt keine Internetverbindung und durchläuft die Findings
 selbstständig von links nach rechts. Gesamtergebnis, animierter Prüfer, Stationen,
 aktives Finding und das rechts schrittweise wachsende Ergebnisprotokoll bleiben in
 einer Bildschirmhöhe ohne vertikales Scrollen sichtbar. Erst der aufrufbare
-Detaildialog zeigt längere Nachweise und Handlungsempfehlungen. Die Datei kann
+Detaildialog zeigt längere Nachweise und Handlungsempfehlungen. Nach dem einmaligen
+Rundgang bleibt ein Abschlussscreen stehen: Er nennt im Hauptbereich die priorisierten
+To-dos mit konkreter Maßnahme und empfohlenem Zeitfenster, während rechts alle
+Findings anklickbar bleiben. Nur **Prüflauf erneut ansehen** startet die Animation
+bewusst neu. Die Zeitfenster sind risikobasierte Pilotempfehlungen und keine
+vertraglichen SLA. Die Datei kann
 weitergegeben oder später an einen freigegebenen Mailversand angehängt werden.
 Zusätzlich steht die kompakte Ergebnisliste direkt in der GitHub-Laufzusammenfassung.
 

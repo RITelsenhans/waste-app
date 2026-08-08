@@ -61,6 +61,10 @@ als direkt anklickbares Workflow-Artefakt \`quality-agent-report\` verlinkt.
 
 export function renderHtml(report) {
   const safeData = JSON.stringify(report).replaceAll("<", "\\u003c");
+  const actionItems = report.findings
+    .filter((finding) => finding.status !== "passed")
+    .sort((left, right) => actionRank(left.actionPriority) - actionRank(right.actionPriority));
+  const visibleActionItems = actionItems.slice(0, 4);
   const stations = report.findings
     .map(
       (finding, index) => `
@@ -82,6 +86,23 @@ export function renderHtml(report) {
         </li>`,
     )
     .join("");
+  const todoItems = visibleActionItems
+    .map(
+      (finding) => `
+        <button class="todo-card todo-card--${escapeHtml(finding.actionPriority)}" type="button" data-finding-id="${escapeHtml(finding.id)}">
+          <span class="todo-card__priority">${escapeHtml(finding.actionLabel)}</span>
+          <strong>${escapeHtml(finding.title)}</strong>
+          <span class="todo-card__action">${escapeHtml(finding.action)}</span>
+          <span class="todo-card__deadline">Zeitfenster: ${escapeHtml(finding.deadline)}</span>
+        </button>`,
+    )
+    .join("");
+  const completionSummary =
+    report.statistics.failed > 0
+      ? `${report.statistics.failed} Fehler müssen bearbeitet werden; ${report.statistics.warnings} weitere Hinweise sind einzuplanen.`
+      : report.statistics.warnings > 0
+        ? `Kein akuter Ausfall. ${report.statistics.warnings} Hinweise sollten geplant bearbeitet werden.`
+        : "Keine Maßnahme erforderlich. Der nächste automatische Lauf kontrolliert den Zustand erneut.";
 
   return `<!doctype html>
 <html lang="de">
@@ -157,6 +178,28 @@ export function renderHtml(report) {
     .spotlight__actions { display:flex; flex-direction:column; align-items:flex-end; gap:7px; }
     .detail-button { appearance:none; padding:7px 11px; border:1px solid currentColor; border-radius:999px; color:inherit; background:transparent; font:inherit; font-size:.76rem; font-weight:850; cursor:pointer; }
     .detail-button:hover,.detail-button:focus-visible { color:white; background:var(--petrol); outline:2px solid var(--amber); outline-offset:2px; }
+    .completion-screen { position:absolute; inset:0; z-index:8; padding:clamp(16px,2vw,28px); display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:clamp(10px,1.5vh,18px); color:#eefafa; background:linear-gradient(145deg,#05313d,#031b23); }
+    .completion-screen[hidden] { display:none; }
+    .completion-screen__eyebrow { margin:0 0 4px; color:var(--mint); font-size:.75rem; font-weight:900; letter-spacing:.11em; text-transform:uppercase; }
+    .completion-screen h2 { margin:0; font-size:clamp(1.55rem,3vw,2.75rem); line-height:1; }
+    .completion-screen__summary { margin:7px 0 0; color:#bed6da; font-size:clamp(.84rem,1.3vw,1rem); }
+    .todo-grid { min-height:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-rows:minmax(0,1fr); gap:10px; }
+    .todo-card { min-height:0; padding:clamp(10px,1.3vw,16px); display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:5px; border:1px solid rgba(255,255,255,.14); border-left:5px solid var(--amber); border-radius:15px; color:#edfafa; background:rgba(255,255,255,.07); font:inherit; text-align:left; cursor:pointer; }
+    .todo-card:hover,.todo-card:focus-visible { border-color:var(--amber); background:rgba(255,255,255,.12); outline:2px solid var(--amber); outline-offset:2px; }
+    .todo-card--urgent { border-left-color:var(--red); }
+    .todo-card__priority { color:var(--amber); font-size:.68rem; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+    .todo-card--urgent .todo-card__priority { color:#ff8ba0; }
+    .todo-card strong { font-size:clamp(.9rem,1.4vw,1.08rem); line-height:1.08; }
+    .todo-card__action { color:#c8dfe2; font-size:clamp(.72rem,1vw,.86rem); line-height:1.24; }
+    .todo-card__deadline { margin-top:auto; padding:4px 8px; border-radius:999px; color:var(--ink); background:var(--amber); font-size:.68rem; font-weight:900; }
+    .todo-card--urgent .todo-card__deadline { color:white; background:var(--red); }
+    .no-action { min-height:0; display:grid; place-content:center; padding:22px; border:1px solid rgba(123,224,195,.35); border-radius:18px; color:var(--ink); background:linear-gradient(135deg,#f8fffe,#d8f7ef); text-align:center; }
+    .no-action strong { font-size:clamp(1.15rem,2vw,1.7rem); }
+    .no-action span { margin-top:5px; }
+    .completion-screen__footer { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .completion-screen__note { margin:0; max-width:780px; color:#91b5bb; font-size:.72rem; }
+    .replay-button { flex:0 0 auto; padding:10px 16px; border:0; border-radius:999px; color:var(--ink); background:var(--mint); font:inherit; font-size:.78rem; font-weight:950; cursor:pointer; }
+    .replay-button:hover,.replay-button:focus-visible { background:white; outline:2px solid var(--amber); outline-offset:2px; }
     .showcase__footer { display:flex; justify-content:space-between; align-items:center; gap:14px; color:#9bbdc3; font-size:.77rem; }
     .showcase__footer strong { color:var(--mint); }
     .results-rail { min-height:0; padding:12px; display:grid; grid-template-rows:auto minmax(0,1fr); border:1px solid rgba(255,255,255,.11); border-radius:22px; background:rgba(3,29,37,.64); overflow:hidden; }
@@ -167,14 +210,14 @@ export function renderHtml(report) {
     .results-list { min-height:0; list-style:none; padding:0; margin:0; display:grid; grid-template-rows:repeat(${Math.max(1, report.findings.length)},minmax(0,1fr)); gap:3px; }
     .result-item { min-height:0; opacity:0; transform:translateX(16px); transition:opacity .32s ease,transform .32s ease; pointer-events:none; }
     .result-item.is-revealed { opacity:1; transform:none; pointer-events:auto; }
-    .result-item button { width:100%; height:100%; min-height:0; padding:2px 5px; display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:7px; align-items:center; border:1px solid rgba(255,255,255,.07); border-radius:8px; color:#dff4f1; background:rgba(255,255,255,.045); font:inherit; text-align:left; cursor:pointer; }
+    .result-item button { width:100%; height:100%; min-height:0; padding:2px 5px; display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:7px; align-items:center; border:1px solid rgba(255,255,255,.12); border-radius:8px; color:#effcf9; background:rgba(255,255,255,.085); font:inherit; text-align:left; cursor:pointer; }
     .result-item button:hover,.result-item button:focus-visible { border-color:var(--amber); background:rgba(255,255,255,.11); outline:none; }
     .result-item__icon { width:21px; height:21px; display:grid; place-items:center; border-radius:50%; color:var(--ink); background:var(--mint); font-size:.7rem; font-weight:950; }
     .result-item--warning .result-item__icon { background:var(--amber); }
     .result-item--failed .result-item__icon { color:white; background:var(--red); }
     .result-item__copy { min-width:0; display:block; }
     .result-item__copy small,.result-item__copy strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .result-item__copy small { color:#83adb4; font-size:clamp(.48rem,.6vw,.62rem); line-height:1; text-transform:uppercase; }
+    .result-item__copy small { color:#a9ccd1; font-size:clamp(.48rem,.6vw,.62rem); line-height:1; text-transform:uppercase; }
     .result-item__copy strong { margin-top:1px; font-size:clamp(.62rem,.72vw,.76rem); line-height:1.08; }
     .result-item time { color:#86aeb5; font-size:.6rem; white-space:nowrap; }
     dialog { width:min(720px,calc(100% - 28px)); padding:0; border:1px solid rgba(123,224,195,.45); border-radius:24px; color:#eefafa; background:linear-gradient(145deg,#073b4c,#061a22); box-shadow:0 28px 100px rgba(0,0,0,.58); }
@@ -189,9 +232,9 @@ export function renderHtml(report) {
     .dialog__section strong { display:block; margin-bottom:4px; color:var(--mint); }
     .dialog__section p { margin:0; color:#cee2e5; }
     .dialog__link { display:inline-block; margin-top:22px; padding:10px 15px; border-radius:999px; color:var(--ink); background:var(--mint); font-weight:900; text-decoration:none; }
-    @media (max-height:760px) { .showcase { padding:12px; } .lead { display:none; } .score { grid-template-columns:48px 1fr; min-width:170px; } .ring { width:48px; } .audit-stage { grid-template-rows:auto minmax(96px,.62fr) minmax(108px,1fr); } .spotlight__icon { width:42px; height:42px; } .spotlight h3 { font-size:1.08rem; } .spotlight p { font-size:.78rem; } .showcase__footer { font-size:.67rem; } }
+    @media (max-height:760px) { .showcase { padding:12px; } .lead { display:none; } .score { grid-template-columns:48px 1fr; min-width:170px; } .ring { width:48px; } .audit-stage { grid-template-rows:auto minmax(96px,.62fr) minmax(108px,1fr); } .spotlight__icon { width:42px; height:42px; } .spotlight h3 { font-size:1.08rem; } .spotlight p { font-size:.78rem; } .showcase__footer { font-size:.67rem; } .completion-screen { padding:12px; gap:8px; } .todo-card { padding:8px 10px; gap:3px; } .todo-card__action { font-size:.7rem; } .completion-screen__note { font-size:.62rem; } }
     @media (max-width:980px) { .showcase__header { grid-template-columns:minmax(0,1fr) 180px; } .workspace { grid-template-columns:minmax(0,1fr) 270px; } .inspector { display:none; } .station__dot { width:30px; height:30px; border-width:3px; } .track::before,.track__progress { top:71px; } .stations { top:58px; } .spotlight { grid-template-columns:44px minmax(0,1fr); } .spotlight__actions { grid-column:2; flex-direction:row; align-items:center; } .result-item time { display:none; } }
-    @media (max-width:700px) { main { padding:5px; } .showcase { padding:9px; border-radius:16px; } .showcase__header { grid-template-columns:1fr auto; gap:8px; } .eyebrow,.lead,.score span,.meta .pill:last-child,.showcase__footer span:last-child { display:none; } h1 { font-size:1.45rem; } .score { min-width:0; padding:6px; grid-template-columns:40px; } .ring { width:40px; } .score > div:last-child { display:none; } .workspace { grid-template-columns:minmax(0,1fr) minmax(190px,42%); gap:6px; } .audit-stage__top { padding-inline:10px; } .agent-message { display:none; } .track { margin-inline:5px; } .station__number { display:none; } .spotlight { margin:0 7px 7px; padding:8px; } .spotlight p { display:none; } .results-rail { padding:6px; } .results-rail__header { padding-bottom:5px; } .results-rail__header p,.results-counter { display:none; } .result-item button { grid-template-columns:20px minmax(0,1fr); gap:4px; } .result-item__icon { width:18px; height:18px; } }
+    @media (max-width:700px) { main { padding:5px; } .showcase { padding:9px; border-radius:16px; } .showcase__header { grid-template-columns:1fr auto; gap:8px; } .eyebrow,.lead,.score span,.meta .pill:last-child,.showcase__footer span:last-child { display:none; } h1 { font-size:1.45rem; } .score { min-width:0; padding:6px; grid-template-columns:40px; } .ring { width:40px; } .score > div:last-child { display:none; } .workspace { grid-template-columns:minmax(0,1fr) minmax(190px,42%); gap:6px; } .audit-stage__top { padding-inline:10px; } .agent-message { display:none; } .track { margin-inline:5px; } .station__number { display:none; } .spotlight { margin:0 7px 7px; padding:8px; } .spotlight p { display:none; } .results-rail { padding:6px; } .results-rail__header { padding-bottom:5px; } .results-rail__header p,.results-counter { display:none; } .result-item button { grid-template-columns:20px minmax(0,1fr); gap:4px; } .result-item__icon { width:18px; height:18px; } .todo-grid { grid-template-columns:1fr; } .todo-card:nth-child(n+3) { display:none; } .completion-screen__note { display:none; } }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }
   </style>
 </head>
@@ -225,6 +268,11 @@ export function renderHtml(report) {
             <div><small>Prüfung</small><h3>Bericht wird vorbereitet</h3><p>Die Findings erscheinen automatisch.</p></div>
             <div class="spotlight__actions"><time>0 ms</time><button class="detail-button" type="button" hidden>Details &amp; Lösung</button></div>
           </article>
+          <section class="completion-screen" aria-labelledby="completion-title" hidden>
+            <div><p class="completion-screen__eyebrow">Prüflauf abgeschlossen · Ergebnis bleibt stehen</p><h2 id="completion-title">Was ist jetzt zu tun?</h2><p class="completion-screen__summary">${escapeHtml(completionSummary)}</p></div>
+            ${todoItems ? `<div class="todo-grid">${todoItems}${actionItems.length > visibleActionItems.length ? `<div class="todo-card"><span class="todo-card__priority">Weitere Maßnahmen</span><strong>Zusätzlich ${actionItems.length - visibleActionItems.length} Findings prüfen</strong><span class="todo-card__action">Die vollständige Liste bleibt rechts sichtbar; jeder Eintrag öffnet Nachweis und Lösung.</span><span class="todo-card__deadline">Nach Priorität rechts bearbeiten</span></div>` : ""}</div>` : '<div class="no-action"><strong>✓ Keine Änderung erforderlich</strong><span>Alle Prüfungen waren erfolgreich. Beim nächsten planmäßigen Lauf wird erneut kontrolliert.</span></div>'}
+            <div class="completion-screen__footer"><p class="completion-screen__note">Die Zeitfenster sind risikobasierte Reaktionsempfehlungen für diesen Pilot, keine vertraglichen SLA. Sicherheitsbefunde und Ausfälle haben Vorrang vor regulären Updates.</p><button class="replay-button" type="button">Prüflauf erneut ansehen</button></div>
+          </section>
         </section>
 
         <aside class="results-rail" aria-labelledby="results-title">
@@ -233,7 +281,7 @@ export function renderHtml(report) {
         </aside>
       </div>
 
-      <div class="showcase__footer"><span><strong>Autoplay:</strong> kein Durchklicken erforderlich · Stationen bleiben zusätzlich anwählbar</span><span>Read-only · Keine Testvorgänge · Keine automatische Veröffentlichung</span></div>
+      <div class="showcase__footer"><span><strong>Einmaliger Ablauf:</strong> Der Abschluss bleibt stehen · Neustart nur über „Prüflauf erneut ansehen“</span><span>Read-only · Keine automatische Veröffentlichung</span></div>
     </section>
 
   </main>
@@ -243,6 +291,7 @@ export function renderHtml(report) {
       <p class="dialog__finding"></p>
       <div class="dialog__section"><strong>Was wurde wirklich geprüft?</strong><p class="dialog__details"></p></div>
       <div class="dialog__section"><strong>Wie lässt sich der Befund korrigieren?</strong><p class="dialog__recommendation"></p></div>
+      <div class="dialog__section"><strong>Empfohlenes Zeitfenster</strong><p class="dialog__deadline"></p></div>
       <a class="dialog__link" target="_blank" rel="noreferrer">Belegquelle öffnen</a>
     </div>
   </dialog>
@@ -258,12 +307,48 @@ export function renderHtml(report) {
     const findingDialog = document.querySelector('.finding-dialog');
     const resultItems = [...document.querySelectorAll('.result-item')];
     const resultsCounter = document.querySelector('.results-counter');
+    const completionScreen = document.querySelector('.completion-screen');
+    const replayButton = document.querySelector('.replay-button');
+    const todoCards = [...document.querySelectorAll('.todo-card[data-finding-id]')];
     const remarks = ['Ausweis geprüft.', 'Lupe an.', 'Termin sitzt.', 'Kein Datenstau.', 'Karte gefunden.', 'Formular im Blick.', 'Mobil passt.', 'Haken dran.'];
     let active = 0;
     let walkingTimer;
     let completionTimer;
-    let autoplayPausedUntil = 0;
+    let advanceTimer;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function resetWalkthrough() {
+      clearTimeout(completionTimer);
+      clearTimeout(advanceTimer);
+      completionScreen.hidden = true;
+      document.querySelector('#report-title').textContent = 'Der Prüfer ist unterwegs.';
+      document.querySelector('.lead').textContent = 'Alle Stationen, der laufende Check und das jeweilige Finding spielen automatisch auf dieser Bühne ab.';
+      stations.forEach((station) => { station.classList.remove('is-active', 'is-complete'); station.querySelector('.station__dot').textContent = ''; });
+      resultItems.forEach((item) => item.classList.remove('is-revealed'));
+      resultsCounter.textContent = '0/' + report.findings.length;
+      progress.style.width = '0';
+    }
+    function showCompletion() {
+      clearTimeout(completionTimer);
+      clearTimeout(advanceTimer);
+      stations.forEach((station) => station.classList.remove('is-active'));
+      inspector.classList.remove('is-walking');
+      message.textContent = report.statistics.failed > 0 ? 'Rundgang beendet – Handlungsbedarf erkannt.' : report.statistics.warnings > 0 ? 'Rundgang beendet – Hinweise einplanen.' : 'Rundgang beendet – alles sauber!';
+      document.querySelector('#report-title').textContent = 'Prüflauf abgeschlossen.';
+      document.querySelector('.lead').textContent = 'Der Rundgang ist beendet. Findings, Maßnahmen und empfohlene Reaktionszeiten bleiben sichtbar.';
+      completionScreen.hidden = false;
+    }
+    function scheduleAdvance(index) {
+      clearTimeout(advanceTimer);
+      const waitUntilReady = () => {
+        if (findingDialog.open) {
+          advanceTimer = setTimeout(waitUntilReady, 500);
+          return;
+        }
+        if (index < report.findings.length - 1) show(index + 1);
+        else showCompletion();
+      };
+      advanceTimer = setTimeout(waitUntilReady, index < report.findings.length - 1 ? 1800 : 1100);
+    }
     function complete(index) {
       const finding = report.findings[index];
       const station = stations[index];
@@ -281,16 +366,12 @@ export function renderHtml(report) {
       detailButton.hidden = false;
       progress.style.width = ((index + 1) / report.findings.length * 95.6) + '%';
       message.textContent = index === report.findings.length - 1 && report.overallStatus === 'passed' ? 'Rundgang beendet – alles sauber!' : remarks[index % remarks.length];
+      if (!reducedMotion) scheduleAdvance(index);
     }
     function show(index) {
       if (!report.findings.length) return;
       clearTimeout(completionTimer);
-      if (index === 0 && stations.some((station) => station.classList.contains('is-complete'))) {
-        stations.forEach((station) => { station.classList.remove('is-complete'); station.querySelector('.station__dot').textContent = ''; });
-        resultItems.forEach((item) => item.classList.remove('is-revealed'));
-        resultsCounter.textContent = '0/' + report.findings.length;
-        progress.style.width = '0';
-      }
+      completionScreen.hidden = true;
       active = index;
       const finding = report.findings[index];
       stations.forEach((station, current) => station.classList.toggle('is-active', current === index));
@@ -320,6 +401,7 @@ export function renderHtml(report) {
       findingDialog.querySelector('.dialog__finding').textContent = finding.finding;
       findingDialog.querySelector('.dialog__details').textContent = finding.details;
       findingDialog.querySelector('.dialog__recommendation').textContent = finding.recommendation;
+      findingDialog.querySelector('.dialog__deadline').textContent = finding.deadline + ' · risikobasierte Pilotempfehlung, kein SLA';
       const link = findingDialog.querySelector('.dialog__link');
       link.hidden = !finding.evidenceUrl;
       if (finding.evidenceUrl) link.href = finding.evidenceUrl;
@@ -327,36 +409,26 @@ export function renderHtml(report) {
     }
     stations.forEach((station) => station.addEventListener('click', () => {
       const index = Number(station.dataset.index);
-      autoplayPausedUntil = Date.now() + 15000;
       if (station.classList.contains('is-complete')) openDetails(index);
       else show(index);
     }));
     detailButton.addEventListener('click', () => {
-      autoplayPausedUntil = Date.now() + 15000;
       openDetails(active);
     });
     resultItems.forEach((item) => item.querySelector('button').addEventListener('click', () => {
-      autoplayPausedUntil = Date.now() + 15000;
       openDetails(Number(item.dataset.index));
     }));
+    todoCards.forEach((card) => card.addEventListener('click', () => openDetails(report.findings.findIndex((finding) => finding.id === card.dataset.findingId))));
+    replayButton.addEventListener('click', () => { resetWalkthrough(); active = 0; show(active); });
     findingDialog.querySelector('.dialog__close').addEventListener('click', () => findingDialog.close());
     findingDialog.addEventListener('click', (event) => { if (event.target === findingDialog) findingDialog.close(); });
     if (!report.findings.length) {
       message.textContent = 'Keine Prüfdaten vorhanden.';
     } else if (reducedMotion) {
       report.findings.forEach((_, index) => complete(index));
-      show(report.findings.length - 1);
-      clearTimeout(completionTimer);
-      complete(report.findings.length - 1);
+      showCompletion();
     } else {
       show(active);
-    }
-    if (!reducedMotion && report.findings.length > 1) {
-      setInterval(() => {
-        if (findingDialog.open || Date.now() < autoplayPausedUntil) return;
-        active = (active + 1) % report.findings.length;
-        show(active);
-      }, 3200);
     }
   </script>
 </body>
@@ -438,7 +510,7 @@ const findingGuidance = {
   ],
   "security-alerts": [
     "Offene Dependabot-Sicherheitswarnungen mit Schweregrad high oder critical wurden über die GitHub-API abgefragt.",
-    "Warnung in GitHub Security öffnen, betroffene Abhängigkeit aktualisieren oder eine begründete Ausnahme dokumentieren.",
+    "Zuerst GitHub-API-Zugriff und Security-Einstellungen prüfen. Bei echten Warnungen die betroffene Abhängigkeit aktualisieren oder eine begründete Ausnahme dokumentieren.",
   ],
   "security-workflow": [
     "Status und Alter des letzten abgeschlossenen Security-Workflows auf main wurden über die GitHub-API kontrolliert.",
@@ -457,12 +529,67 @@ function enrichFinding(finding) {
       ? "Keine Korrektur erforderlich; der Nachweis wird beim nächsten Lauf erneut erhoben."
       : "Befund anhand der Ausgabedaten analysieren, gezielt korrigieren und den Qualitätslauf wiederholen.",
   ];
+  const recommendation = finding.recommendation ?? guidance[1];
+  const action = classifyAction(finding, recommendation);
   return {
     ...finding,
     details: finding.details ?? guidance[0],
-    recommendation: finding.recommendation ?? guidance[1],
+    recommendation,
     evidenceUrl: finding.evidenceUrl ?? "",
+    action: action.action,
+    deadline: action.deadline,
+    actionLabel: action.label,
+    actionPriority: action.priority,
   };
+}
+
+function classifyAction(finding, recommendation) {
+  if (finding.status === "passed") {
+    return {
+      action: "Keine Änderung erforderlich; der nächste Qualitätslauf prüft erneut.",
+      deadline: "Nächster planmäßiger Lauf",
+      label: "Keine Maßnahme",
+      priority: "none",
+    };
+  }
+  if (finding.status === "failed") {
+    const securityCritical = ["dependency-audit", "security-alerts"].includes(finding.id);
+    return {
+      action: recommendation,
+      deadline: securityCritical ? "Innerhalb 24 Stunden" : "Sofort – heute",
+      label: securityCritical ? "Sicherheitsmaßnahme" : "Akuter Handlungsbedarf",
+      priority: "urgent",
+    };
+  }
+  if (["dependency-audit", "security-alerts", "security-workflow"].includes(finding.id)) {
+    return {
+      action:
+        finding.id === "security-alerts" && finding.finding?.startsWith("Prüfung nicht verfügbar")
+          ? "GitHub-API-Zugriff und Repository-Security-Einstellungen prüfen; anschließend den Qualitätslauf wiederholen."
+          : recommendation,
+      deadline: "Innerhalb 1 Arbeitstags",
+      label: "Prüfnachweis nachholen",
+      priority: "soon",
+    };
+  }
+  if (finding.id === "dependency-updates") {
+    return {
+      action: recommendation,
+      deadline: "Innerhalb 14 Kalendertagen",
+      label: "Update einplanen",
+      priority: "planned",
+    };
+  }
+  return {
+    action: recommendation,
+    deadline: "Innerhalb 5 Arbeitstagen",
+    label: "Zeitnah prüfen",
+    priority: "soon",
+  };
+}
+
+function actionRank(priority) {
+  return { urgent: 0, soon: 1, planned: 2, none: 3 }[priority] ?? 4;
 }
 
 function formatTimestamp(value) {

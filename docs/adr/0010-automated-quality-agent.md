@@ -58,8 +58,15 @@ Aufbewahrungsregeln und ein freigegebener Maildienst liegen noch nicht vor.
   Abschluss der jeweiligen Station. Station, aktuelles Finding und Protokolleintrag
   öffnen denselben Dialog **Details & Lösung** mit tatsächlichem Prüfgegenstand,
   Handlungsempfehlung und – sofern vorhanden – GitHub-Belegquelle. Offene
-  Dependabot-PRs werden mit Nummer und Titel in die Offline-Datei eingebettet. Nach
-  dem Upload ergänzt der Workflow
+  Dependabot-PRs werden mit Nummer und Titel in die Offline-Datei eingebettet. Der
+  Rundgang läuft genau einmal und bleibt anschließend auf einem Abschlussscreen
+  stehen; ein erneuter Ablauf benötigt die ausdrückliche Aktion
+  **Prüflauf erneut ansehen**. Der Hauptbereich priorisiert dort die erforderlichen
+  Maßnahmen und nennt risikobasierte Reaktionsfenster. Bestandene Prüfungen benötigen
+  keine Änderung, operative Fehler sind am selben Tag, bekannte hohe
+  Sicherheitsrisiken innerhalb von 24 Stunden und reguläre Updates innerhalb von 14
+  Kalendertagen zu bearbeiten. Diese Zeitfenster sind Empfehlungen für den Pilot und
+  keine vertraglichen SLA. Nach dem Upload ergänzt der Workflow
   die GitHub-Zusammenfassung um den direkten, angemeldeten Artifact-Link. Das
   Artefakt bleibt 30 Tage erhalten. E-Mail-Versand wird erst ergänzt, wenn Empfänger,
   Absender und freigegebener Mailweg verbindlich vorliegen.
