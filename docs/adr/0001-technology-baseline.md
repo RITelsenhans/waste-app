@@ -19,13 +19,15 @@ Abschnitt 9 verlangt Next.js/App Router mit React und TypeScript sowie eine eige
 
 Die Baseline nutzt aktuelle, zueinander kompatible Hauptversionen und benötigt keine globale Gradle-Installation. Vor einer Regio-IT-Betriebsfreigabe müssen Supportfenster, interne Baselines und Security-Scans bestätigt werden. Ein Versionswechsel benötigt Aktualisierung dieses ADRs und vollständige Qualitätsprüfungen.
 
-Für Vercel ist die Hauptversion im `engines.node`-Feld bewusst als `22.x`
-gebunden. Eine offene Untergrenze wie `>=22.13.0` erlaubte Vercel, automatisch
-Node 24 auszuwählen, obwohl die freigegebene und überwachte Laufzeitbaseline
-weiterhin Node 22 ist. Vercel unterstützt an dieser Stelle die Auswahl einer
-Hauptversion; konkrete Minor-/Patchstände werden durch die Plattform gepflegt.
-Der lokale Entwicklungsstand und GitHub Actions bleiben auf einem freigegebenen
-Node-22-Patchstand ab 22.13.
+Für Vercel ist die Hauptversion in den `engines.node`-Feldern des Root- und des
+Web-Manifests bewusst als `22.x` gebunden. Vercel verwendet für dieses Monorepo
+`apps/web` als Projekt-Root und liest deshalb das dortige Manifest für die
+Laufzeitwahl. Eine offene Untergrenze wie `>=22.13.0` erlaubte Vercel,
+automatisch Node 24 auszuwählen, obwohl die freigegebene und überwachte
+Laufzeitbaseline weiterhin Node 22 ist. Vercel unterstützt an dieser Stelle die
+Auswahl einer Hauptversion; konkrete Minor-/Patchstände werden durch die
+Plattform gepflegt. Der lokale Entwicklungsstand und GitHub Actions bleiben auf
+einem freigegebenen Node-22-Patchstand ab 22.13.
 
 Gradle wurde innerhalb derselben Hauptversion auf 9.6.1 aktualisiert. Das von
 Gradle empfohlene Patch-Release behebt Fehler aus 9.6.0; Lizenz (Apache-2.0),

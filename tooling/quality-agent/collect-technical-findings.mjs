@@ -16,11 +16,13 @@ export function evaluateDeclaredBaseline({ baseline, rootPackage, webPackage, gr
     ),
     new RegExp(`JavaVersion\\.VERSION_${baseline.javaMajor}`).test(gradleBuild),
     rootPackage.engines?.node?.includes(String(baseline.nodeMajor)),
+    webPackage.engines?.node === rootPackage.engines?.node,
   ];
   return {
     passed: checks.every(Boolean),
     finding:
-      `Deklariert: Node.js ${rootPackage.engines?.node ?? "unbekannt"}, ` +
+      `Deklariert: Node.js Root ${rootPackage.engines?.node ?? "unbekannt"}, ` +
+      `Web ${webPackage.engines?.node ?? "unbekannt"}, ` +
       `Next.js ${webPackage.dependencies?.next ?? "unbekannt"}, Spring Boot ${baseline.springBootVersion}, ` +
       `Kotlin ${baseline.kotlinVersion}, Java ${baseline.javaMajor}.`,
   };
