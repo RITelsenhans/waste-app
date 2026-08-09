@@ -66,7 +66,10 @@ Aufbewahrungsregeln und ein freigegebener Maildienst liegen noch nicht vor.
   keine Änderung, operative Fehler sind am selben Tag, bekannte hohe
   Sicherheitsrisiken innerhalb von 24 Stunden und reguläre Updates innerhalb von 14
   Kalendertagen zu bearbeiten. Diese Zeitfenster sind Empfehlungen für den Pilot und
-  keine vertraglichen SLA. Nach dem Upload ergänzt der Workflow
+  keine vertraglichen SLA. Bei Zeitplänen bleibt GitHubs sichtbarer Auslöser technisch
+  der Default-Branch `main`; Laufname, Zusammenfassung und HTML unterscheiden deshalb
+  ausdrücklich zwischen dieser Workflow-Quelle und dem tatsächlich ausgecheckten
+  Produktionsbranch samt geprüfter Revision. Nach dem Upload ergänzt der Workflow
   die GitHub-Zusammenfassung um den direkten, angemeldeten Artifact-Link. Das
   Artefakt bleibt 30 Tage erhalten. E-Mail-Versand wird erst ergänzt, wenn Empfänger,
   Absender und freigegebener Mailweg verbindlich vorliegen.

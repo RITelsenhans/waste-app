@@ -15,7 +15,20 @@ export function buildQualityReport(liveReport, environment = process.env) {
     generatedAt: liveReport.generatedAt ?? new Date().toISOString(),
     target: liveReport.target ?? environment.MONITOR_BASE_URL ?? "unbekannt",
     mode: liveReport.mode ?? "read-only-live",
-    revision: environment.GITHUB_SHA?.slice(0, 12) ?? "lokaler Lauf",
+    revision:
+      (
+        environment.QUALITY_REPORT_REVISION ??
+        environment.EXPECTED_PRODUCTION_REVISION ??
+        liveReport.revision ??
+        environment.GITHUB_SHA
+      )?.slice(0, 12) ?? "lokaler Lauf",
+    productionBranch:
+      environment.QUALITY_REPORT_BRANCH ?? liveReport.productionBranch ?? "lokaler Stand",
+    workflowBranch:
+      environment.QUALITY_WORKFLOW_BRANCH ??
+      liveReport.workflowBranch ??
+      environment.GITHUB_REF_NAME ??
+      "lokaler Start",
     runNumber: environment.GITHUB_RUN_NUMBER ?? "lokal",
     overallStatus:
       failed > 0 || findings.length === 0 ? "failed" : warnings > 0 ? "warning" : "passed",
@@ -47,7 +60,9 @@ export function renderMarkdown(report) {
 
 - Ziel: ${escapeMarkdown(report.target)}
 - Prüflauf: ${formatTimestamp(report.generatedAt)}
-- Revision: \`${report.revision}\`
+- Workflow-Quelle: \`${escapeMarkdown(report.workflowBranch)}\`
+- Geprüfte Produktion: \`${escapeMarkdown(report.productionBranch)}\`
+- Geprüfte Revision: \`${report.revision}\`
 - Ergebnis: ${report.statistics.passed}/${report.statistics.total} erfolgreich
 
 | Status | Prüfschritt | Befund | Dauer |
@@ -253,7 +268,7 @@ export function renderHtml(report) {
         </aside>
       </header>
 
-      <div class="meta"><span class="pill">Prüflauf ${escapeHtml(formatTimestamp(report.generatedAt))}</span><span class="pill">Revision ${escapeHtml(report.revision)}</span><span class="pill">${escapeHtml(report.target)}</span></div>
+      <div class="meta"><span class="pill">Prüflauf ${escapeHtml(formatTimestamp(report.generatedAt))}</span><span class="pill">Workflow-Quelle ${escapeHtml(report.workflowBranch)}</span><span class="pill">Produktion ${escapeHtml(report.productionBranch)}</span><span class="pill">Geprüfte Revision ${escapeHtml(report.revision)}</span><span class="pill">${escapeHtml(report.target)}</span></div>
 
       <div class="workspace">
         <section class="audit-stage" aria-labelledby="stage-title">

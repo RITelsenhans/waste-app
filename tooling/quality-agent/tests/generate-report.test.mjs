@@ -30,6 +30,9 @@ test("aggregiert Status und Laufstatistik deterministisch", () => {
   const report = buildQualityReport(input, {
     GITHUB_SHA: "1234567890abcdef",
     GITHUB_RUN_NUMBER: "9",
+    QUALITY_REPORT_BRANCH: "feat/produktion",
+    QUALITY_REPORT_REVISION: "abcdef1234567890",
+    QUALITY_WORKFLOW_BRANCH: "main",
   });
   assert.equal(report.overallStatus, "failed");
   assert.deepEqual(report.statistics, {
@@ -39,7 +42,9 @@ test("aggregiert Status und Laufstatistik deterministisch", () => {
     failed: 1,
     durationMs: 970,
   });
-  assert.equal(report.revision, "1234567890ab");
+  assert.equal(report.revision, "abcdef123456");
+  assert.equal(report.productionBranch, "feat/produktion");
+  assert.equal(report.workflowBranch, "main");
   assert.equal(report.findings[0].actionLabel, "Keine Maßnahme");
   assert.equal(report.findings[1].deadline, "Sofort – heute");
 });
@@ -60,6 +65,8 @@ test("erzeugt einen selbstständigen HTML-Zeitstrahl ohne Fremdressourcen", () =
   assert.match(html, /Was ist jetzt zu tun\?/);
   assert.match(html, /Zeitfenster: Sofort – heute/);
   assert.match(html, /Ergebnis bleibt stehen/);
+  assert.match(html, /Workflow-Quelle lokaler Start/);
+  assert.match(html, /Produktion lokaler Stand/);
   assert.match(html, /data-result="✓"><\/span>/);
   assert.doesNotMatch(html, /class="station__dot">✓/);
   assert.match(html, /Prüflauf 05\.08\.2026, 07:30 MESZ/);
@@ -121,5 +128,7 @@ test("erzeugt eine kompakte GitHub-Zusammenfassung", () => {
   const markdown = renderMarkdown(buildQualityReport(input, {}));
   assert.match(markdown, /1\/2 erfolgreich/);
   assert.match(markdown, /❌/);
+  assert.match(markdown, /Workflow-Quelle: `lokaler Start`/);
+  assert.match(markdown, /Geprüfte Produktion: `lokaler Stand`/);
   assert.match(markdown, /direkt anklickbares Workflow-Artefakt `quality-agent-report`/);
 });

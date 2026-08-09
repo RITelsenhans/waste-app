@@ -1,4 +1,8 @@
 name: Qualitätsagent
+run-name: Qualitätsagent · Produktion feat/phase1-phase2-functional-pilot
+
+env:
+  QUALITY_PRODUCTION_BRANCH: feat/phase1-phase2-functional-pilot
 
 on:
   schedule:
@@ -30,7 +34,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: feat/phase1-phase2-functional-pilot
+          ref: ${{ env.QUALITY_PRODUCTION_BRANCH }}
 
       - name: Erwartete Produktionsrevision feststellen
         id: production-revision
@@ -74,6 +78,10 @@ jobs:
 
       - name: Animierten Bericht erzeugen
         if: always()
+        env:
+          QUALITY_REPORT_BRANCH: ${{ env.QUALITY_PRODUCTION_BRANCH }}
+          QUALITY_REPORT_REVISION: ${{ steps.production-revision.outputs.sha }}
+          QUALITY_WORKFLOW_BRANCH: ${{ github.ref_name }}
         run: pnpm quality-agent:report
 
       - name: Berichtsstatus feststellen

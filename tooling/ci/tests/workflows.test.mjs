@@ -155,6 +155,15 @@ test("quality agent is read-only for GitHub and publishes an animated report", a
   assert.match(workflow, /quality-agent-report direkt herunterladen/);
   assert.match(workflow, /collect-technical-findings\.mjs/);
   assert.match(workflow, /EXPECTED_PRODUCTION_REVISION/);
+  assert.match(
+    workflow,
+    /run-name: Qualitätsagent · Produktion feat\/phase1-phase2-functional-pilot/,
+  );
+  assert.match(
+    workflow,
+    /QUALITY_REPORT_REVISION: \$\{\{ steps\.production-revision\.outputs\.sha \}\}/,
+  );
+  assert.match(workflow, /QUALITY_WORKFLOW_BRANCH: \$\{\{ github\.ref_name \}\}/);
   assert.match(workflow, /pnpm security:audit/);
   assert.match(liveMonitor, /DEMO-QA-/);
   assert.match(liveMonitor, /quality-agent\/recycling-access-cleanup/);

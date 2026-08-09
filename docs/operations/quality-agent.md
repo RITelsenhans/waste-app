@@ -58,6 +58,12 @@ ausdrücklich auf dem bei Vercel/Railway eingestellten Produktionsbranch. Vor de
 ist der Workflow vollständig inaktiv; ein direktes, ungeprüftes Umgehen dieser Grenze
 ist nicht vorgesehen.
 
+Bei einem Zeitplan zeigt GitHub in der Laufübersicht trotzdem den Default-Branch
+`main`, weil die Workflow-Definition von dort gestartet wird. Das ändert den geprüften
+Stand nicht: Der Schritt **Produktionsstand auschecken** lädt ausdrücklich
+`feat/phase1-phase2-functional-pilot`. Laufname, Zusammenfassung und HTML nennen daher
+getrennt die Workflow-Quelle, den geprüften Produktionsbranch und dessen Revision.
+
 Vercel muss unter **Settings → Environment Variables** die Option **Automatically
 expose System Environment Variables** aktiviert haben. Railway stellt seine
 Git-Deploymentvariablen bei GitHub-basierten Deployments automatisch bereit. Der
@@ -96,6 +102,12 @@ Dependabot-PRs in die Offline-Datei ein.
    `quality-agent-report direkt herunterladen` anklicken. Alternativ unter
    **Artifacts** `quality-agent-report` herunterladen.
 3. ZIP entpacken und `quality-report.html` doppelklicken.
+
+GitHub speichert für **jeden** Lauf ein eigenes Artefakt namens
+`quality-agent-report` für 30 Tage. Es enthält `quality-report.html`,
+`quality-report.json`, `quality-summary.md` und bei Browserfehlern zusätzlich Trace und
+Screenshot. Das Artefakt liegt nicht dauerhaft im Repository und nicht auf Vercel oder
+Railway, sondern ausschließlich am jeweiligen GitHub-Actions-Lauf.
 
 Die HTML-Datei benötigt keine Internetverbindung und durchläuft die Findings
 selbstständig von links nach rechts. Gesamtergebnis, animierter Prüfer, Stationen,
