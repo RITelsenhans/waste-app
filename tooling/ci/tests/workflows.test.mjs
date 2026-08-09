@@ -164,6 +164,13 @@ test("quality agent is read-only for GitHub and publishes an animated report", a
     /QUALITY_REPORT_REVISION: \$\{\{ steps\.production-revision\.outputs\.sha \}\}/,
   );
   assert.match(workflow, /QUALITY_WORKFLOW_BRANCH: \$\{\{ github\.ref_name \}\}/);
+  assert.match(workflow, /node tooling\/quality-agent\/send-report-email\.mjs/);
+  assert.match(workflow, /M365_CLIENT_SECRET: \$\{\{ secrets\.M365_CLIENT_SECRET \}\}/);
+  assert.match(workflow, /QUALITY_REPORT_EMAIL_TO: \$\{\{ secrets\.QUALITY_REPORT_EMAIL_TO \}\}/);
+  assert.match(
+    workflow,
+    /name: Qualitätsbericht per Microsoft 365 versenden[\s\S]*?continue-on-error: true/,
+  );
   assert.match(workflow, /pnpm security:audit/);
   assert.match(liveMonitor, /DEMO-QA-/);
   assert.match(liveMonitor, /quality-agent\/recycling-access-cleanup/);

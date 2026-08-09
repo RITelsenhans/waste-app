@@ -1,6 +1,6 @@
 # Decision Log
 
-Stand: 5. August 2026
+Stand: 9. August 2026
 
 ## Fehlende Voraussetzungen
 
@@ -70,6 +70,7 @@ Stand: 5. August 2026
 | D-047 | Der Qualitätsbericht endet dauerhaft auf einem To-do-Screen; ein Neustart erfolgt nur manuell.                                                                                                                                     | Zeigt Maßnahmen und risikobasierte Pilot-Reaktionsfenster ohne Videoloop; siehe ADR-0010.                                                                                                                                                                                                                              |
 | D-048 | Bericht und Laufname trennen GitHubs Workflow-Quelle vom geprüften Produktionsbranch.                                                                                                                                              | Zeitpläne tragen technisch `main`, obwohl der explizite Checkout die veröffentlichte Feature-Revision prüft; siehe ADR-0010.                                                                                                                                                                                           |
 | D-049 | Rot bleibt nachgewiesenen Produktionsabweichungen vorbehalten; fehlende Agentenmetadaten erscheinen einmalig gelb.                                                                                                                 | Verhindert Fehlalarm und rote Kaskaden wie in Lauf #11, ohne die unabhängigen Prüfungen abzubrechen; siehe ADR-0010.                                                                                                                                                                                                   |
+| D-050 | Qualitätsberichte werden optional per Microsoft Graph mit Ampelbetreff, To-dos, Artifact-Link und HTML-Anhang versendet.                                                                                                           | Nutzt Microsoft 365 ohne neue Bibliothek; Secrets bleiben in GitHub, der Mailfehler ist kein Produktfehler und die App-Berechtigung muss auf das Absenderpostfach begrenzt werden; siehe ADR-0010.                                                                                                                     |
 
 ## Offene Entscheidungen
 

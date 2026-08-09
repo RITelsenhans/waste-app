@@ -129,6 +129,45 @@ vertraglichen SLA. Die Datei kann
 weitergegeben oder später an einen freigegebenen Mailversand angehängt werden.
 Zusätzlich steht die kompakte Ergebnisliste direkt in der GitHub-Laufzusammenfassung.
 
+## Bericht über Microsoft 365 versenden
+
+Der Workflow kann den fertigen Bericht über Microsoft Graph an ein freigegebenes
+Microsoft-365-Postfach senden. Fehlen Zugangswerte, wird der Versand neutral
+übersprungen. Ein Authentifizierungs- oder Zustellfehler erscheint getrennt in der
+GitHub-Zusammenfassung; er verändert den fachlichen Produktstatus des Prüfberichts
+nicht.
+
+Vor der Aktivierung muss die Regio-IT-Administration:
+
+1. eine eigene, nicht-interaktive Entra-ID-App für den Qualitätsagenten anlegen,
+2. die Microsoft-Graph-**Application Permission** `Mail.Send` hinzufügen und per
+   Administratorzustimmung freigeben,
+3. die App in Exchange Online per **Application RBAC** auf genau das freigegebene
+   Absenderpostfach begrenzen; ein unbeschränkter mandantenweiter Zugriff ist für den
+   Betrieb nicht akzeptiert,
+4. zunächst ein zeitlich begrenztes Client-Secret mit verantworteter Ablaufkontrolle
+   erzeugen und
+5. folgende GitHub-Actions-Secrets vollständig setzen:
+
+| GitHub-Secret                 | Inhalt                                      |
+| ----------------------------- | ------------------------------------------- |
+| `M365_TENANT_ID`              | Verzeichnis-/Mandanten-ID                   |
+| `M365_CLIENT_ID`              | Anwendungs-/Client-ID                       |
+| `M365_CLIENT_SECRET`          | Wert des zeitlich begrenzten Client-Secrets |
+| `QUALITY_REPORT_EMAIL_SENDER` | freigegebenes Absenderpostfach              |
+| `QUALITY_REPORT_EMAIL_TO`     | Empfänger, kommasepariert                   |
+
+E-Mail-Adressen und Zugangswerte werden nicht in Workflow, Dokumentation oder
+Repository eingetragen. Der Betreff beginnt mit `[GRÜN]`, `[GELB]` oder `[ROT]` und
+die Nachricht enthält Maßnahmen, GitHub-Lauf, angemeldeten Artifact-Link sowie
+`quality-report.html` als Anhang. Nach dem ersten manuellen Kontrolllauf muss die
+GitHub-Zusammenfassung ausdrücklich melden, dass Microsoft Graph die Nachricht
+angenommen hat. Diese Annahme bestätigt noch nicht die endgültige Zustellung oder die
+Spam-Prüfung im Empfängerpostfach.
+
+Das Client-Secret ist eine Startlösung. Für den späteren Betrieb ist eine
+secretfreie, föderierte Identität zu bevorzugen.
+
 ## Grenzen und Reaktion auf Fehler
 
 - Der Agent sammelt keine Testeridentitäten und keine Forminhalte.
@@ -139,5 +178,5 @@ Zusätzlich steht die kompakte Ergebnisliste direkt in der GitHub-Laufzusammenfa
   dann manuell zu prüfen.
 - Bei einem roten Lauf zuerst Trace/Fehlertext und HTML-Artefakt prüfen. Codex liefert
   bei konfiguriertem API-Key nur eine Empfehlung; es erstellt keinen PR automatisch.
-- E-Mail-Zustellung benötigt noch eine Entscheidung zu Empfänger, freigegebenem SMTP-
-  oder Mail-API-Dienst, Absenderdomain und Secret-Verwaltung.
+- Microsoft-365-Versand bleibt deaktiviert, bis die fünf GitHub-Secrets vollständig
+  gesetzt und die App auf das freigegebene Postfach beschränkt wurde.

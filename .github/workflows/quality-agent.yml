@@ -151,6 +151,20 @@ jobs:
           printf '\n## Animierten Bericht öffnen\n\n[quality-agent-report direkt herunterladen](%s)\n' \
             "$REPORT_ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Qualitätsbericht per Microsoft 365 versenden
+        id: report-email
+        if: always() && steps.report-artifact.outcome == 'success'
+        continue-on-error: true
+        env:
+          M365_TENANT_ID: ${{ secrets.M365_TENANT_ID }}
+          M365_CLIENT_ID: ${{ secrets.M365_CLIENT_ID }}
+          M365_CLIENT_SECRET: ${{ secrets.M365_CLIENT_SECRET }}
+          QUALITY_REPORT_EMAIL_SENDER: ${{ secrets.QUALITY_REPORT_EMAIL_SENDER }}
+          QUALITY_REPORT_EMAIL_TO: ${{ secrets.QUALITY_REPORT_EMAIL_TO }}
+          REPORT_ARTIFACT_URL: ${{ steps.report-artifact.outputs.artifact-url }}
+          QUALITY_REPORT_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node tooling/quality-agent/send-report-email.mjs
+
       - name: Laufstatus übernehmen
         if: always()
         env:

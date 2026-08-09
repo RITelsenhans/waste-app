@@ -2,6 +2,7 @@
 
 - Status: angenommen
 - Datum: 5. August 2026
+- Aktualisiert: 9. August 2026
 
 ## Kontext
 
@@ -10,7 +11,8 @@ Erreichbarkeit, zentrale Soll-Wege, fehlerhafte Zustände, technische Alt-Daten 
 aggregierte Betriebszahlen geprüft werden. Die Auswertung soll ohne Durchklicken als
 anschauliche Datei vorführbar sein. Personenbezogene Testeridentifikation ist nicht
 Teil des Auftrags. Produktive Authentifizierung, zentrale Observability, verbindliche
-Aufbewahrungsregeln und ein freigegebener Maildienst liegen noch nicht vor.
+Aufbewahrungsregeln liegen noch nicht vor. Microsoft Graph ist als Mailweg gewählt;
+die begrenzte Entra-ID-App und ihre administrative Freigabe stehen noch aus.
 
 ## Entscheidung
 
@@ -78,8 +80,17 @@ Aufbewahrungsregeln und ein freigegebener Maildienst liegen noch nicht vor.
   ausdrücklich zwischen dieser Workflow-Quelle und dem tatsächlich ausgecheckten
   Produktionsbranch samt geprüfter Revision. Nach dem Upload ergänzt der Workflow
   die GitHub-Zusammenfassung um den direkten, angemeldeten Artifact-Link. Das
-  Artefakt bleibt 30 Tage erhalten. E-Mail-Versand wird erst ergänzt, wenn Empfänger,
-  Absender und freigegebener Mailweg verbindlich vorliegen.
+  Artefakt bleibt 30 Tage erhalten.
+- Nach jedem erzeugten Artefakt darf der Workflow den Bericht über Microsoft Graph
+  versenden. Die nicht-interaktive Entra-ID-App verwendet den Client-Credentials-Flow
+  mit der Application Permission `Mail.Send`; Administratorzustimmung und eine
+  Exchange-Online-Beschränkung auf das freigegebene Absenderpostfach sind vor der
+  Aktivierung Pflicht. Tenant, Client, Secret, Absender und Empfänger liegen
+  ausschließlich als GitHub-Secrets vor. Die Mail enthält die Ampelklassifikation,
+  priorisierte Maßnahmen, den angemeldeten Artifact-Link und den eigenständigen
+  HTML-Bericht als kleinen Anhang. Dafür wird keine neue Laufzeitbibliothek
+  eingeführt. Ein Authentifizierungs- oder Zustellfehler erscheint getrennt in der
+  GitHub-Zusammenfassung und darf den Produktstatus nicht auf Rot setzen.
 - Codex analysiert ausschließlich fehlgeschlagene Berichte und nur, wenn ein separates
   `OPENAI_API_KEY`-Secret konfiguriert ist. Die Action läuft read-only mit festem
   Ausgabeschema. Sie darf weder Dateien verändern noch Pull Requests, Merges oder
