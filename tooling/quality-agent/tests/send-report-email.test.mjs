@@ -66,11 +66,11 @@ test("sendet per Client-Credentials ausschließlich an die Graph-sendMail-Route"
   );
 
   assert.equal(requests.length, 2);
-  assert.match(requests[0].url, /login\.microsoftonline\.com\/tenant-id/);
+  assert.equal(requests[0].url, "https://login.microsoftonline.com/tenant-id/oauth2/v2.0/token");
   assert.equal(requests[0].options.body.get("scope"), "https://graph.microsoft.com/.default");
-  assert.match(
+  assert.equal(
     requests[1].url,
-    /graph\.microsoft\.com\/v1\.0\/users\/sender%40example\.invalid\/sendMail$/,
+    "https://graph.microsoft.com/v1.0/users/sender%40example.invalid/sendMail",
   );
   assert.equal(requests[1].options.headers.Authorization, "Bearer test-token");
 });
