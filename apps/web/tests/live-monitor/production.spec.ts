@@ -1,8 +1,9 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import technicalBaseline from "../../../../tooling/quality-agent/technical-baseline.json";
 import type { WebReleaseInfo } from "../../lib/release-info";
+import { assessProductionRevision } from "../../lib/quality-monitoring";
 
-type FindingStatus = "passed" | "failed";
+type FindingStatus = "passed" | "warning" | "failed";
 
 type Finding = {
   id: string;
@@ -15,7 +16,7 @@ type Finding = {
 
 const findings: Finding[] = [];
 const password = process.env.DEMO_MONITOR_PASSWORD;
-const expectedProductionRevision = process.env.EXPECTED_PRODUCTION_REVISION;
+const productionRevision = assessProductionRevision(process.env.EXPECTED_PRODUCTION_REVISION);
 const qualityAgentCredential = `DEMO-QA-${String(process.env.GITHUB_RUN_ID ?? Date.now())
   .replace(/[^A-Z0-9]/gi, "")
   .slice(-12)
@@ -68,6 +69,17 @@ async function login(page: Page) {
 test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wartung", async ({
   page,
 }, testInfo) => {
+  if (!productionRevision.available) {
+    findings.push({
+      id: "monitor-configuration",
+      title: "Prüfauftrag vollständig konfigurieren",
+      area: "Monitoring",
+      status: "warning",
+      finding: productionRevision.finding,
+      durationMs: 0,
+    });
+  }
+
   await record(
     testInfo,
     "login",
@@ -86,16 +98,17 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Neuesten Web-Push nachweisen",
     () => webDeploymentFinding,
     async () => {
-      expect(expectedProductionRevision, "Erwartete Produktionsrevision fehlt.").toMatch(
-        /^[0-9a-f]{40}$/,
-      );
       const response = await page.request.get("/demo-auth/release");
       expect(response.ok()).toBeTruthy();
       webRelease = (await response.json()) as WebReleaseInfo;
       expect(webRelease.provider).toBe("vercel");
       expect(webRelease.branch).toBe(technicalBaseline.productionBranch);
-      expect(webRelease.commitSha).toBe(expectedProductionRevision);
-      webDeploymentFinding = `Vercel liefert Commit ${webRelease.commitSha.slice(0, 12)} aus ${webRelease.branch} aus.`;
+      if (productionRevision.available) {
+        expect(webRelease.commitSha).toBe(productionRevision.revision);
+        webDeploymentFinding = `Vercel liefert Commit ${webRelease.commitSha.slice(0, 12)} aus ${webRelease.branch} aus.`;
+      } else {
+        webDeploymentFinding = `Vercel meldet Commit ${webRelease.commitSha.slice(0, 12)} aus ${webRelease.branch}; der Vergleich mit GitHub ist in diesem Lauf nicht verfügbar.`;
+      }
     },
   );
 
@@ -192,14 +205,15 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Neuesten API-Push nachweisen",
     () => apiDeploymentFinding,
     async () => {
-      expect(expectedProductionRevision, "Erwartete Produktionsrevision fehlt.").toMatch(
-        /^[0-9a-f]{40}$/,
-      );
       expect(apiRelease).toBeDefined();
       expect(apiRelease?.provider).toBe("railway");
       expect(apiRelease?.branch).toBe(technicalBaseline.productionBranch);
-      expect(apiRelease?.commitSha).toBe(expectedProductionRevision);
-      apiDeploymentFinding = `Railway liefert Commit ${apiRelease?.commitSha.slice(0, 12)} aus ${apiRelease?.branch} aus.`;
+      if (productionRevision.available) {
+        expect(apiRelease?.commitSha).toBe(productionRevision.revision);
+        apiDeploymentFinding = `Railway liefert Commit ${apiRelease?.commitSha.slice(0, 12)} aus ${apiRelease?.branch} aus.`;
+      } else {
+        apiDeploymentFinding = `Railway meldet Commit ${apiRelease?.commitSha.slice(0, 12)} aus ${apiRelease?.branch}; der Vergleich mit GitHub ist in diesem Lauf nicht verfügbar.`;
+      }
     },
   );
 

@@ -90,6 +90,13 @@ kritische Sicherheitswarnungen sind Fehler. Diese Prüfungen erkennen bekannte u
 maschinell sichtbare Risiken; sie ersetzen weder Container- und Betriebssystemscans
 noch Penetrationstest oder Betriebsfreigabe.
 
+Für die Alarmierung gilt: **Rot** bedeutet eine nachgewiesene Abweichung der
+Anwendung, des veröffentlichten Deployments oder der Sicherheitsbaseline. Fehlt dem
+Prüfwerkzeug selbst eine notwendige Eingabe, erscheint genau ein gelber Hinweis
+**Monitoring unvollständig**. Daraus werden keine roten Folgefehler abgeleitet;
+unabhängige Prüfungen laufen weiter. Ein roter GitHub-Job ohne erzeugten Bericht ist
+zunächst ein technischer Agentenausfall und noch kein Produktionsalarm.
+
 Nach Abschluss jeder Station öffnet **Details & Lösung** den realen Prüfgegenstand,
 die empfohlene Nacharbeit und – bei GitHub-basierten Befunden – die Belegquelle. Die
 Updateprüfung bettet Nummer und Titel der zum Laufzeitpunkt tatsächlich offenen

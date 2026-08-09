@@ -39,6 +39,13 @@ Aufbewahrungsregeln und ein freigegebener Maildienst liegen noch nicht vor.
   Update ist ein gelber Hinweis; eine Baselineabweichung oder bekannte hohe
   Sicherheitswarnung ist ein roter Fehler. „Keine bekannten Funde“ ist keine
   allgemeine Garantie der Risikofreiheit.
+- Rot bezeichnet ausschließlich eine nachweisbare Abweichung der geprüften
+  Anwendung, ihres Deployments oder ihrer Sicherheitsbaseline. Fehlende oder
+  fehlerhafte Eingaben des Prüfwerkzeugs werden einmalig als gelber Zustand
+  **Monitoring unvollständig** ausgewiesen. Abhängige Prüfungen dürfen daraus keine
+  zusätzlichen roten Folgefehler erzeugen; unabhängige Funktions- und Laufzeitchecks
+  werden weiter ausgeführt. Ein technischer Ausfall des GitHub-Jobs bleibt in GitHub
+  sichtbar, ist aber nicht automatisch ein Produktionsalarm.
 - Automatisch löschbar sind nach 30 Tagen ausschließlich veröffentlichte Outbox-
   Ereignisse sowie Fall- und 24/7-Idempotenzschlüssel. Fachvorgänge, Ereignisverläufe,
   Termine, Hinweise und Inhaltsdaten werden nicht automatisch gelöscht. Mehr als 500

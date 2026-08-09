@@ -124,6 +124,29 @@ test("kennzeichnet einen nicht lesbaren Security-Nachweis als kurzfristige Prüf
   assert.doesNotMatch(report.findings[0].action, /betroffene Abhängigkeit aktualisieren/);
 });
 
+test("behandelt fehlende Agentenmetadaten als gelben Monitoringhinweis", () => {
+  const report = buildQualityReport(
+    {
+      ...input,
+      findings: [
+        {
+          ...input.findings[0],
+          id: "monitor-configuration",
+          area: "Monitoring",
+          status: "warning",
+          finding: "Die erwartete Produktionsrevision fehlt.",
+        },
+      ],
+    },
+    {},
+  );
+  assert.equal(report.overallStatus, "warning");
+  assert.equal(report.statistics.failed, 0);
+  assert.equal(report.findings[0].actionLabel, "Prüfnachweis nachholen");
+  assert.equal(report.findings[0].deadline, "Innerhalb 1 Arbeitstags");
+  assert.match(report.findings[0].recommendation, /Anwendung selbst ist.*nicht.*fehlerhaft/s);
+});
+
 test("erzeugt eine kompakte GitHub-Zusammenfassung", () => {
   const markdown = renderMarkdown(buildQualityReport(input, {}));
   assert.match(markdown, /1\/2 erfolgreich/);

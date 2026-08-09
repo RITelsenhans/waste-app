@@ -451,6 +451,10 @@ export function renderHtml(report) {
 }
 
 const findingGuidance = {
+  "monitor-configuration": [
+    "Der Agent prüft vor dem Rundgang, ob alle für einen belastbaren Produktionsvergleich erforderlichen Metadaten vorliegen.",
+    "Workflow-Quelle und Übergabe der erwarteten Produktionsrevision prüfen; anschließend den Qualitätslauf wiederholen. Die Anwendung selbst ist durch diesen Hinweis nicht als fehlerhaft nachgewiesen.",
+  ],
   login: [
     "Browser-Anmeldung, Sitzungscookie und Weiterleitung wurden gegen die veröffentlichte Demo ausgeführt.",
     "Bei einem Fehler zuerst Demo-Passwort, Vercel-Variablen und Login-Logs prüfen.",
@@ -576,7 +580,11 @@ function classifyAction(finding, recommendation) {
       priority: "urgent",
     };
   }
-  if (["dependency-audit", "security-alerts", "security-workflow"].includes(finding.id)) {
+  if (
+    ["dependency-audit", "security-alerts", "security-workflow", "monitor-configuration"].includes(
+      finding.id,
+    )
+  ) {
     return {
       action:
         finding.id === "security-alerts" && finding.finding?.startsWith("Prüfung nicht verfügbar")
