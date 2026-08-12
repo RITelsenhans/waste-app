@@ -257,6 +257,97 @@ class ApiHttpIntegrationTests {
     }
 
     @Test
+    fun `draft content stays private until publication and changes are audited`() {
+        val created =
+            mockMvc
+                .post("/v1/admin/notices") {
+                    header("X-Pilot-Admin-Token", adminToken)
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "tenantId":"demo",
+                          "addressId":null,
+                          "noticeType":"service",
+                          "title":"Noch nicht freigegeben",
+                          "body":"Dieser Hinweis beginnt als Entwurf.",
+                          "priority":"info",
+                          "validFrom":"2026-08-01T00:00:00Z",
+                          "validUntil":"2026-09-01T00:00:00Z",
+                          "publicationStatus":"draft"
+                        }
+                        """.trimIndent()
+                }.andExpect {
+                    status { isCreated() }
+                    jsonPath("$.publicationStatus") { value("draft") }
+                }.andReturn()
+        val id = objectMapper.readTree(created.response.contentAsString)["id"].asText()
+
+        mockMvc
+            .get("/v1/notices") { param("tenantId", "demo") }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$[?(@.id == '$id')]") { isEmpty() }
+            }
+
+        mockMvc
+            .get("/v1/admin/notices") {
+                header("X-Pilot-Admin-Token", adminToken)
+                param("tenantId", "demo")
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$[?(@.id == '$id')].publicationStatus") { value("draft") }
+            }
+
+        mockMvc
+            .put("/v1/admin/notices/$id") {
+                header("X-Pilot-Admin-Token", adminToken)
+                contentType = MediaType.APPLICATION_JSON
+                content =
+                    """
+                    {
+                      "tenantId":"demo",
+                      "addressId":null,
+                      "noticeType":"service",
+                      "title":"Jetzt freigegeben",
+                      "body":"Dieser Hinweis ist veröffentlicht.",
+                      "priority":"info",
+                      "validFrom":"2026-08-01T00:00:00Z",
+                      "validUntil":"2026-09-01T00:00:00Z",
+                      "publicationStatus":"published"
+                    }
+                    """.trimIndent()
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.publicationStatus") { value("published") }
+            }
+
+        mockMvc
+            .get("/v1/notices") { param("tenantId", "demo") }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$[?(@.id == '$id')].title") { value("Jetzt freigegeben") }
+            }
+
+        mockMvc
+            .get("/v1/admin/content-audit") {
+                header("X-Pilot-Admin-Token", adminToken)
+                param("tenantId", "demo")
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$[?(@.contentId == '$id')].action") {
+                    value(org.hamcrest.Matchers.hasItems("created", "published"))
+                }
+            }
+
+        mockMvc
+            .delete("/v1/admin/notices/$id") {
+                header("X-Pilot-Admin-Token", adminToken)
+                param("tenantId", "demo")
+            }.andExpect { status { isNoContent() } }
+    }
+
+    @Test
     fun `defect submission is idempotent and status can be updated`() {
         val body =
             """

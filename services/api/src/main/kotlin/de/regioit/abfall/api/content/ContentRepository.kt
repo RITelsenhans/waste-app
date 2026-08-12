@@ -61,11 +61,12 @@ class ContentRepository(
             .sql(
                 """
                 select id, address_id, waste_type_id, waste_type_label, planned_date, effective_date,
-                       status, last_modified
+                       status, last_modified, publication_status, publication_updated_at
                 from collection_event
                 where tenant_id = :tenantId
                   and address_id = :addressId
                   and effective_date >= :fromDate
+                  and publication_status = 'published'
                 order by effective_date, waste_type_label
                 """.trimIndent(),
             ).param("tenantId", tenantId)
@@ -79,7 +80,7 @@ class ContentRepository(
             .sql(
                 """
                 select id, address_id, waste_type_id, waste_type_label, planned_date, effective_date,
-                       status, last_modified
+                       status, last_modified, publication_status, publication_updated_at
                 from collection_event
                 where tenant_id = :tenantId
                 order by effective_date desc, waste_type_label
@@ -88,40 +89,58 @@ class ContentRepository(
             .query(::mapCollection)
             .list()
 
-    fun wasteGuideEntries(tenantId: String): List<WasteGuideEntry> =
+    fun wasteGuideEntries(
+        tenantId: String,
+        includeDrafts: Boolean = false,
+    ): List<WasteGuideEntry> =
         jdbc
             .sql(
                 """
                 select id, tenant_id, name, category, disposal_route, notes, synonyms, data_status
+                       , publication_status, publication_updated_at
                 from waste_guide_entry
                 where tenant_id = :tenantId
+                  and (:includeDrafts or publication_status = 'published')
                 order by name
                 """.trimIndent(),
             ).param("tenantId", tenantId)
+            .param("includeDrafts", includeDrafts)
             .query(::mapWasteGuideEntry)
             .list()
 
     fun sites(
         tenantId: String,
         wasteType: String?,
+        includeDrafts: Boolean = false,
     ): List<Site> {
         val sql =
             if (wasteType.isNullOrBlank()) {
                 """
                 select id, tenant_id, name, site_type, address, opening_hours, accepted_waste_types,
-                       open_now, latitude, longitude, data_status
-                from disposal_site where tenant_id = :tenantId order by name
+                       open_now, latitude, longitude, data_status, publication_status,
+                       publication_updated_at
+                from disposal_site
+                where tenant_id = :tenantId
+                  and (:includeDrafts or publication_status = 'published')
+                order by name
                 """.trimIndent()
             } else {
                 """
                 select id, tenant_id, name, site_type, address, opening_hours, accepted_waste_types,
-                       open_now, latitude, longitude, data_status
+                       open_now, latitude, longitude, data_status, publication_status,
+                       publication_updated_at
                 from disposal_site
-                where tenant_id = :tenantId and lower(accepted_waste_types) like :wasteType
+                where tenant_id = :tenantId
+                  and (:includeDrafts or publication_status = 'published')
+                  and lower(accepted_waste_types) like :wasteType
                 order by name
                 """.trimIndent()
             }
-        var statement = jdbc.sql(sql).param("tenantId", tenantId)
+        var statement =
+            jdbc
+                .sql(sql)
+                .param("tenantId", tenantId)
+                .param("includeDrafts", includeDrafts)
         if (!wasteType.isNullOrBlank()) {
             statement = statement.param("wasteType", "%${wasteType.lowercase(Locale.GERMAN)}%")
         }
@@ -137,10 +156,12 @@ class ContentRepository(
             .sql(
                 """
                 select id, tenant_id, address_id, notice_type, title, body, priority, valid_from, valid_until
+                       , publication_status, publication_updated_at
                 from notice
                 where tenant_id = :tenantId
                   and valid_from <= :now and valid_until >= :now
                   and (address_id is null or address_id = :addressId)
+                  and publication_status = 'published'
                 order by case priority when 'critical' then 1 when 'warning' then 2 else 3 end, valid_from desc
                 """.trimIndent(),
             ).param("tenantId", tenantId)
@@ -154,6 +175,7 @@ class ContentRepository(
             .sql(
                 """
                 select id, tenant_id, address_id, notice_type, title, body, priority, valid_from, valid_until
+                       , publication_status, publication_updated_at
                 from notice where tenant_id = :tenantId order by valid_until desc, valid_from desc
                 """.trimIndent(),
             ).param("tenantId", tenantId)
@@ -168,10 +190,10 @@ class ContentRepository(
                 """
                 insert into collection_event
                     (id, tenant_id, address_id, waste_type_id, waste_type_label, planned_date,
-                     effective_date, status, last_modified)
+                     effective_date, status, last_modified, publication_status, publication_updated_at)
                 values
                     (:id, :tenantId, :addressId, :wasteTypeId, :wasteTypeLabel, :plannedDate,
-                     :effectiveDate, :status, :lastModified)
+                     :effectiveDate, :status, :lastModified, :publicationStatus, :publicationUpdatedAt)
                 """.trimIndent(),
             ).param("id", id)
             .param("tenantId", input.tenantId)
@@ -182,6 +204,8 @@ class ContentRepository(
             .param("effectiveDate", input.effectiveDate)
             .param("status", input.status)
             .param("lastModified", Timestamp.from(now))
+            .param("publicationStatus", input.publicationStatus)
+            .param("publicationUpdatedAt", Timestamp.from(now))
             .update()
         return CollectionEvent(
             id,
@@ -191,6 +215,8 @@ class ContentRepository(
             input.plannedDate,
             input.effectiveDate,
             input.status,
+            now,
+            input.publicationStatus,
             now,
         )
     }
@@ -202,8 +228,10 @@ class ContentRepository(
             .sql(
                 """
                 insert into waste_guide_entry
-                    (id, tenant_id, name, category, disposal_route, notes, synonyms, data_status)
-                values (:id, :tenantId, :name, :category, :disposalRoute, :notes, :synonyms, :dataStatus)
+                    (id, tenant_id, name, category, disposal_route, notes, synonyms, data_status,
+                     publication_status, publication_updated_at)
+                values (:id, :tenantId, :name, :category, :disposalRoute, :notes, :synonyms,
+                        :dataStatus, :publicationStatus, :publicationUpdatedAt)
                 """.trimIndent(),
             ).param("id", id)
             .param("tenantId", input.tenantId)
@@ -213,6 +241,8 @@ class ContentRepository(
             .param("notes", input.notes.trim())
             .param("synonyms", input.synonyms.joinToString("|") { it.trim() })
             .param("dataStatus", Timestamp.from(now))
+            .param("publicationStatus", input.publicationStatus)
+            .param("publicationUpdatedAt", Timestamp.from(now))
             .update()
         return WasteGuideEntry(
             id,
@@ -222,6 +252,8 @@ class ContentRepository(
             input.disposalRoute.trim(),
             input.notes.trim(),
             input.synonyms.map(String::trim).filter(String::isNotBlank),
+            now,
+            input.publicationStatus,
             now,
         )
     }
@@ -234,10 +266,12 @@ class ContentRepository(
                 """
                 insert into disposal_site
                     (id, tenant_id, name, site_type, address, opening_hours, accepted_waste_types,
-                     open_now, latitude, longitude, data_status)
+                     open_now, latitude, longitude, data_status, publication_status,
+                     publication_updated_at)
                 values
                     (:id, :tenantId, :name, :siteType, :address, :openingHours, :acceptedWasteTypes,
-                     :openNow, :latitude, :longitude, :dataStatus)
+                     :openNow, :latitude, :longitude, :dataStatus, :publicationStatus,
+                     :publicationUpdatedAt)
                 """.trimIndent(),
             ).param("id", id)
             .param("tenantId", input.tenantId)
@@ -250,6 +284,8 @@ class ContentRepository(
             .param("latitude", input.latitude)
             .param("longitude", input.longitude)
             .param("dataStatus", Timestamp.from(now))
+            .param("publicationStatus", input.publicationStatus)
+            .param("publicationUpdatedAt", Timestamp.from(now))
             .update()
         return Site(
             id,
@@ -263,19 +299,23 @@ class ContentRepository(
             input.latitude,
             input.longitude,
             now,
+            input.publicationStatus,
+            now,
         )
     }
 
     fun createNotice(input: NoticeInput): Notice {
         val id = "notice-${UUID.randomUUID()}"
+        val now = Instant.now()
         jdbc
             .sql(
                 """
                 insert into notice
-                    (id, tenant_id, address_id, notice_type, title, body, priority, valid_from, valid_until)
+                    (id, tenant_id, address_id, notice_type, title, body, priority, valid_from,
+                     valid_until, publication_status, publication_updated_at)
                 values
                     (:id, :tenantId, :addressId, :noticeType, :title, :body, :priority,
-                     :validFrom, :validUntil)
+                     :validFrom, :validUntil, :publicationStatus, :publicationUpdatedAt)
                 """.trimIndent(),
             ).param("id", id)
             .param("tenantId", input.tenantId)
@@ -286,6 +326,8 @@ class ContentRepository(
             .param("priority", input.priority)
             .param("validFrom", Timestamp.from(input.validFrom))
             .param("validUntil", Timestamp.from(input.validUntil))
+            .param("publicationStatus", input.publicationStatus)
+            .param("publicationUpdatedAt", Timestamp.from(now))
             .update()
         return Notice(
             id,
@@ -297,6 +339,8 @@ class ContentRepository(
             input.priority,
             input.validFrom,
             input.validUntil,
+            input.publicationStatus,
+            now,
         )
     }
 
@@ -312,7 +356,9 @@ class ContentRepository(
                     update collection_event
                     set address_id = :addressId, waste_type_id = :wasteTypeId,
                         waste_type_label = :wasteTypeLabel, planned_date = :plannedDate,
-                        effective_date = :effectiveDate, status = :status, last_modified = :lastModified
+                        effective_date = :effectiveDate, status = :status, last_modified = :lastModified,
+                        publication_status = :publicationStatus,
+                        publication_updated_at = :publicationUpdatedAt
                     where id = :id and tenant_id = :tenantId
                     """.trimIndent(),
                 ).param("id", id)
@@ -324,6 +370,8 @@ class ContentRepository(
                 .param("effectiveDate", input.effectiveDate)
                 .param("status", input.status)
                 .param("lastModified", Timestamp.from(now))
+                .param("publicationStatus", input.publicationStatus)
+                .param("publicationUpdatedAt", Timestamp.from(now))
                 .update(),
             id,
         )
@@ -335,6 +383,8 @@ class ContentRepository(
             input.plannedDate,
             input.effectiveDate,
             input.status,
+            now,
+            input.publicationStatus,
             now,
         )
     }
@@ -350,7 +400,9 @@ class ContentRepository(
                     """
                     update waste_guide_entry
                     set name = :name, category = :category, disposal_route = :disposalRoute,
-                        notes = :notes, synonyms = :synonyms, data_status = :dataStatus
+                        notes = :notes, synonyms = :synonyms, data_status = :dataStatus,
+                        publication_status = :publicationStatus,
+                        publication_updated_at = :publicationUpdatedAt
                     where id = :id and tenant_id = :tenantId
                     """.trimIndent(),
                 ).param("id", id)
@@ -361,6 +413,8 @@ class ContentRepository(
                 .param("notes", input.notes.trim())
                 .param("synonyms", input.synonyms.joinToString("|") { it.trim() })
                 .param("dataStatus", Timestamp.from(now))
+                .param("publicationStatus", input.publicationStatus)
+                .param("publicationUpdatedAt", Timestamp.from(now))
                 .update(),
             id,
         )
@@ -372,6 +426,8 @@ class ContentRepository(
             input.disposalRoute.trim(),
             input.notes.trim(),
             input.synonyms.map(String::trim).filter(String::isNotBlank),
+            now,
+            input.publicationStatus,
             now,
         )
     }
@@ -389,7 +445,8 @@ class ContentRepository(
                     set name = :name, site_type = :siteType, address = :address,
                         opening_hours = :openingHours, accepted_waste_types = :acceptedWasteTypes,
                         open_now = :openNow, latitude = :latitude, longitude = :longitude,
-                        data_status = :dataStatus
+                        data_status = :dataStatus, publication_status = :publicationStatus,
+                        publication_updated_at = :publicationUpdatedAt
                     where id = :id and tenant_id = :tenantId
                     """.trimIndent(),
                 ).param("id", id)
@@ -403,6 +460,8 @@ class ContentRepository(
                 .param("latitude", input.latitude)
                 .param("longitude", input.longitude)
                 .param("dataStatus", Timestamp.from(now))
+                .param("publicationStatus", input.publicationStatus)
+                .param("publicationUpdatedAt", Timestamp.from(now))
                 .update(),
             id,
         )
@@ -418,6 +477,8 @@ class ContentRepository(
             input.latitude,
             input.longitude,
             now,
+            input.publicationStatus,
+            now,
         )
     }
 
@@ -425,6 +486,7 @@ class ContentRepository(
         id: String,
         input: NoticeInput,
     ): Notice {
+        val now = Instant.now()
         requireUpdated(
             jdbc
                 .sql(
@@ -432,7 +494,8 @@ class ContentRepository(
                     update notice
                     set address_id = :addressId, notice_type = :noticeType, title = :title,
                         body = :body, priority = :priority, valid_from = :validFrom,
-                        valid_until = :validUntil
+                        valid_until = :validUntil, publication_status = :publicationStatus,
+                        publication_updated_at = :publicationUpdatedAt
                     where id = :id and tenant_id = :tenantId
                     """.trimIndent(),
                 ).param("id", id)
@@ -444,6 +507,8 @@ class ContentRepository(
                 .param("priority", input.priority)
                 .param("validFrom", Timestamp.from(input.validFrom))
                 .param("validUntil", Timestamp.from(input.validUntil))
+                .param("publicationStatus", input.publicationStatus)
+                .param("publicationUpdatedAt", Timestamp.from(now))
                 .update(),
             id,
         )
@@ -457,6 +522,8 @@ class ContentRepository(
             input.priority,
             input.validFrom,
             input.validUntil,
+            input.publicationStatus,
+            now,
         )
     }
 
@@ -476,6 +543,70 @@ class ContentRepository(
             id,
         )
     }
+
+    fun publicationStatus(
+        table: String,
+        id: String,
+        tenantId: String,
+    ): String {
+        val allowedTables = setOf("collection_event", "waste_guide_entry", "disposal_site", "notice")
+        require(table in allowedTables)
+        return jdbc
+            .sql("select publication_status from $table where id = :id and tenant_id = :tenantId")
+            .param("id", id)
+            .param("tenantId", tenantId)
+            .query(String::class.java)
+            .optional()
+            .orElseThrow { PilotNotFoundException("Der Eintrag $id ist nicht vorhanden.") }
+    }
+
+    fun addAuditEvent(
+        tenantId: String,
+        contentType: String,
+        contentId: String,
+        action: String,
+        publicationStatus: String?,
+        occurredAt: Instant,
+    ) {
+        jdbc
+            .sql(
+                """
+                insert into content_audit_event
+                    (id, tenant_id, content_type, content_id, action, publication_status,
+                     actor_label, occurred_at)
+                values
+                    (:id, :tenantId, :contentType, :contentId, :action, :publicationStatus,
+                     :actorLabel, :occurredAt)
+                """.trimIndent(),
+            ).param("id", "audit-${UUID.randomUUID()}")
+            .param("tenantId", tenantId)
+            .param("contentType", contentType)
+            .param("contentId", contentId)
+            .param("action", action)
+            .param("publicationStatus", publicationStatus)
+            .param("actorLabel", "Geschützte Pilotpflege")
+            .param("occurredAt", Timestamp.from(occurredAt))
+            .update()
+    }
+
+    fun auditEvents(
+        tenantId: String,
+        limit: Int,
+    ): List<ContentAuditEvent> =
+        jdbc
+            .sql(
+                """
+                select id, tenant_id, content_type, content_id, action, publication_status,
+                       actor_label, occurred_at
+                from content_audit_event
+                where tenant_id = :tenantId
+                order by occurred_at desc, id desc
+                limit :limit
+                """.trimIndent(),
+            ).param("tenantId", tenantId)
+            .param("limit", limit)
+            .query(::mapAuditEvent)
+            .list()
 
     private fun requireUpdated(
         count: Int,
@@ -510,6 +641,8 @@ class ContentRepository(
         effectiveDate = rs.getObject("effective_date", LocalDate::class.java),
         status = rs.getString("status"),
         lastModified = rs.getTimestamp("last_modified").toInstant(),
+        publicationStatus = rs.getString("publication_status"),
+        publicationUpdatedAt = rs.getTimestamp("publication_updated_at").toInstant(),
     )
 
     private fun mapWasteGuideEntry(
@@ -524,6 +657,8 @@ class ContentRepository(
         notes = rs.getString("notes"),
         synonyms = splitValues(rs.getString("synonyms")),
         dataStatus = rs.getTimestamp("data_status").toInstant(),
+        publicationStatus = rs.getString("publication_status"),
+        publicationUpdatedAt = rs.getTimestamp("publication_updated_at").toInstant(),
     )
 
     private fun mapSite(
@@ -541,6 +676,8 @@ class ContentRepository(
         latitude = rs.getDouble("latitude"),
         longitude = rs.getDouble("longitude"),
         dataStatus = rs.getTimestamp("data_status").toInstant(),
+        publicationStatus = rs.getString("publication_status"),
+        publicationUpdatedAt = rs.getTimestamp("publication_updated_at").toInstant(),
     )
 
     private fun mapNotice(
@@ -556,6 +693,22 @@ class ContentRepository(
         priority = rs.getString("priority"),
         validFrom = rs.getTimestamp("valid_from").toInstant(),
         validUntil = rs.getTimestamp("valid_until").toInstant(),
+        publicationStatus = rs.getString("publication_status"),
+        publicationUpdatedAt = rs.getTimestamp("publication_updated_at").toInstant(),
+    )
+
+    private fun mapAuditEvent(
+        rs: ResultSet,
+        row: Int,
+    ) = ContentAuditEvent(
+        id = rs.getString("id"),
+        tenantId = rs.getString("tenant_id"),
+        contentType = rs.getString("content_type"),
+        contentId = rs.getString("content_id"),
+        action = rs.getString("action"),
+        publicationStatus = rs.getString("publication_status"),
+        actorLabel = rs.getString("actor_label"),
+        occurredAt = rs.getTimestamp("occurred_at").toInstant(),
     )
 
     private fun splitValues(value: String): List<String> = value.split('|').map(String::trim).filter(String::isNotBlank)
@@ -569,6 +722,7 @@ class ContentService(
 ) {
     private val collectionStatuses = setOf("planned", "moved", "cancelled", "additional")
     private val noticePriorities = setOf("info", "warning", "critical")
+    private val publicationStatuses = setOf("draft", "published")
 
     fun searchAddresses(
         tenantId: String,
@@ -632,12 +786,12 @@ class ContentService(
 
     fun adminWasteGuide(tenantId: String): List<WasteGuideEntry> {
         validateTenant(tenantId)
-        return repository.wasteGuideEntries(tenantId)
+        return repository.wasteGuideEntries(tenantId, includeDrafts = true)
     }
 
     fun adminSites(tenantId: String): List<Site> {
         validateTenant(tenantId)
-        return repository.sites(tenantId, null)
+        return repository.sites(tenantId, null, includeDrafts = true)
     }
 
     fun adminNotices(tenantId: String): List<Notice> {
@@ -645,34 +799,57 @@ class ContentService(
         return repository.allNotices(tenantId)
     }
 
+    fun adminAuditEvents(
+        tenantId: String,
+        limit: Int,
+    ): List<ContentAuditEvent> {
+        validateTenant(tenantId)
+        if (limit !in 1..200) {
+            throw PilotValidationException("Der Änderungsverlauf kann 1 bis 200 Einträge umfassen.")
+        }
+        return repository.auditEvents(tenantId, limit)
+    }
+
     @Transactional
     fun createCollection(input: CollectionInput): CollectionEvent {
         validateTenant(input.tenantId)
         validateAddress(input.tenantId, input.addressId)
+        validatePublicationStatus(input.publicationStatus)
         if (input.status !in collectionStatuses) {
             throw PilotValidationException("Unbekannter Terminstatus: ${input.status}")
         }
-        return repository.createCollection(input)
+        return repository.createCollection(input).also {
+            audit(input.tenantId, "collections", it.id, "created", input.publicationStatus)
+        }
     }
 
     @Transactional
     fun createWasteGuideEntry(input: WasteGuideInput): WasteGuideEntry {
         validateTenant(input.tenantId)
-        return repository.createWasteGuideEntry(input)
+        validatePublicationStatus(input.publicationStatus)
+        return repository.createWasteGuideEntry(input).also {
+            audit(input.tenantId, "waste-guide", it.id, "created", input.publicationStatus)
+        }
     }
 
     @Transactional
     fun createSite(input: SiteInput): Site {
         validateTenant(input.tenantId)
+        validatePublicationStatus(input.publicationStatus)
         validateSite(input)
-        return repository.createSite(input)
+        return repository.createSite(input).also {
+            audit(input.tenantId, "sites", it.id, "created", input.publicationStatus)
+        }
     }
 
     @Transactional
     fun createNotice(input: NoticeInput): Notice {
         validateTenant(input.tenantId)
+        validatePublicationStatus(input.publicationStatus)
         validateNotice(input)
-        return repository.createNotice(input)
+        return repository.createNotice(input).also {
+            audit(input.tenantId, "notices", it.id, "created", input.publicationStatus)
+        }
     }
 
     private fun validateSite(input: SiteInput) {
@@ -701,10 +878,14 @@ class ContentService(
     ): CollectionEvent {
         validateTenant(input.tenantId)
         validateAddress(input.tenantId, input.addressId)
+        validatePublicationStatus(input.publicationStatus)
         if (input.status !in collectionStatuses) {
             throw PilotValidationException("Unbekannter Terminstatus: ${input.status}")
         }
-        return repository.updateCollection(id, input)
+        val previous = repository.publicationStatus("collection_event", id, input.tenantId)
+        return repository.updateCollection(id, input).also {
+            auditUpdate(input.tenantId, "collections", id, previous, input.publicationStatus)
+        }
     }
 
     @Transactional
@@ -713,7 +894,11 @@ class ContentService(
         input: WasteGuideInput,
     ): WasteGuideEntry {
         validateTenant(input.tenantId)
-        return repository.updateWasteGuideEntry(id, input)
+        validatePublicationStatus(input.publicationStatus)
+        val previous = repository.publicationStatus("waste_guide_entry", id, input.tenantId)
+        return repository.updateWasteGuideEntry(id, input).also {
+            auditUpdate(input.tenantId, "waste-guide", id, previous, input.publicationStatus)
+        }
     }
 
     @Transactional
@@ -722,8 +907,12 @@ class ContentService(
         input: SiteInput,
     ): Site {
         validateTenant(input.tenantId)
+        validatePublicationStatus(input.publicationStatus)
         validateSite(input)
-        return repository.updateSite(id, input)
+        val previous = repository.publicationStatus("disposal_site", id, input.tenantId)
+        return repository.updateSite(id, input).also {
+            auditUpdate(input.tenantId, "sites", id, previous, input.publicationStatus)
+        }
     }
 
     @Transactional
@@ -732,8 +921,12 @@ class ContentService(
         input: NoticeInput,
     ): Notice {
         validateTenant(input.tenantId)
+        validatePublicationStatus(input.publicationStatus)
         validateNotice(input)
-        return repository.updateNotice(id, input)
+        val previous = repository.publicationStatus("notice", id, input.tenantId)
+        return repository.updateNotice(id, input).also {
+            auditUpdate(input.tenantId, "notices", id, previous, input.publicationStatus)
+        }
     }
 
     @Transactional
@@ -743,15 +936,56 @@ class ContentService(
         tenantId: String,
     ) {
         validateTenant(tenantId)
-        val table =
-            mapOf(
-                "collections" to "collection_event",
-                "waste-guide" to "waste_guide_entry",
-                "sites" to "disposal_site",
-                "notices" to "notice",
-            )[resource] ?: throw PilotValidationException("Unbekannter Inhaltstyp: $resource")
+        val table = tableFor(resource)
+        repository.publicationStatus(table, id, tenantId)
         repository.deleteContent(table, id, tenantId)
+        audit(tenantId, resource, id, "deleted", null)
     }
+
+    private fun tableFor(resource: String): String =
+        mapOf(
+            "collections" to "collection_event",
+            "waste-guide" to "waste_guide_entry",
+            "sites" to "disposal_site",
+            "notices" to "notice",
+        )[resource] ?: throw PilotValidationException("Unbekannter Inhaltstyp: $resource")
+
+    private fun validatePublicationStatus(status: String) {
+        if (status !in publicationStatuses) {
+            throw PilotValidationException("Unbekannter Freigabestatus: $status")
+        }
+    }
+
+    private fun auditUpdate(
+        tenantId: String,
+        contentType: String,
+        contentId: String,
+        previousStatus: String,
+        nextStatus: String,
+    ) {
+        val action =
+            when {
+                previousStatus != "published" && nextStatus == "published" -> "published"
+                previousStatus == "published" && nextStatus == "draft" -> "moved-to-draft"
+                else -> "updated"
+            }
+        audit(tenantId, contentType, contentId, action, nextStatus)
+    }
+
+    private fun audit(
+        tenantId: String,
+        contentType: String,
+        contentId: String,
+        action: String,
+        publicationStatus: String?,
+    ) = repository.addAuditEvent(
+        tenantId,
+        contentType,
+        contentId,
+        action,
+        publicationStatus,
+        clock.instant(),
+    )
 
     private fun validateTenant(tenantId: String) {
         if (tenantId !in properties.tenants) {

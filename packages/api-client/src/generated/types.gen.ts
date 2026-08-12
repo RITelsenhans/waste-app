@@ -145,6 +145,8 @@ export type Address = {
 
 export type CollectionStatus = "planned" | "moved" | "cancelled" | "additional";
 
+export type PublicationStatus = "draft" | "published";
+
 export type CollectionEvent = {
   id: string;
   addressId: string;
@@ -154,6 +156,8 @@ export type CollectionEvent = {
   effectiveDate: string;
   status: CollectionStatus;
   lastModified: string;
+  publicationStatus: PublicationStatus;
+  publicationUpdatedAt: string;
 };
 
 export type CollectionInput = {
@@ -164,6 +168,7 @@ export type CollectionInput = {
   plannedDate: string;
   effectiveDate: string;
   status: CollectionStatus;
+  publicationStatus?: PublicationStatus;
 };
 
 export type WasteGuideEntry = {
@@ -175,6 +180,8 @@ export type WasteGuideEntry = {
   notes: string;
   synonyms: Array<string>;
   dataStatus: string;
+  publicationStatus: PublicationStatus;
+  publicationUpdatedAt: string;
 };
 
 export type WasteGuideInput = {
@@ -184,6 +191,7 @@ export type WasteGuideInput = {
   disposalRoute: string;
   notes: string;
   synonyms: Array<string>;
+  publicationStatus?: PublicationStatus;
 };
 
 export type Site = {
@@ -198,6 +206,8 @@ export type Site = {
   latitude: number;
   longitude: number;
   dataStatus: string;
+  publicationStatus: PublicationStatus;
+  publicationUpdatedAt: string;
 };
 
 export type SiteInput = {
@@ -210,6 +220,7 @@ export type SiteInput = {
   openNow: boolean;
   latitude: number;
   longitude: number;
+  publicationStatus?: PublicationStatus;
 };
 
 export type NoticePriority = "info" | "warning" | "critical";
@@ -224,6 +235,8 @@ export type Notice = {
   priority: NoticePriority;
   validFrom: string;
   validUntil: string;
+  publicationStatus: PublicationStatus;
+  publicationUpdatedAt: string;
 };
 
 export type NoticeInput = {
@@ -235,6 +248,18 @@ export type NoticeInput = {
   priority: NoticePriority;
   validFrom: string;
   validUntil: string;
+  publicationStatus?: PublicationStatus;
+};
+
+export type ContentAuditEvent = {
+  id: string;
+  tenantId: string;
+  contentType: "collections" | "waste-guide" | "sites" | "notices";
+  contentId: string;
+  action: "created" | "updated" | "published" | "moved-to-draft" | "deleted";
+  publicationStatus: "draft" | "published" | null;
+  actorLabel: string;
+  occurredAt: string;
 };
 
 export type DefectCategory =
@@ -1088,6 +1113,42 @@ export type CreateNoticeResponses = {
 };
 
 export type CreateNoticeResponse = CreateNoticeResponses[keyof CreateNoticeResponses];
+
+export type GetAdminContentAuditData = {
+  body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
+  path?: never;
+  query: {
+    tenantId: string;
+    limit?: number;
+  };
+  url: "/v1/admin/content-audit";
+};
+
+export type GetAdminContentAuditErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminContentAuditError =
+  GetAdminContentAuditErrors[keyof GetAdminContentAuditErrors];
+
+export type GetAdminContentAuditResponses = {
+  /**
+   * Neueste Änderungen zuerst.
+   */
+  200: Array<ContentAuditEvent>;
+};
+
+export type GetAdminContentAuditResponse =
+  GetAdminContentAuditResponses[keyof GetAdminContentAuditResponses];
 
 export type DeleteCollectionData = {
   body?: never;

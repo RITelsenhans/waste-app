@@ -469,6 +469,31 @@ paths:
                 $ref: "#/components/schemas/Notice"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /v1/admin/content-audit:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
+    get:
+      operationId: getAdminContentAudit
+      summary: Listet die letzten nachvollziehbaren Änderungen an synthetischen Inhalten.
+      tags: [Admin]
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Neueste Änderungen zuerst.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ContentAuditEvent" }
+        "400": { $ref: "#/components/responses/BadRequest" }
   /v1/admin/collections/{id}:
     parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
@@ -1198,6 +1223,9 @@ components:
     CollectionStatus:
       type: string
       enum: [planned, moved, cancelled, additional]
+    PublicationStatus:
+      type: string
+      enum: [draft, published]
     CollectionEvent:
       type: object
       additionalProperties: false
@@ -1211,6 +1239,8 @@ components:
           effectiveDate,
           status,
           lastModified,
+          publicationStatus,
+          publicationUpdatedAt,
         ]
       properties:
         id:
@@ -1230,6 +1260,11 @@ components:
         status:
           $ref: "#/components/schemas/CollectionStatus"
         lastModified:
+          type: string
+          format: date-time
+        publicationStatus:
+          $ref: "#/components/schemas/PublicationStatus"
+        publicationUpdatedAt:
           type: string
           format: date-time
     CollectionInput:
@@ -1255,10 +1290,26 @@ components:
           format: date
         status:
           $ref: "#/components/schemas/CollectionStatus"
+        publicationStatus:
+          allOf:
+            - $ref: "#/components/schemas/PublicationStatus"
+          default: published
     WasteGuideEntry:
       type: object
       additionalProperties: false
-      required: [id, tenantId, name, category, disposalRoute, notes, synonyms, dataStatus]
+      required:
+        [
+          id,
+          tenantId,
+          name,
+          category,
+          disposalRoute,
+          notes,
+          synonyms,
+          dataStatus,
+          publicationStatus,
+          publicationUpdatedAt,
+        ]
       properties:
         id:
           type: string
@@ -1277,6 +1328,11 @@ components:
           items:
             type: string
         dataStatus:
+          type: string
+          format: date-time
+        publicationStatus:
+          $ref: "#/components/schemas/PublicationStatus"
+        publicationUpdatedAt:
           type: string
           format: date-time
     WasteGuideInput:
@@ -1301,6 +1357,10 @@ components:
           type: array
           items:
             type: string
+        publicationStatus:
+          allOf:
+            - $ref: "#/components/schemas/PublicationStatus"
+          default: published
     Site:
       type: object
       additionalProperties: false
@@ -1317,6 +1377,8 @@ components:
           latitude,
           longitude,
           dataStatus,
+          publicationStatus,
+          publicationUpdatedAt,
         ]
       properties:
         id:
@@ -1348,6 +1410,11 @@ components:
           minimum: -180
           maximum: 180
         dataStatus:
+          type: string
+          format: date-time
+        publicationStatus:
+          $ref: "#/components/schemas/PublicationStatus"
+        publicationUpdatedAt:
           type: string
           format: date-time
     SiteInput:
@@ -1394,13 +1461,29 @@ components:
           format: double
           minimum: -180
           maximum: 180
+        publicationStatus:
+          allOf:
+            - $ref: "#/components/schemas/PublicationStatus"
+          default: published
     NoticePriority:
       type: string
       enum: [info, warning, critical]
     Notice:
       type: object
       additionalProperties: false
-      required: [id, tenantId, noticeType, title, body, priority, validFrom, validUntil]
+      required:
+        [
+          id,
+          tenantId,
+          noticeType,
+          title,
+          body,
+          priority,
+          validFrom,
+          validUntil,
+          publicationStatus,
+          publicationUpdatedAt,
+        ]
       properties:
         id:
           type: string
@@ -1420,6 +1503,11 @@ components:
           type: string
           format: date-time
         validUntil:
+          type: string
+          format: date-time
+        publicationStatus:
+          $ref: "#/components/schemas/PublicationStatus"
+        publicationUpdatedAt:
           type: string
           format: date-time
     NoticeInput:
@@ -1445,6 +1533,36 @@ components:
           type: string
           format: date-time
         validUntil:
+          type: string
+          format: date-time
+        publicationStatus:
+          allOf:
+            - $ref: "#/components/schemas/PublicationStatus"
+          default: published
+    ContentAuditEvent:
+      type: object
+      additionalProperties: false
+      required:
+        [id, tenantId, contentType, contentId, action, publicationStatus, actorLabel, occurredAt]
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        contentType:
+          type: string
+          enum: [collections, waste-guide, sites, notices]
+        contentId:
+          type: string
+        action:
+          type: string
+          enum: [created, updated, published, moved-to-draft, deleted]
+        publicationStatus:
+          type: [string, "null"]
+          enum: [draft, published, null]
+        actorLabel:
+          type: string
+        occurredAt:
           type: string
           format: date-time
     DefectCategory:

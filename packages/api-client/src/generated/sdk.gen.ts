@@ -45,6 +45,9 @@ import type {
   GetAdminCollectionsData,
   GetAdminCollectionsErrors,
   GetAdminCollectionsResponses,
+  GetAdminContentAuditData,
+  GetAdminContentAuditErrors,
+  GetAdminContentAuditResponses,
   GetAdminMunicipalityCustomizationData,
   GetAdminMunicipalityCustomizationErrors,
   GetAdminMunicipalityCustomizationResponses,
@@ -422,6 +425,18 @@ export const createNotice = <ThrowOnError extends boolean = false>(
       ...options.headers,
     },
   });
+
+/**
+ * Listet die letzten nachvollziehbaren Änderungen an synthetischen Inhalten.
+ */
+export const getAdminContentAudit = <ThrowOnError extends boolean = false>(
+  options: Options<GetAdminContentAuditData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<
+    GetAdminContentAuditResponses,
+    GetAdminContentAuditErrors,
+    ThrowOnError
+  >({ url: "/v1/admin/content-audit", ...options });
 
 /**
  * Löscht einen synthetischen Abholtermin.
