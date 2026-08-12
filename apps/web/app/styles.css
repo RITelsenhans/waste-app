@@ -2410,6 +2410,91 @@ button:hover,
   display: none;
 }
 
+/* Sprint 1: aufgabenorientierte Seiten statt einer einzigen langen Präsentationsseite. */
+.page-intro {
+  margin-inline: auto;
+  max-width: var(--layout-content-max);
+  padding: clamp(2.5rem, 6vw, 5rem) clamp(1rem, 4vw, 2rem) 0;
+}
+
+.page-intro h1 {
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  margin-bottom: 0.8rem;
+  max-width: 17ch;
+}
+
+.page-intro > p:last-child {
+  color: var(--text-muted);
+  font-size: 1.08rem;
+  max-width: 46rem;
+}
+
+.collection-filter {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  margin: 1.5rem 0 1rem;
+  padding: 1rem;
+}
+
+.collection-filter legend {
+  font-weight: var(--typography-weight-bold);
+  padding-inline: 0.35rem;
+}
+
+.collection-filter > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1.2rem;
+}
+
+.collection-filter label {
+  align-items: center;
+  display: inline-flex;
+  font-weight: var(--typography-weight-semibold);
+  gap: 0.45rem;
+}
+
+.collection-filter input {
+  height: 1.15rem;
+  width: 1.15rem;
+}
+
+.calendar-disclosure--first {
+  margin-bottom: 1.25rem;
+  margin-top: 0;
+}
+
+.section-link-row {
+  margin-top: 1.25rem;
+}
+
+.button-link--dark {
+  background: #102d39;
+  color: white;
+}
+
+.view-home #abfall-abc {
+  grid-template-columns: 1fr;
+}
+
+.view-home #abfall-abc .guide-card,
+.view-guide #abfall-abc .updates-card {
+  display: none;
+}
+
+.view-home #kalender {
+  padding-top: clamp(2rem, 4vw, 3.5rem);
+}
+
+.view-home .collection-card {
+  min-height: 8.5rem;
+}
+
+.view-services #sortierkompass {
+  padding-top: clamp(2rem, 4vw, 3.5rem);
+}
+
 .centered-state {
   display: grid;
   min-height: 70vh;

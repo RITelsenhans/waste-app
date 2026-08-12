@@ -44,8 +44,8 @@ waste:
   tenants:
     demo:
       tenant-id: demo
-      name: Demo Kommune
-      short-name: Demo
+      name: Stadt Aachen · Pilot
+      short-name: Aachen
       branding:
         logo-url: /regio-it-logo.png
         primary-color: "#C8102E"
@@ -68,7 +68,7 @@ waste:
         privacy: "#datenschutz"
         accessibility: "#barrierefreiheit"
       service-area:
-        city: Demo-Stadt
+        city: Aachen
         reporting-office: Bürgerservice Abfall
         phone: 0241 000000
         email: abfall@example.invalid
@@ -76,4 +76,4 @@ waste:
         - label: Demo-Support
           email: support@example.invalid
           phone: 0241 000000
-      content-version: demo-2026-07-30
+      content-version: aachen-pilot-2026-08-12

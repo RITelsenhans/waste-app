@@ -4,11 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { TenantConfig } from "../lib/tenant-config";
+import type { CitizenView } from "./citizen-pilot";
 
 type SiteHeaderProps = {
   addressLabel?: string;
   config: TenantConfig;
   tenantKey: string;
+  view: CitizenView;
 };
 
 type Municipality = {
@@ -19,7 +21,15 @@ type Municipality = {
 
 const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
-export function SiteHeader({ addressLabel, config, tenantKey }: SiteHeaderProps) {
+const navigation: { href: string; label: string; view: CitizenView }[] = [
+  { href: "", label: "Start", view: "home" },
+  { href: "/kalender", label: "Kalender", view: "calendar" },
+  { href: "/abfall-abc", label: "Abfall-ABC", view: "guide" },
+  { href: "/standorte", label: "Standorte", view: "sites" },
+  { href: "/services", label: "Services", view: "services" },
+];
+
+export function SiteHeader({ addressLabel, config, tenantKey, view }: SiteHeaderProps) {
   const [municipalities, setMunicipalities] = useState<Municipality[]>([
     { tenantId: tenantKey, name: config.name, city: config.serviceArea.city },
   ]);
@@ -74,23 +84,25 @@ export function SiteHeader({ addressLabel, config, tenantKey }: SiteHeaderProps)
             </select>
           </label>
           {addressLabel && (
-            <a className="address-label" href="#adresse">
+            <Link className="address-label" href={`/${tenantKey}#adresse`}>
               <span aria-hidden="true">●</span>
               <span>
                 <small>Abholadresse</small>
                 {addressLabel}
               </span>
-            </a>
+            </Link>
           )}
         </div>
         <nav className="desktop-nav" aria-label="Hauptnavigation">
-          <Link aria-current="page" href={`/${tenantKey}`}>
-            Start
-          </Link>
-          <a href="#kalender">Kalender</a>
-          <a href="#abfall-abc">Abfall-ABC</a>
-          <a href="#standorte">Standorte</a>
-          <a href="#mehr">Mehr</a>
+          {navigation.map((item) => (
+            <Link
+              aria-current={view === item.view ? "page" : undefined}
+              href={`/${tenantKey}${item.href}`}
+              key={item.view}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
       </div>
     </header>
