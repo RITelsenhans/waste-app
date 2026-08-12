@@ -352,8 +352,8 @@ test("Pflege-Unit bietet Bearbeiten und Löschen für Bestandsdaten", async ({ p
 test("Pflege-Unit hält Entwürfe zurück und protokolliert die Freigabe", async ({
   page,
   request,
-}) => {
-  const title = `Freigabeprüfung ${Date.now()}`;
+}, testInfo) => {
+  const title = `Freigabeprüfung ${testInfo.project.name} ${Date.now()}`;
   const created = await request.post("http://localhost:13001/admin-api/v1/admin/notices", {
     headers: { Origin: "http://localhost:13001" },
     data: {
@@ -391,9 +391,11 @@ test("Pflege-Unit hält Entwürfe zurück und protokolliert die Freigabe", async
 
   await page.goto("http://localhost:13001");
   await page.getByRole("button", { name: "Änderungsverlauf" }).click();
-  await expect(
-    page.getByRole("listitem").filter({ hasText: "Hinweis veröffentlicht" }),
-  ).toBeVisible();
+  const auditEntry = page
+    .getByRole("listitem")
+    .filter({ hasText: notice.id })
+    .filter({ hasText: "Hinweis veröffentlicht" });
+  await expect(auditEntry).toBeVisible();
 
   const removed = await request.delete(
     `http://localhost:13001/admin-api/v1/admin/notices/${notice.id}?tenantId=demo`,
