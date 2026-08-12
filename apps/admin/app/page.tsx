@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
 import { ContentManager } from "../components/content-manager";
+import { ContentAudit } from "../components/content-audit";
 import { MunicipalityCustomization } from "../components/municipality-customization";
 import { adminRequest } from "../lib/admin-api";
 import { nextStatus, type CaseTransition } from "../lib/case-status";
@@ -24,7 +25,20 @@ type Municipality = {
   city: string;
   primaryColor: string;
 };
-type Workspace = "create" | "manage" | "cases" | "municipality";
+type Workspace = "create" | "manage" | "audit" | "cases" | "municipality";
+
+function PublicationSelect() {
+  return (
+    <label className="publication-field">
+      Freigabe
+      <select name="publicationStatus" defaultValue="draft">
+        <option value="draft">Als Entwurf speichern</option>
+        <option value="published">Sofort veröffentlichen</option>
+      </select>
+      <small>Entwürfe sind nur hier sichtbar.</small>
+    </label>
+  );
+}
 
 function values(form: HTMLFormElement) {
   return new FormData(form);
@@ -94,7 +108,12 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      setMessage("Eintrag wurde gespeichert und ist sofort in der Bürgeransicht sichtbar.");
+      const publicationStatus = (payload as { publicationStatus?: string }).publicationStatus;
+      setMessage(
+        publicationStatus === "published"
+          ? "Eintrag wurde gespeichert und ist in der Bürgeransicht sichtbar."
+          : "Entwurf wurde gespeichert und bleibt in der Bürgeransicht verborgen.",
+      );
       setContentRevision((current) => current + 1);
       form.reset();
     } catch (error) {
@@ -115,6 +134,7 @@ export default function AdminPage() {
         plannedDate: data.get("plannedDate"),
         effectiveDate: data.get("effectiveDate"),
         status: data.get("status"),
+        publicationStatus: data.get("publicationStatus"),
       },
       event.currentTarget,
     );
@@ -134,6 +154,7 @@ export default function AdminPage() {
           .split(",")
           .map((item) => item.trim())
           .filter(Boolean),
+        publicationStatus: data.get("publicationStatus"),
       },
       event.currentTarget,
     );
@@ -156,6 +177,7 @@ export default function AdminPage() {
         openNow: data.get("openNow") === "on",
         latitude: Number(data.get("latitude")),
         longitude: Number(data.get("longitude")),
+        publicationStatus: data.get("publicationStatus"),
       },
       event.currentTarget,
     );
@@ -174,6 +196,7 @@ export default function AdminPage() {
         priority: data.get("priority"),
         validFrom: new Date(String(data.get("validFrom"))).toISOString(),
         validUntil: new Date(String(data.get("validUntil"))).toISOString(),
+        publicationStatus: data.get("publicationStatus"),
       },
       event.currentTarget,
     );
@@ -215,8 +238,9 @@ export default function AdminPage() {
         </div>
       </header>
       <aside>
-        <strong>Geschützter Pilot</strong> Änderungen wirken unmittelbar auf die synthetischen Daten
-        der ausgewählten Kommune. Für echte kommunale Daten ist dieser Zugang nicht freigegeben.
+        <strong>Geschützter Pilot</strong> Nur veröffentlichte Änderungen wirken auf die
+        synthetischen Bürgerdaten der ausgewählten Kommune. Für echte kommunale Daten ist dieser
+        Zugang nicht freigegeben.
       </aside>
       <p className="status" role="status">
         {message}
@@ -263,6 +287,9 @@ export default function AdminPage() {
           </button>
           <button aria-pressed={workspace === "manage"} onClick={() => setWorkspace("manage")}>
             <Icon name="calendar" /> Bestand bearbeiten
+          </button>
+          <button aria-pressed={workspace === "audit"} onClick={() => setWorkspace("audit")}>
+            <Icon name="sparkles" /> Änderungsverlauf
           </button>
           <button aria-pressed={workspace === "cases"} onClick={() => setWorkspace("cases")}>
             <Icon name="warning" /> Vorgänge
@@ -320,6 +347,7 @@ export default function AdminPage() {
                 <option value="additional">Zusatztermin</option>
               </select>
             </label>
+            <PublicationSelect />
             <button>Termin speichern</button>
           </form>
           <form className="waste-card waste-card--raised" id="abc" onSubmit={guide}>
@@ -349,6 +377,7 @@ export default function AdminPage() {
               Synonyme, komma-getrennt
               <input name="synonyms" />
             </label>
+            <PublicationSelect />
             <button>ABC-Eintrag speichern</button>
           </form>
           <form className="waste-card waste-card--raised" id="orte" onSubmit={site}>
@@ -403,6 +432,7 @@ export default function AdminPage() {
             <label className="check">
               <input name="openNow" type="checkbox" /> Im Demo-Zeitpunkt geöffnet
             </label>
+            <PublicationSelect />
             <button>Standort speichern</button>
           </form>
           <form className="waste-card waste-card--raised" id="hinweise" onSubmit={notice}>
@@ -451,7 +481,8 @@ export default function AdminPage() {
               Gültig bis
               <input name="validUntil" type="datetime-local" required />
             </label>
-            <button>Hinweis veröffentlichen</button>
+            <PublicationSelect />
+            <button>Hinweis speichern</button>
           </form>
         </div>
       )}
@@ -463,6 +494,7 @@ export default function AdminPage() {
           tenantId={tenantId}
         />
       )}
+      {workspace === "audit" && tenantId && <ContentAudit key={tenantId} tenantId={tenantId} />}
       {workspace === "municipality" && tenantId && (
         <MunicipalityCustomization key={tenantId} onMessage={setMessage} tenantId={tenantId} />
       )}

@@ -6,6 +6,10 @@ import { Icon, StatusBadge } from "@waste/ui";
 import { adminRequest } from "../lib/admin-api";
 
 type Address = { id: string; displayLabel: string };
+type Publication = {
+  publicationStatus: "draft" | "published";
+  publicationUpdatedAt: string;
+};
 type Collection = {
   id: string;
   addressId: string;
@@ -14,7 +18,7 @@ type Collection = {
   plannedDate: string;
   effectiveDate: string;
   status: string;
-};
+} & Publication;
 type GuideEntry = {
   id: string;
   name: string;
@@ -22,7 +26,7 @@ type GuideEntry = {
   disposalRoute: string;
   notes: string;
   synonyms: string[];
-};
+} & Publication;
 type Site = {
   id: string;
   name: string;
@@ -33,7 +37,7 @@ type Site = {
   openNow: boolean;
   latitude: number;
   longitude: number;
-};
+} & Publication;
 type Notice = {
   id: string;
   addressId: string | null;
@@ -43,7 +47,27 @@ type Notice = {
   priority: string;
   validFrom: string;
   validUntil: string;
-};
+} & Publication;
+
+function PublicationEditor({ status }: { status: Publication["publicationStatus"] }) {
+  return (
+    <label>
+      Freigabe
+      <select name="publicationStatus" defaultValue={status}>
+        <option value="draft">Entwurf – nicht öffentlich</option>
+        <option value="published">Veröffentlicht</option>
+      </select>
+    </label>
+  );
+}
+
+function PublicationBadge({ status }: { status: Publication["publicationStatus"] }) {
+  return (
+    <StatusBadge tone={status === "published" ? "success" : "warning"}>
+      {status === "published" ? "Veröffentlicht" : "Entwurf"}
+    </StatusBadge>
+  );
+}
 
 function data(form: HTMLFormElement) {
   return new FormData(form);
@@ -120,7 +144,12 @@ export function ContentManager({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      onMessage("Änderung wurde gespeichert und ist in der Bürgeransicht abrufbar.");
+      const status = (payload as { publicationStatus?: string }).publicationStatus;
+      onMessage(
+        status === "published"
+          ? "Änderung wurde veröffentlicht und ist in der Bürgeransicht abrufbar."
+          : "Änderung wurde als Entwurf gespeichert und ist nicht öffentlich sichtbar.",
+      );
       await load();
     } catch (error) {
       onMessage((error as Error).message);
@@ -173,6 +202,7 @@ export function ContentManager({
                   priority: form.get("priority"),
                   validFrom: new Date(String(form.get("validFrom"))).toISOString(),
                   validUntil: new Date(String(form.get("validUntil"))).toISOString(),
+                  publicationStatus: form.get("publicationStatus"),
                 });
               }}
             >
@@ -181,6 +211,7 @@ export function ContentManager({
                 <StatusBadge tone={new Date(item.validUntil) < new Date() ? "neutral" : "info"}>
                   {new Date(item.validUntil) < new Date() ? "Abgelaufen" : "Aktiv/künftig"}
                 </StatusBadge>
+                <PublicationBadge status={item.publicationStatus} />
               </div>
               <label>
                 Titel
@@ -232,6 +263,7 @@ export function ContentManager({
                     required
                   />
                 </label>
+                <PublicationEditor status={item.publicationStatus} />
               </div>
               <div className="edit-actions">
                 <button type="submit">Änderungen speichern</button>
@@ -267,12 +299,16 @@ export function ContentManager({
                   plannedDate: form.get("plannedDate"),
                   effectiveDate: form.get("effectiveDate"),
                   status: form.get("status"),
+                  publicationStatus: form.get("publicationStatus"),
                 });
               }}
             >
-              <strong>
-                {item.wasteTypeLabel} · {item.effectiveDate}
-              </strong>
+              <div className="editable-list__title">
+                <strong>
+                  {item.wasteTypeLabel} · {item.effectiveDate}
+                </strong>
+                <PublicationBadge status={item.publicationStatus} />
+              </div>
               <div className="edit-grid">
                 <label>
                   Adresse
@@ -314,6 +350,7 @@ export function ContentManager({
                     <option value="additional">Zusatztermin</option>
                   </select>
                 </label>
+                <PublicationEditor status={item.publicationStatus} />
               </div>
               <div className="edit-actions">
                 <button type="submit">Änderungen speichern</button>
@@ -348,10 +385,14 @@ export function ContentManager({
                   disposalRoute: form.get("disposalRoute"),
                   notes: form.get("notes"),
                   synonyms: values(form.get("synonyms")),
+                  publicationStatus: form.get("publicationStatus"),
                 });
               }}
             >
-              <strong>{item.name}</strong>
+              <div className="editable-list__title">
+                <strong>{item.name}</strong>
+                <PublicationBadge status={item.publicationStatus} />
+              </div>
               <div className="edit-grid">
                 <label>
                   Begriff
@@ -374,6 +415,7 @@ export function ContentManager({
                 Synonyme
                 <input name="synonyms" defaultValue={item.synonyms.join(", ")} />
               </label>
+              <PublicationEditor status={item.publicationStatus} />
               <div className="edit-actions">
                 <button type="submit">Änderungen speichern</button>
                 <button
@@ -410,10 +452,14 @@ export function ContentManager({
                   openNow: form.get("openNow") === "on",
                   latitude: Number(form.get("latitude")),
                   longitude: Number(form.get("longitude")),
+                  publicationStatus: form.get("publicationStatus"),
                 });
               }}
             >
-              <strong>{item.name}</strong>
+              <div className="editable-list__title">
+                <strong>{item.name}</strong>
+                <PublicationBadge status={item.publicationStatus} />
+              </div>
               <div className="edit-grid">
                 <label>
                   Name
@@ -464,6 +510,7 @@ export function ContentManager({
                 <input name="openNow" type="checkbox" defaultChecked={item.openNow} /> Im
                 Demo-Zeitpunkt geöffnet
               </label>
+              <PublicationEditor status={item.publicationStatus} />
               <div className="edit-actions">
                 <button type="submit">Änderungen speichern</button>
                 <button

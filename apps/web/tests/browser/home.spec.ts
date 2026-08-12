@@ -349,6 +349,61 @@ test("Pflege-Unit bietet Bearbeiten und Löschen für Bestandsdaten", async ({ p
   await expect(page.getByRole("button", { name: "Löschen" }).first()).toBeVisible();
 });
 
+test("Pflege-Unit hält Entwürfe zurück und protokolliert die Freigabe", async ({
+  page,
+  request,
+}, testInfo) => {
+  const title = `Freigabeprüfung ${testInfo.project.name} ${Date.now()}`;
+  const created = await request.post("http://localhost:13001/admin-api/v1/admin/notices", {
+    headers: { Origin: "http://localhost:13001" },
+    data: {
+      tenantId: "demo",
+      addressId: null,
+      noticeType: "service",
+      title,
+      body: "Dieser Hinweis wird erst nach der Sichtprüfung veröffentlicht.",
+      priority: "info",
+      validFrom: "2026-08-01T00:00:00Z",
+      validUntil: "2026-08-31T23:59:59Z",
+      publicationStatus: "draft",
+    },
+  });
+  expect(created.ok()).toBeTruthy();
+  const notice = (await created.json()) as { id: string };
+
+  await page.goto("/demo");
+  await expect(page.getByRole("heading", { name: title })).toHaveCount(0);
+
+  await page.goto("http://localhost:13001");
+  await page.getByRole("button", { name: "Bestand bearbeiten" }).click();
+  await page
+    .locator("summary")
+    .filter({ hasText: /^Hinweise/ })
+    .click();
+  const form = page.locator(".editable-list form").filter({ hasText: title });
+  await expect(form.getByText("Entwurf", { exact: true })).toBeVisible();
+  await form.getByLabel("Freigabe").selectOption("published");
+  await form.getByRole("button", { name: "Änderungen speichern" }).click();
+  await expect(page.getByRole("status")).toContainText("veröffentlicht");
+
+  await page.goto("/demo");
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
+
+  await page.goto("http://localhost:13001");
+  await page.getByRole("button", { name: "Änderungsverlauf" }).click();
+  const auditEntry = page
+    .getByRole("listitem")
+    .filter({ hasText: notice.id })
+    .filter({ hasText: "Hinweis veröffentlicht" });
+  await expect(auditEntry).toBeVisible();
+
+  const removed = await request.delete(
+    `http://localhost:13001/admin-api/v1/admin/notices/${notice.id}?tenantId=demo`,
+    { headers: { Origin: "http://localhost:13001" } },
+  );
+  expect(removed.ok()).toBeTruthy();
+});
+
 test("Pflege-Unit zeigt das zentrale Kommunenprofil", async ({ page }) => {
   await page.goto("http://localhost:13001");
   await page.getByRole("button", { name: "Kommune" }).click();
