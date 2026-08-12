@@ -7,20 +7,15 @@
 # Build-Kontext ist das Repository-Wurzelverzeichnis (Gradle-Multiprojekt).
 
 # --- Build-Stufe -----------------------------------------------------------
-FROM eclipse-temurin:21-jdk AS build
+FROM gradle:9.6.1-jdk21 AS build
 WORKDIR /src
 
 # Gesamtes Monorepo kopieren (Gradle braucht settings + Wrapper + Modul).
 COPY . .
 
-# Nur den API-Boot-Jar bauen. --no-daemon ist im Container korrekt.
-RUN chmod +x gradlew \
- && for attempt in 1 2 3; do \
-      ./gradlew --no-daemon :services:api:bootJar && break; \
-      if [ "$attempt" -eq 3 ]; then exit 1; fi; \
-      echo "Gradle download/build attempt $attempt failed; retrying..." >&2; \
-      sleep "$((attempt * 5))"; \
-    done \
+# Nur den API-Boot-Jar bauen. Das offizielle Image enthält die zum Wrapper
+# passende Gradle-Version bereits; Railway muss sie nicht separat laden.
+RUN gradle --no-daemon :services:api:bootJar \
  && cp "$(ls services/api/build/libs/*.jar | grep -v -- '-plain' | head -n1)" /app.jar
 
 # --- Laufzeit-Stufe --------------------------------------------------------
