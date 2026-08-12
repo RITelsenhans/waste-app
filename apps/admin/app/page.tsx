@@ -30,6 +30,21 @@ function values(form: HTMLFormElement) {
   return new FormData(form);
 }
 
+function citizenAppUrl(baseUrl: string, tenantId: string): string {
+  try {
+    const target = new URL(baseUrl);
+    if (!["http:", "https:"].includes(target.protocol) || target.username || target.password) {
+      throw new Error("Nicht unterstützte Bürger-App-URL");
+    }
+    target.pathname = `${target.pathname.replace(/\/$/, "")}/${encodeURIComponent(tenantId || "demo")}`;
+    target.search = "";
+    target.hash = "";
+    return target.toString();
+  } catch {
+    return `http://localhost:3000/${encodeURIComponent(tenantId || "demo")}`;
+  }
+}
+
 export default function AdminPage() {
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
   const [tenantId, setTenantId] = useState("");
@@ -191,9 +206,7 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="header-actions">
-          <a href={`${citizenBaseUrl.replace(/\/$/, "")}/${tenantId || "demo"}`}>
-            Bürgeransicht öffnen
-          </a>
+          <a href={citizenAppUrl(citizenBaseUrl, tenantId)}>Bürgeransicht öffnen</a>
           <form action="/admin-auth/logout" method="post">
             <button className="secondary-button" type="submit">
               Abmelden
