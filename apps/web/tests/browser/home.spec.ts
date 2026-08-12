@@ -141,6 +141,18 @@ test("simuliert den 24-7-Zugang vom Antrag bis zur geschlossenen Ausfahrt", asyn
 
   await expect(showcase.getByText("DEMO-TV-22", { exact: true })).toBeVisible();
   await expect(showcase.getByText("Zugang erteilt", { exact: true })).toBeVisible();
+  const reference = (await showcase.locator(".gate-message").innerText()).match(
+    /DEMO-Z-[A-F0-9]{12}/,
+  )?.[0];
+  expect(reference).toBeDefined();
+
+  await page.reload();
+  await expect(showcase.locator(".gate-message")).toContainText(
+    "wurde in dieser Sitzung wiederhergestellt",
+  );
+  await expect(showcase.locator(".gate-message")).toContainText(reference!);
+  await expect(showcase.getByText("DEMO-TV-22", { exact: true })).toBeVisible();
+
   await showcase.getByRole("button", { name: "Ankunft jetzt scannen" }).click();
   await expect(showcase.getByText("Schranke geöffnet", { exact: true })).toBeVisible();
   await showcase.getByRole("button", { name: "Einfahrt jetzt bestätigen" }).click();

@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
-
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
+import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
 
 type GuideEntry = { id: string; name: string; disposalRoute: string; notes: string };
 type SampleId = "batteries" | "toaster" | "jar";

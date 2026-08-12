@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
 import type { TenantConfig } from "../lib/tenant-config";
 import type { CitizenView } from "./citizen-pilot";
 
@@ -18,8 +19,6 @@ type Municipality = {
   name: string;
   city: string;
 };
-
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
 const navigation: { href: string; label: string; view: CitizenView }[] = [
   { href: "", label: "Start", view: "home" },

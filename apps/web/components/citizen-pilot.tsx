@@ -3,12 +3,11 @@
 import type { CSSProperties, FormEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
+import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
 import type { TenantConfig } from "../lib/tenant-config";
 import { RecyclingAccessShowcase } from "./recycling-access-showcase";
 import { SiteHeader } from "./site-header";
 import { WasteSortingShowcase } from "./waste-sorting-showcase";
-
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
 type Address = { id: string; displayLabel: string };
 type Collection = { id: string; wasteTypeLabel: string; effectiveDate: string; status: string };
