@@ -32,6 +32,41 @@ header a {
   color: #c8102e;
   font-weight: 700;
 }
+.header-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+.header-actions form {
+  margin: 0;
+}
+.secondary-button {
+  background: white;
+  border: 1px solid var(--border-default);
+  color: var(--text-strong);
+}
+.municipality-switcher {
+  background: linear-gradient(135deg, #123b45, #0b625f);
+  border-radius: var(--radius-card);
+  color: white;
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 2rem;
+  max-width: 38rem;
+  padding: 1rem 1.2rem;
+}
+.municipality-switcher label {
+  font-weight: 800;
+}
+.municipality-switcher select {
+  background: white;
+  color: var(--text-strong);
+}
+.municipality-switcher p {
+  color: #d9f4f2;
+  font-size: 0.9rem;
+  margin: 0;
+}
 
 .workspace-tabs button {
   align-items: center;
@@ -391,6 +426,11 @@ button {
   .case-list article {
     align-items: stretch;
     flex-direction: column;
+  }
+  .header-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    width: 100%;
   }
 
   h1 {

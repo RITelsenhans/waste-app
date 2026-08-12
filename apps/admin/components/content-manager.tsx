@@ -3,8 +3,7 @@
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { Icon, StatusBadge } from "@waste/ui";
-
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
+import { adminRequest } from "../lib/admin-api";
 
 type Address = { id: string; displayLabel: string };
 type Collection = {
@@ -46,15 +45,6 @@ type Notice = {
   validUntil: string;
 };
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API}${path}`, options);
-  if (!response.ok) {
-    const problem = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new Error(problem?.detail ?? `Anfrage fehlgeschlagen (${response.status}).`);
-  }
-  return (response.status === 204 ? undefined : await response.json()) as T;
-}
-
 function data(form: HTMLFormElement) {
   return new FormData(form);
 }
@@ -75,9 +65,11 @@ function localDateTime(value: string) {
 export function ContentManager({
   addresses,
   onMessage,
+  tenantId,
 }: {
   addresses: Address[];
   onMessage: (message: string) => void;
+  tenantId: string;
 }) {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [guide, setGuide] = useState<GuideEntry[]>([]);
@@ -87,10 +79,14 @@ export function ContentManager({
   const load = useCallback(async () => {
     try {
       const [nextCollections, nextGuide, nextSites, nextNotices] = await Promise.all([
-        request<Collection[]>("/v1/admin/collections?tenantId=demo"),
-        request<GuideEntry[]>("/v1/admin/waste-guide?tenantId=demo"),
-        request<Site[]>("/v1/admin/sites?tenantId=demo"),
-        request<Notice[]>("/v1/admin/notices?tenantId=demo"),
+        adminRequest<Collection[]>(
+          `/v1/admin/collections?tenantId=${encodeURIComponent(tenantId)}`,
+        ),
+        adminRequest<GuideEntry[]>(
+          `/v1/admin/waste-guide?tenantId=${encodeURIComponent(tenantId)}`,
+        ),
+        adminRequest<Site[]>(`/v1/admin/sites?tenantId=${encodeURIComponent(tenantId)}`),
+        adminRequest<Notice[]>(`/v1/admin/notices?tenantId=${encodeURIComponent(tenantId)}`),
       ]);
       setCollections(nextCollections);
       setGuide(nextGuide);
@@ -99,14 +95,14 @@ export function ContentManager({
     } catch (error) {
       onMessage((error as Error).message);
     }
-  }, [onMessage]);
+  }, [onMessage, tenantId]);
 
   useEffect(() => {
     void Promise.all([
-      request<Collection[]>("/v1/admin/collections?tenantId=demo"),
-      request<GuideEntry[]>("/v1/admin/waste-guide?tenantId=demo"),
-      request<Site[]>("/v1/admin/sites?tenantId=demo"),
-      request<Notice[]>("/v1/admin/notices?tenantId=demo"),
+      adminRequest<Collection[]>(`/v1/admin/collections?tenantId=${encodeURIComponent(tenantId)}`),
+      adminRequest<GuideEntry[]>(`/v1/admin/waste-guide?tenantId=${encodeURIComponent(tenantId)}`),
+      adminRequest<Site[]>(`/v1/admin/sites?tenantId=${encodeURIComponent(tenantId)}`),
+      adminRequest<Notice[]>(`/v1/admin/notices?tenantId=${encodeURIComponent(tenantId)}`),
     ])
       .then(([nextCollections, nextGuide, nextSites, nextNotices]) => {
         setCollections(nextCollections);
@@ -115,11 +111,11 @@ export function ContentManager({
         setNotices(nextNotices);
       })
       .catch((error: Error) => onMessage(error.message));
-  }, [onMessage]);
+  }, [onMessage, tenantId]);
 
   async function save(path: string, id: string, payload: object) {
     try {
-      await request(`${path}/${id}`, {
+      await adminRequest(`${path}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -134,7 +130,9 @@ export function ContentManager({
   async function remove(path: string, id: string, label: string) {
     if (!window.confirm(`„${label}“ wirklich aus dem lokalen Pilotbestand löschen?`)) return;
     try {
-      await request<void>(`${path}/${id}?tenantId=demo`, { method: "DELETE" });
+      await adminRequest<void>(`${path}/${id}?tenantId=${encodeURIComponent(tenantId)}`, {
+        method: "DELETE",
+      });
       onMessage(`„${label}“ wurde gelöscht.`);
       await load();
     } catch (error) {
@@ -167,7 +165,7 @@ export function ContentManager({
                 event.preventDefault();
                 const form = data(event.currentTarget);
                 void save("/v1/admin/notices", item.id, {
-                  tenantId: "demo",
+                  tenantId,
                   addressId: form.get("addressId") || null,
                   noticeType: form.get("noticeType"),
                   title: form.get("title"),
@@ -262,7 +260,7 @@ export function ContentManager({
                 event.preventDefault();
                 const form = data(event.currentTarget);
                 void save("/v1/admin/collections", item.id, {
-                  tenantId: "demo",
+                  tenantId,
                   addressId: form.get("addressId"),
                   wasteTypeId: form.get("wasteTypeId"),
                   wasteTypeLabel: form.get("wasteTypeLabel"),
@@ -344,7 +342,7 @@ export function ContentManager({
                 event.preventDefault();
                 const form = data(event.currentTarget);
                 void save("/v1/admin/waste-guide", item.id, {
-                  tenantId: "demo",
+                  tenantId,
                   name: form.get("name"),
                   category: form.get("category"),
                   disposalRoute: form.get("disposalRoute"),
@@ -403,7 +401,7 @@ export function ContentManager({
                 event.preventDefault();
                 const form = data(event.currentTarget);
                 void save("/v1/admin/sites", item.id, {
-                  tenantId: "demo",
+                  tenantId,
                   name: form.get("name"),
                   siteType: form.get("siteType"),
                   address: form.get("address"),

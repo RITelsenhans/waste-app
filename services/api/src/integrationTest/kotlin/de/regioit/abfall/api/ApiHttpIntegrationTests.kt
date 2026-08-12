@@ -26,6 +26,8 @@ import kotlin.test.assertTrue
 @AutoConfigureMockMvc
 @ActiveProfiles("integration")
 class ApiHttpIntegrationTests {
+    private val adminToken = "integration-admin-token-0000000000000000000000000000000000"
+
     @Autowired
     lateinit var mockMvc: MockMvc
 
@@ -176,10 +178,28 @@ class ApiHttpIntegrationTests {
     }
 
     @Test
+    fun `admin endpoints reject missing and invalid service tokens`() {
+        mockMvc
+            .get("/v1/admin/notices") { param("tenantId", "demo") }
+            .andExpect {
+                status { isUnauthorized() }
+                content { contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON) }
+                jsonPath("$.type") { value("/problems/admin-authentication-required") }
+            }
+
+        mockMvc
+            .get("/v1/admin/notices") {
+                param("tenantId", "demo")
+                header("X-Pilot-Admin-Token", "invalid-admin-token-00000000000000")
+            }.andExpect { status { isUnauthorized() } }
+    }
+
+    @Test
     fun `admin can correct list and delete a notice`() {
         val created =
             mockMvc
                 .post("/v1/admin/notices") {
+                    header("X-Pilot-Admin-Token", adminToken)
                     contentType = MediaType.APPLICATION_JSON
                     content =
                         """
@@ -200,6 +220,7 @@ class ApiHttpIntegrationTests {
 
         mockMvc
             .put("/v1/admin/notices/$id") {
+                header("X-Pilot-Admin-Token", adminToken)
                 contentType = MediaType.APPLICATION_JSON
                 content =
                     """
@@ -220,15 +241,19 @@ class ApiHttpIntegrationTests {
             }
 
         mockMvc
-            .get("/v1/admin/notices") { param("tenantId", "demo") }
-            .andExpect {
+            .get("/v1/admin/notices") {
+                header("X-Pilot-Admin-Token", adminToken)
+                param("tenantId", "demo")
+            }.andExpect {
                 status { isOk() }
                 jsonPath("$[?(@.id == '$id')].title") { value("Korrigierter Titel") }
             }
 
         mockMvc
-            .delete("/v1/admin/notices/$id") { param("tenantId", "demo") }
-            .andExpect { status { isNoContent() } }
+            .delete("/v1/admin/notices/$id") {
+                header("X-Pilot-Admin-Token", adminToken)
+                param("tenantId", "demo")
+            }.andExpect { status { isNoContent() } }
     }
 
     @Test
@@ -285,6 +310,7 @@ class ApiHttpIntegrationTests {
 
         mockMvc
             .patch("/v1/admin/cases/$reference/status") {
+                header("X-Pilot-Admin-Token", adminToken)
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"status":"in-review","publicLabel":"Die Meldung wird geprüft."}"""
             }.andExpect {

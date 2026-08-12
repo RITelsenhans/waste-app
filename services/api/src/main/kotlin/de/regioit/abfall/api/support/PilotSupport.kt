@@ -1,20 +1,28 @@
 package de.regioit.abfall.api.support
 
+import jakarta.servlet.FilterChain
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
+import org.springframework.stereotype.Component
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 
 @ConfigurationProperties("waste.pilot")
 data class PilotProperties(
     val adminEnabled: Boolean = false,
+    val adminToken: String = "",
     val allowedOrigins: List<String> = emptyList(),
 )
 
@@ -39,6 +47,78 @@ class PilotAdminGuard(
         if (!properties.adminEnabled) {
             throw PilotAdminDisabledException()
         }
+    }
+}
+
+@Component
+class PilotAdminTokenFilter(
+    private val properties: PilotProperties,
+) : OncePerRequestFilter() {
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean =
+        !request.requestURI.startsWith("/v1/admin/") && request.requestURI != "/v1/admin"
+
+    override fun doFilterInternal(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        filterChain: FilterChain,
+    ) {
+        if (!properties.adminEnabled) {
+            writeProblem(
+                response,
+                HttpStatus.FORBIDDEN,
+                "Pilotpflege deaktiviert",
+                "Die lokale Pilotpflege ist deaktiviert.",
+                "/problems/admin-disabled",
+            )
+            return
+        }
+        if (properties.adminToken.length < 32) {
+            writeProblem(
+                response,
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Pilotpflege nicht vollständig konfiguriert",
+                "Der interne Admin-Zugang ist nicht sicher konfiguriert.",
+                "/problems/admin-not-configured",
+            )
+            return
+        }
+
+        val supplied = request.getHeader("X-Pilot-Admin-Token").orEmpty()
+        if (!secureEquals(supplied, properties.adminToken)) {
+            writeProblem(
+                response,
+                HttpStatus.UNAUTHORIZED,
+                "Admin-Anmeldung erforderlich",
+                "Für diesen administrativen Aufruf fehlt eine gültige Berechtigung.",
+                "/problems/admin-authentication-required",
+            )
+            return
+        }
+        filterChain.doFilter(request, response)
+    }
+
+    private fun secureEquals(
+        candidate: String,
+        expected: String,
+    ): Boolean =
+        MessageDigest.isEqual(
+            candidate.toByteArray(StandardCharsets.UTF_8),
+            expected.toByteArray(StandardCharsets.UTF_8),
+        )
+
+    private fun writeProblem(
+        response: HttpServletResponse,
+        status: HttpStatus,
+        title: String,
+        detail: String,
+        type: String,
+    ) {
+        response.status = status.value()
+        response.contentType = "application/problem+json"
+        response.characterEncoding = StandardCharsets.UTF_8.name()
+        response.writer.write(
+            """{"type":"$type","title":"$title","status":${status.value()},"detail":"$detail"}""",
+        )
     }
 }
 
