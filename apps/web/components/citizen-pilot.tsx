@@ -1,14 +1,13 @@
 "use client";
 
 import type { CSSProperties, FormEvent } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
+import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
 import type { TenantConfig } from "../lib/tenant-config";
 import { RecyclingAccessShowcase } from "./recycling-access-showcase";
 import { SiteHeader } from "./site-header";
 import { WasteSortingShowcase } from "./waste-sorting-showcase";
-
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
 type Address = { id: string; displayLabel: string };
 type Collection = { id: string; wasteTypeLabel: string; effectiveDate: string; status: string };
@@ -32,6 +31,34 @@ type CaseDetail = {
   status: string;
   summary: string;
   events: { publicLabel: string; occurredAt: string }[];
+};
+
+export type CitizenView = "home" | "calendar" | "guide" | "sites" | "services";
+
+const viewTitles: Record<
+  Exclude<CitizenView, "home">,
+  { eyebrow: string; title: string; text: string }
+> = {
+  calendar: {
+    eyebrow: "Abfuhrkalender",
+    title: "Alle Abholtermine auf einen Blick",
+    text: "Abholadresse im Kopf wechseln, Abfallarten filtern und zwischen Liste und Quartalsansicht wechseln.",
+  },
+  guide: {
+    eyebrow: "Abfall-ABC",
+    title: "Was gehört wohin?",
+    text: "Gegenstand suchen und den passenden Entsorgungsweg für die Pilotkommune finden.",
+  },
+  sites: {
+    eyebrow: "Standorte",
+    title: "Entsorgungsmöglichkeiten in Ihrer Nähe",
+    text: "Öffnungszeiten prüfen, Standort auswählen und die Kartenansicht öffnen.",
+  },
+  services: {
+    eyebrow: "Digitale Services",
+    title: "Anliegen direkt erledigen",
+    text: "Sortierhilfe, Reklamation, Sperrmüll und 24/7-Zugang in der geschützten Demo testen.",
+  },
 };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -88,7 +115,15 @@ function calendarDateKey(month: Date, day: number) {
   return `${month.getFullYear()}-${monthNumber}-${String(day).padStart(2, "0")}`;
 }
 
-export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tenantKey: string }) {
+export function CitizenPilot({
+  config,
+  tenantKey,
+  view = "home",
+}: {
+  config: TenantConfig;
+  tenantKey: string;
+  view?: CitizenView;
+}) {
   const [addressQuery, setAddressQuery] = useState("");
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressSearchCompleted, setAddressSearchCompleted] = useState(false);
@@ -106,6 +141,7 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
   const [lastNotificationEmail, setLastNotificationEmail] = useState<string | null>(null);
   const [caseDetail, setCaseDetail] = useState<CaseDetail | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [excludedWasteTypes, setExcludedWasteTypes] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState("Demo-Daten werden geladen …");
   const addressResultsRef = useRef<HTMLDivElement>(null);
 
@@ -135,18 +171,27 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
         setSelectedSiteId((current) => current ?? items[0]?.id ?? null);
       }),
       request<Rule>(`/v1/bulk-waste/rules?tenantId=${tenantKey}`).then(setRules),
-      request<Address[]>(`/v1/addresses/search?tenantId=${tenantKey}&q=Demo-Stadt`).then(
-        (items) => {
-          const stored = localStorage.getItem(`waste-address-${tenantKey}`);
-          const selected = stored
-            ? (JSON.parse(stored) as Address)
-            : (items.find((item) => item.id === "demo-musterstrasse-12") ?? items[0]);
-          if (selected) return loadAddressData(selected);
-          return undefined;
-        },
-      ),
+      request<Address[]>(
+        `/v1/addresses/search?tenantId=${tenantKey}&q=${encodeURIComponent(config.serviceArea.city)}`,
+      ).then((items) => {
+        const stored = localStorage.getItem(`waste-address-${tenantKey}`);
+        let storedId: string | undefined;
+        if (stored) {
+          try {
+            storedId = (JSON.parse(stored) as Address).id;
+          } catch {
+            localStorage.removeItem(`waste-address-${tenantKey}`);
+          }
+        }
+        const selected =
+          items.find((item) => item.id === storedId) ??
+          items.find((item) => item.id === "demo-musterstrasse-12") ??
+          items[0];
+        if (selected) return loadAddressData(selected);
+        return undefined;
+      }),
     ]).catch((error: Error) => setMessage(error.message));
-  }, [loadAddressData, tenantKey]);
+  }, [config.serviceArea.city, loadAddressData, tenantKey]);
 
   useEffect(() => {
     if (!address) return undefined;
@@ -160,7 +205,29 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
     return () => window.clearInterval(interval);
   }, [address, tenantKey]);
 
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const stored = localStorage.getItem(`waste-filter-${tenantKey}`);
+      if (!stored) return;
+      try {
+        setExcludedWasteTypes(new Set(JSON.parse(stored) as string[]));
+      } catch {
+        localStorage.removeItem(`waste-filter-${tenantKey}`);
+      }
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [tenantKey]);
+
   const nextCollection = collections[0];
+  const wasteTypes = useMemo(
+    () => Array.from(new Set(collections.map((item) => item.wasteTypeLabel))),
+    [collections],
+  );
+  const filteredCollections = collections.filter(
+    (item) => !excludedWasteTypes.has(item.wasteTypeLabel),
+  );
+  const displayedCollections =
+    view === "home" ? filteredCollections.slice(0, 3) : filteredCollections;
   const selectedSite = sites.find((site) => site.id === selectedSiteId) ?? sites[0];
   const mapUrl = selectedSite
     ? `https://www.openstreetmap.org/export/embed.html?bbox=${selectedSite.longitude - 0.018}%2C${selectedSite.latitude - 0.012}%2C${selectedSite.longitude + 0.018}%2C${selectedSite.latitude + 0.012}&layer=mapnik&marker=${selectedSite.latitude}%2C${selectedSite.longitude}`
@@ -298,14 +365,19 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
   }
 
   return (
-    <div className="app-shell" style={style}>
-      <SiteHeader addressLabel={address?.displayLabel} config={config} tenantKey={tenantKey} />
+    <div className={`app-shell view-${view}`} style={style}>
+      <SiteHeader
+        addressLabel={address?.displayLabel}
+        config={config}
+        tenantKey={tenantKey}
+        view={view}
+      />
       <aside className="demo-banner" id="demo-hinweis">
         <div className="demo-banner__inner">
-          <span className="demo-banner__label">Lokaler Pilot</span>
+          <span className="demo-banner__label">Geschützte Pilot-Demo</span>
           <p>
             <strong>Hier dürfen Sie wirklich ausprobieren.</strong> Alle Inhalte sind synthetisch;
-            Eingaben landen nur in Ihrer lokalen Datenbank.
+            Eingaben werden ausschließlich in der isolierten Demo-Umgebung verarbeitet.
           </p>
         </div>
       </aside>
@@ -313,498 +385,575 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
         <p className="live-message" role="status">
           {message}
         </p>
-        <section className="home-hero" aria-labelledby="page-title">
-          <Card as="article" className="collection-hero">
-            <Icon className="collection-hero__icon" name="truck" />
-            <div className="collection-hero__topline">
-              <p className="eyebrow">Nächste Abholung</p>
-              <StatusBadge tone="success">
-                {nextCollection ? statusLabel[nextCollection.status] : "Adresse wählen"}
-              </StatusBadge>
-            </div>
-            <h1 id="page-title">
-              {nextCollection ? formatDate(nextCollection.effectiveDate) : "Ihre Termine"}
-            </h1>
-            <p className="collection-type">
-              {nextCollection?.wasteTypeLabel ?? "Wählen Sie eine Demo-Adresse aus."}
-            </p>
-            <p className="collection-address">
-              {address?.displayLabel ?? "Noch keine Adresse gewählt"}
-            </p>
-            <a className="button-link" href="#adresse">
-              Adresse wechseln
-            </a>
-          </Card>
-          <Card as="aside" className="quick-actions" elevation="flat">
-            <p className="eyebrow">Direkt erledigen</p>
-            <h2>Was möchten Sie tun?</h2>
-            <nav aria-label="Schnellaktionen">
-              <a href="#sortierkompass">
-                <span>
-                  <Icon name="camera" />
-                </span>
-                <strong>SortierKompass testen</strong>
-                <small>Beispielfoto prüfen</small>
-              </a>
-              <a href="#meldung">
-                <span>
-                  <Icon name="warning" />
-                </span>
-                <strong>Problem melden</strong>
-                <small>Formular öffnen</small>
-              </a>
-              <a href="#sperrmuell">
-                <span>
-                  <Icon name="truck" />
-                </span>
-                <strong>Sperrmüll bestellen</strong>
-                <small>Termin wählen</small>
-              </a>
-              {config.enabledFeatures.recyclingAccessShowcase && (
-                <a href="#nachtzugang">
-                  <span>
-                    <Icon name="recycle" />
-                  </span>
-                  <strong>24/7-Zugang testen</strong>
-                  <small>Tor-Simulation starten</small>
-                </a>
-              )}
-            </nav>
-          </Card>
-        </section>
-        <section className="home-section" id="adresse">
-          <p className="eyebrow">Adresse</p>
-          <h2 className="section-title">
-            <span>
-              <Icon name="home" />
-            </span>
-            Für welchen Abholort?
-          </h2>
-          <form className="search-form" onSubmit={searchAddresses}>
-            <label>
-              Straße, Hausnummer, Ort oder Postleitzahl
-              <input
-                value={addressQuery}
-                onChange={(event) => setAddressQuery(event.target.value)}
-                placeholder={`z. B. Musterstraße 12 oder ${config.serviceArea.city}`}
-                minLength={2}
-                required
-              />
-            </label>
-            <button type="submit">Suchen</button>
-          </form>
-          <p className="search-hint">
-            Aktuelle Testdaten: <strong>{config.serviceArea.city}</strong>. Sie können auch nach „
-            {config.name}“ suchen.
-          </p>
-          {addressSearchCompleted && (
-            <div className="address-results" ref={addressResultsRef} tabIndex={-1}>
-              <div className="address-results__head">
-                <h3>
-                  {addresses.length ? `${addresses.length} Treffer` : "Keine Adresse gefunden"}
-                </h3>
-                <button type="button" onClick={() => setAddressSearchCompleted(false)}>
-                  Schließen
-                </button>
-              </div>
-              <div className="result-list">
-                {addresses.map((item) => (
-                  <button
-                    className={
-                      address?.id === item.id ? "result-button is-selected" : "result-button"
-                    }
-                    key={item.id}
-                    onClick={() => {
-                      void loadAddressData(item);
-                      setAddressSearchCompleted(false);
-                      setAddressQuery("");
-                    }}
-                    type="button"
-                  >
-                    <Icon name="map-pin" />
-                    {item.displayLabel}
-                  </button>
-                ))}
-              </div>
-              {addresses.length === 0 && (
-                <p>
-                  Für diese Kommune sind momentan nur synthetische Adressen in{" "}
-                  <strong>{config.serviceArea.city}</strong> hinterlegt.
-                </p>
-              )}
-            </div>
-          )}
-        </section>
-        <section className="home-section" id="kalender">
-          <p className="eyebrow">Abfuhrkalender</p>
-          <h2 className="section-title">
-            <span>
-              <Icon name="calendar" />
-            </span>
-            Die nächsten Termine
-          </h2>
-          <div className="collection-list">
-            {collections.map((item) => (
-              <Card as="article" className="collection-card" elevation="flat" key={item.id}>
-                <p className="collection-card__weekday">{formatDate(item.effectiveDate)}</p>
-                <h3>{item.wasteTypeLabel}</h3>
-                <StatusBadge tone={item.status === "moved" ? "warning" : "success"}>
-                  {statusLabel[item.status] ?? item.status}
+        {view !== "home" && (
+          <header className="page-intro">
+            <p className="eyebrow">{viewTitles[view].eyebrow}</p>
+            <h1>{viewTitles[view].title}</h1>
+            <p>{viewTitles[view].text}</p>
+          </header>
+        )}
+        {view === "home" && (
+          <section className="home-hero" aria-labelledby="page-title">
+            <Card as="article" className="collection-hero">
+              <Icon className="collection-hero__icon" name="truck" />
+              <div className="collection-hero__topline">
+                <p className="eyebrow">Nächste Abholung</p>
+                <StatusBadge tone="success">
+                  {nextCollection ? statusLabel[nextCollection.status] : "Adresse wählen"}
                 </StatusBadge>
-              </Card>
-            ))}
-          </div>
-          <div className="calendar-disclosure">
-            <button
-              aria-controls="quarter-calendar"
-              aria-expanded={calendarOpen}
-              className="calendar-toggle"
-              onClick={() => setCalendarOpen((open) => !open)}
-              type="button"
-            >
-              <Icon name="calendar" />
-              {calendarOpen
-                ? "Kalenderansicht schließen"
-                : "Kalenderansicht für drei Monate öffnen"}
-            </button>
-            <p>Optional: alle zukünftigen Abholungen im nächsten Quartal als Kalender.</p>
-          </div>
-          {calendarOpen && (
-            <div className="quarter-calendar" id="quarter-calendar">
-              {calendarMonths().map((month) => (
-                <section className="calendar-month" key={month.toISOString()}>
-                  <h3>
-                    {new Intl.DateTimeFormat("de-DE", {
-                      month: "long",
-                      year: "numeric",
-                    }).format(month)}
-                  </h3>
-                  <div
-                    className="calendar-grid"
-                    role="grid"
-                    aria-label={month.toLocaleDateString("de-DE", {
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  >
-                    {calendarWeekdays.map((weekday) => (
-                      <span className="calendar-weekday" key={weekday} role="columnheader">
-                        {weekday}
-                      </span>
-                    ))}
-                    {calendarDays(month).map((day, index) => {
-                      if (day === null) {
-                        return (
-                          <span
-                            aria-hidden="true"
-                            className="calendar-day is-empty"
-                            key={`empty-${index}`}
-                          />
-                        );
-                      }
-                      const dateKey = calendarDateKey(month, day);
-                      const events = collections.filter((item) => item.effectiveDate === dateKey);
-                      return (
-                        <article
-                          aria-label={`${day}. ${month.toLocaleDateString("de-DE", { month: "long" })}${events.length ? `: ${events.map((item) => item.wasteTypeLabel).join(", ")}` : ": kein Termin"}`}
-                          className={events.length ? "calendar-day has-events" : "calendar-day"}
-                          key={dateKey}
-                          role="gridcell"
-                        >
-                          <span>{day}</span>
-                          {events.map((item) => (
-                            <small
-                              className={`calendar-event is-${item.status}`}
-                              key={item.id}
-                              title={item.wasteTypeLabel}
-                            >
-                              {item.wasteTypeLabel}
-                            </small>
-                          ))}
-                        </article>
-                      );
-                    })}
-                  </div>
-                  <ul className="calendar-agenda" aria-label="Termine dieses Monats">
-                    {collections
-                      .filter((item) => {
-                        const date = new Date(`${item.effectiveDate}T12:00:00`);
-                        return (
-                          date.getFullYear() === month.getFullYear() &&
-                          date.getMonth() === month.getMonth()
-                        );
-                      })
-                      .map((item) => (
-                        <li key={`agenda-${item.id}`}>
-                          <time dateTime={item.effectiveDate}>
-                            {formatDate(item.effectiveDate)}
-                          </time>
-                          <strong>{item.wasteTypeLabel}</strong>
-                          {item.status !== "planned" && (
-                            <small>{statusLabel[item.status] ?? item.status}</small>
-                          )}
-                        </li>
-                      ))}
-                    {collections.every((item) => {
-                      const date = new Date(`${item.effectiveDate}T12:00:00`);
-                      return (
-                        date.getFullYear() !== month.getFullYear() ||
-                        date.getMonth() !== month.getMonth()
-                      );
-                    }) && <li className="is-empty">Keine Abholung in diesem Monat</li>}
-                  </ul>
-                </section>
-              ))}
-            </div>
-          )}
-        </section>
-        <WasteSortingShowcase tenantKey={tenantKey} />
-        <section className="home-section split-section" id="abfall-abc">
-          <Card as="article" className="guide-card">
-            <p className="eyebrow">Abfall-ABC</p>
+              </div>
+              <h1 id="page-title">
+                {nextCollection ? formatDate(nextCollection.effectiveDate) : "Ihre Termine"}
+              </h1>
+              <p className="collection-type">
+                {nextCollection?.wasteTypeLabel ?? "Wählen Sie eine Demo-Adresse aus."}
+              </p>
+              <p className="collection-address">
+                {address?.displayLabel ?? "Noch keine Adresse gewählt"}
+              </p>
+              <a className="button-link" href="#adresse">
+                Adresse wechseln
+              </a>
+            </Card>
+            <Card as="aside" className="quick-actions" elevation="flat">
+              <p className="eyebrow">Direkt erledigen</p>
+              <h2>Was möchten Sie tun?</h2>
+              <nav aria-label="Schnellaktionen">
+                <a href={`/${tenantKey}/services#sortierkompass`}>
+                  <span>
+                    <Icon name="camera" />
+                  </span>
+                  <strong>SortierKompass testen</strong>
+                  <small>Beispielfoto prüfen</small>
+                </a>
+                <a href={`/${tenantKey}/services#meldung`}>
+                  <span>
+                    <Icon name="warning" />
+                  </span>
+                  <strong>Problem melden</strong>
+                  <small>Formular öffnen</small>
+                </a>
+                <a href={`/${tenantKey}/services#sperrmuell`}>
+                  <span>
+                    <Icon name="truck" />
+                  </span>
+                  <strong>Sperrmüll bestellen</strong>
+                  <small>Termin wählen</small>
+                </a>
+                {config.enabledFeatures.recyclingAccessShowcase && (
+                  <a href={`/${tenantKey}/services#nachtzugang`}>
+                    <span>
+                      <Icon name="recycle" />
+                    </span>
+                    <strong>24/7-Zugang testen</strong>
+                    <small>Tor-Simulation starten</small>
+                  </a>
+                )}
+              </nav>
+            </Card>
+          </section>
+        )}
+        {view === "home" && (
+          <section className="home-section" id="adresse">
+            <p className="eyebrow">Adresse</p>
             <h2 className="section-title">
               <span>
-                <Icon name="recycle" />
+                <Icon name="home" />
               </span>
-              Wohin damit?
+              Für welchen Abholort?
             </h2>
-            <form className="search-form" onSubmit={searchGuide}>
+            <form className="search-form" onSubmit={searchAddresses}>
               <label>
-                Gegenstand
+                Straße, Hausnummer, Ort oder Postleitzahl
                 <input
-                  value={guideQuery}
-                  onChange={(event) => setGuideQuery(event.target.value)}
-                  placeholder="z. B. Akku"
+                  value={addressQuery}
+                  onChange={(event) => setAddressQuery(event.target.value)}
+                  placeholder={`z. B. Musterstraße 12 oder ${config.serviceArea.city}`}
                   minLength={2}
                   required
                 />
               </label>
               <button type="submit">Suchen</button>
             </form>
-            <div className="result-stack">
-              {guide.map((item) => (
-                <article key={item.id}>
-                  <h3>{item.name}</h3>
-                  <p>
-                    <strong>{item.disposalRoute}</strong>
-                  </p>
-                  <p>{item.notes}</p>
-                </article>
-              ))}
-            </div>
-          </Card>
-          <Card as="article" className="updates-card">
-            <div className="updates-card__head">
-              <div>
-                <p className="eyebrow">Aktuelle Hinweise</p>
-                <h2 className="section-title">
-                  <span>
-                    <Icon name="megaphone" />
-                  </span>
-                  Was ist wichtig?
-                </h2>
-              </div>
-              <button
-                className="refresh-button"
-                onClick={() => void refreshNotices()}
-                type="button"
-              >
-                Aktualisieren
-              </button>
-            </div>
-            {notices.map((notice) => (
-              <article key={notice.id}>
-                <h3>{notice.title}</h3>
-                <p>{notice.body}</p>
-              </article>
-            ))}
-            {notices.length === 0 && <p>Für Ihre Adresse liegen derzeit keine Hinweise vor.</p>}
-            {noticesUpdatedAt && (
-              <small className="updated-at">
-                Zuletzt aktualisiert:{" "}
-                {noticesUpdatedAt.toLocaleTimeString("de-DE", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}{" "}
-                Uhr
-              </small>
-            )}
-          </Card>
-        </section>
-        <section className="home-section" id="standorte">
-          <p className="eyebrow">Standorte</p>
-          <h2 className="section-title">
-            <span>
-              <Icon name="map-pin" />
-            </span>
-            Entsorgungsmöglichkeiten
-          </h2>
-          <div className="site-explorer">
-            <div className="map-panel">
-              {mapUrl ? (
-                <iframe
-                  className="site-map"
-                  loading="lazy"
-                  src={mapUrl}
-                  title={`Karte für ${selectedSite.name}`}
-                />
-              ) : (
-                <div className="site-map site-map--empty">Karte wird geladen …</div>
-              )}
-              <div className="map-panel__footer">
-                <span>
-                  <Icon name="info" /> Kartendaten © OpenStreetMap
-                </span>
-                {selectedSite && (
-                  <a
-                    href={`https://www.openstreetmap.org/?mlat=${selectedSite.latitude}&mlon=${selectedSite.longitude}#map=16/${selectedSite.latitude}/${selectedSite.longitude}`}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    Große Karte öffnen <Icon name="chevron-right" />
-                  </a>
-                )}
-              </div>
-            </div>
-            <div className="site-list">
-              {sites.map((site, index) => (
-                <Card
-                  as="article"
-                  className={site.id === selectedSite?.id ? "site-card is-selected" : "site-card"}
-                  elevation="flat"
-                  key={site.id}
-                >
-                  <span className="site-card__marker" aria-hidden="true">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <h3>{site.name}</h3>
-                    <p>
-                      {site.address}
-                      <br />
-                      {site.openingHours}
-                    </p>
+            <p className="search-hint">
+              Aktuelle Testdaten: <strong>{config.serviceArea.city}</strong>. Sie können auch nach „
+              {config.name}“ suchen.
+            </p>
+            {addressSearchCompleted && (
+              <div className="address-results" ref={addressResultsRef} tabIndex={-1}>
+                <div className="address-results__head">
+                  <h3>
+                    {addresses.length ? `${addresses.length} Treffer` : "Keine Adresse gefunden"}
+                  </h3>
+                  <button type="button" onClick={() => setAddressSearchCompleted(false)}>
+                    Schließen
+                  </button>
+                </div>
+                <div className="result-list">
+                  {addresses.map((item) => (
                     <button
-                      className="map-select"
-                      onClick={() => setSelectedSiteId(site.id)}
+                      className={
+                        address?.id === item.id ? "result-button is-selected" : "result-button"
+                      }
+                      key={item.id}
+                      onClick={() => {
+                        void loadAddressData(item);
+                        setAddressSearchCompleted(false);
+                        setAddressQuery("");
+                      }}
                       type="button"
                     >
-                      <Icon name="map-pin" /> Auf Karte zeigen
+                      <Icon name="map-pin" />
+                      {item.displayLabel}
                     </button>
-                  </div>
-                  <StatusBadge tone={site.openNow ? "success" : "neutral"}>
-                    {site.openNow ? "Jetzt geöffnet" : "Geschlossen"}
+                  ))}
+                </div>
+                {addresses.length === 0 && (
+                  <p>
+                    Für diese Kommune sind momentan nur synthetische Adressen in{" "}
+                    <strong>{config.serviceArea.city}</strong> hinterlegt.
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+        {(view === "home" || view === "calendar") && (
+          <section className="home-section" id="kalender">
+            <p className="eyebrow">Abfuhrkalender</p>
+            <h2 className="section-title">
+              <span>
+                <Icon name="calendar" />
+              </span>
+              Die nächsten Termine
+            </h2>
+            {view === "calendar" && wasteTypes.length > 0 && (
+              <fieldset className="collection-filter">
+                <legend>Abfallarten anzeigen</legend>
+                <div>
+                  {wasteTypes.map((wasteType) => (
+                    <label key={wasteType}>
+                      <input
+                        checked={!excludedWasteTypes.has(wasteType)}
+                        onChange={(event) => {
+                          const next = new Set(excludedWasteTypes);
+                          if (event.currentTarget.checked) next.delete(wasteType);
+                          else next.add(wasteType);
+                          setExcludedWasteTypes(next);
+                          localStorage.setItem(
+                            `waste-filter-${tenantKey}`,
+                            JSON.stringify(Array.from(next)),
+                          );
+                        }}
+                        type="checkbox"
+                      />
+                      {wasteType}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+            {view === "calendar" && (
+              <div className="calendar-disclosure calendar-disclosure--first">
+                <button
+                  aria-controls="quarter-calendar"
+                  aria-expanded={calendarOpen}
+                  className="calendar-toggle"
+                  onClick={() => setCalendarOpen((open) => !open)}
+                  type="button"
+                >
+                  <Icon name="calendar" />
+                  {calendarOpen
+                    ? "Kalenderansicht schließen"
+                    : "Kalenderansicht für drei Monate öffnen"}
+                </button>
+                <p>Alle gefilterten Abholungen im nächsten Quartal als Kalender.</p>
+              </div>
+            )}
+            <div className="collection-list">
+              {displayedCollections.map((item) => (
+                <Card as="article" className="collection-card" elevation="flat" key={item.id}>
+                  <p className="collection-card__weekday">{formatDate(item.effectiveDate)}</p>
+                  <h3>{item.wasteTypeLabel}</h3>
+                  <StatusBadge tone={item.status === "moved" ? "warning" : "success"}>
+                    {statusLabel[item.status] ?? item.status}
                   </StatusBadge>
                 </Card>
               ))}
             </div>
-          </div>
-        </section>
-        {config.enabledFeatures.recyclingAccessShowcase && (
+            {view === "home" && (
+              <p className="section-link-row">
+                <a className="button-link button-link--dark" href={`/${tenantKey}/kalender`}>
+                  Alle Termine und Filter öffnen
+                </a>
+              </p>
+            )}
+            {view !== "calendar" && (
+              <div className="calendar-disclosure">
+                <button
+                  aria-controls="quarter-calendar"
+                  aria-expanded={calendarOpen}
+                  className="calendar-toggle"
+                  onClick={() => setCalendarOpen((open) => !open)}
+                  type="button"
+                >
+                  <Icon name="calendar" />
+                  {calendarOpen
+                    ? "Kalenderansicht schließen"
+                    : "Kalenderansicht für drei Monate öffnen"}
+                </button>
+                <p>Optional: alle zukünftigen Abholungen im nächsten Quartal als Kalender.</p>
+              </div>
+            )}
+            {calendarOpen && (
+              <div className="quarter-calendar" id="quarter-calendar">
+                {calendarMonths().map((month) => (
+                  <section className="calendar-month" key={month.toISOString()}>
+                    <h3>
+                      {new Intl.DateTimeFormat("de-DE", {
+                        month: "long",
+                        year: "numeric",
+                      }).format(month)}
+                    </h3>
+                    <div
+                      className="calendar-grid"
+                      role="grid"
+                      aria-label={month.toLocaleDateString("de-DE", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    >
+                      {calendarWeekdays.map((weekday) => (
+                        <span className="calendar-weekday" key={weekday} role="columnheader">
+                          {weekday}
+                        </span>
+                      ))}
+                      {calendarDays(month).map((day, index) => {
+                        if (day === null) {
+                          return (
+                            <span
+                              aria-hidden="true"
+                              className="calendar-day is-empty"
+                              key={`empty-${index}`}
+                            />
+                          );
+                        }
+                        const dateKey = calendarDateKey(month, day);
+                        const events = filteredCollections.filter(
+                          (item) => item.effectiveDate === dateKey,
+                        );
+                        return (
+                          <article
+                            aria-label={`${day}. ${month.toLocaleDateString("de-DE", { month: "long" })}${events.length ? `: ${events.map((item) => item.wasteTypeLabel).join(", ")}` : ": kein Termin"}`}
+                            className={events.length ? "calendar-day has-events" : "calendar-day"}
+                            key={dateKey}
+                            role="gridcell"
+                          >
+                            <span>{day}</span>
+                            {events.map((item) => (
+                              <small
+                                className={`calendar-event is-${item.status}`}
+                                key={item.id}
+                                title={item.wasteTypeLabel}
+                              >
+                                {item.wasteTypeLabel}
+                              </small>
+                            ))}
+                          </article>
+                        );
+                      })}
+                    </div>
+                    <ul className="calendar-agenda" aria-label="Termine dieses Monats">
+                      {filteredCollections
+                        .filter((item) => {
+                          const date = new Date(`${item.effectiveDate}T12:00:00`);
+                          return (
+                            date.getFullYear() === month.getFullYear() &&
+                            date.getMonth() === month.getMonth()
+                          );
+                        })
+                        .map((item) => (
+                          <li key={`agenda-${item.id}`}>
+                            <time dateTime={item.effectiveDate}>
+                              {formatDate(item.effectiveDate)}
+                            </time>
+                            <strong>{item.wasteTypeLabel}</strong>
+                            {item.status !== "planned" && (
+                              <small>{statusLabel[item.status] ?? item.status}</small>
+                            )}
+                          </li>
+                        ))}
+                      {filteredCollections.every((item) => {
+                        const date = new Date(`${item.effectiveDate}T12:00:00`);
+                        return (
+                          date.getFullYear() !== month.getFullYear() ||
+                          date.getMonth() !== month.getMonth()
+                        );
+                      }) && <li className="is-empty">Keine Abholung in diesem Monat</li>}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+        {view === "services" && <WasteSortingShowcase tenantKey={tenantKey} />}
+        {(view === "home" || view === "guide") && (
+          <section className="home-section split-section" id="abfall-abc">
+            <Card as="article" className="guide-card">
+              <p className="eyebrow">Abfall-ABC</p>
+              <h2 className="section-title">
+                <span>
+                  <Icon name="recycle" />
+                </span>
+                Wohin damit?
+              </h2>
+              <form className="search-form" onSubmit={searchGuide}>
+                <label>
+                  Gegenstand
+                  <input
+                    value={guideQuery}
+                    onChange={(event) => setGuideQuery(event.target.value)}
+                    placeholder="z. B. Akku"
+                    minLength={2}
+                    required
+                  />
+                </label>
+                <button type="submit">Suchen</button>
+              </form>
+              <div className="result-stack">
+                {guide.map((item) => (
+                  <article key={item.id}>
+                    <h3>{item.name}</h3>
+                    <p>
+                      <strong>{item.disposalRoute}</strong>
+                    </p>
+                    <p>{item.notes}</p>
+                  </article>
+                ))}
+              </div>
+            </Card>
+            <Card as="article" className="updates-card">
+              <div className="updates-card__head">
+                <div>
+                  <p className="eyebrow">Aktuelle Hinweise</p>
+                  <h2 className="section-title">
+                    <span>
+                      <Icon name="megaphone" />
+                    </span>
+                    Was ist wichtig?
+                  </h2>
+                </div>
+                <button
+                  className="refresh-button"
+                  onClick={() => void refreshNotices()}
+                  type="button"
+                >
+                  Aktualisieren
+                </button>
+              </div>
+              {notices.map((notice) => (
+                <article key={notice.id}>
+                  <h3>{notice.title}</h3>
+                  <p>{notice.body}</p>
+                </article>
+              ))}
+              {notices.length === 0 && <p>Für Ihre Adresse liegen derzeit keine Hinweise vor.</p>}
+              {noticesUpdatedAt && (
+                <small className="updated-at">
+                  Zuletzt aktualisiert:{" "}
+                  {noticesUpdatedAt.toLocaleTimeString("de-DE", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  Uhr
+                </small>
+              )}
+            </Card>
+          </section>
+        )}
+        {view === "sites" && (
+          <section className="home-section" id="standorte">
+            <p className="eyebrow">Standorte</p>
+            <h2 className="section-title">
+              <span>
+                <Icon name="map-pin" />
+              </span>
+              Entsorgungsmöglichkeiten
+            </h2>
+            <div className="site-explorer">
+              <div className="map-panel">
+                {mapUrl ? (
+                  <iframe
+                    className="site-map"
+                    loading="lazy"
+                    src={mapUrl}
+                    title={`Karte für ${selectedSite.name}`}
+                  />
+                ) : (
+                  <div className="site-map site-map--empty">Karte wird geladen …</div>
+                )}
+                <div className="map-panel__footer">
+                  <span>
+                    <Icon name="info" /> Kartendaten © OpenStreetMap
+                  </span>
+                  {selectedSite && (
+                    <a
+                      href={`https://www.openstreetmap.org/?mlat=${selectedSite.latitude}&mlon=${selectedSite.longitude}#map=16/${selectedSite.latitude}/${selectedSite.longitude}`}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Große Karte öffnen <Icon name="chevron-right" />
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div className="site-list">
+                {sites.map((site, index) => (
+                  <Card
+                    as="article"
+                    className={site.id === selectedSite?.id ? "site-card is-selected" : "site-card"}
+                    elevation="flat"
+                    key={site.id}
+                  >
+                    <span className="site-card__marker" aria-hidden="true">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <h3>{site.name}</h3>
+                      <p>
+                        {site.address}
+                        <br />
+                        {site.openingHours}
+                      </p>
+                      <button
+                        className="map-select"
+                        onClick={() => setSelectedSiteId(site.id)}
+                        type="button"
+                      >
+                        <Icon name="map-pin" /> Auf Karte zeigen
+                      </button>
+                    </div>
+                    <StatusBadge tone={site.openNow ? "success" : "neutral"}>
+                      {site.openNow ? "Jetzt geöffnet" : "Geschlossen"}
+                    </StatusBadge>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+        {view === "services" && config.enabledFeatures.recyclingAccessShowcase && (
           <RecyclingAccessShowcase
             site={sites.find((site) => site.id === "site-north") ?? null}
             tenantKey={tenantKey}
           />
         )}
-        <section className="home-section form-grid" id="meldung">
-          <div>
-            <p className="eyebrow">Reklamation</p>
-            <h2 className="section-title">
-              <span>
-                <Icon name="warning" />
-              </span>
-              Problem melden
-            </h2>
-            <p>Das Foto wird im Pilot nur ausgewählt und namentlich vermerkt, nicht hochgeladen.</p>
-          </div>
-          <form className="waste-card waste-card--raised pilot-form" onSubmit={submitDefect}>
-            <label>
-              Kategorie
-              <select name="category" required>
-                <option value="bin-not-emptied">Tonne nicht geleert</option>
-                <option value="illegal-dumping">Wilde Ablagerung</option>
-                <option value="damaged-bin">Behälter beschädigt</option>
-              </select>
-            </label>
-            <label>
-              Ort oder Adresse
-              <input name="address" defaultValue={address?.displayLabel} minLength={4} required />
-            </label>
-            <label>
-              Zeitpunkt
-              <input name="occurredAt" type="datetime-local" required />
-            </label>
-            <label>
-              Beschreibung
-              <textarea name="description" minLength={10} maxLength={2000} required />
-            </label>
-            <label>
-              E-Mail (optional)
-              <input name="email" type="email" />
-            </label>
-            <label>
-              Fotos auswählen (max. 3)
-              <input name="attachments" type="file" accept="image/*" multiple />
-            </label>
-            <label className="check">
-              <input name="consent" type="checkbox" required /> Ich stimme der lokalen
-              Demo-Verarbeitung zu.
-            </label>
-            <button type="submit">Meldung absenden</button>
-          </form>
-        </section>
-        <section className="home-section form-grid" id="sperrmuell">
-          <div>
-            <p className="eyebrow">Sperrmüll</p>
-            <h2 className="section-title">
-              <span>
-                <Icon name="truck" />
-              </span>
-              Abholung bestellen
-            </h2>
-            <p>{rules?.preparationInstructions}</p>
-          </div>
-          <form className="waste-card waste-card--raised pilot-form" onSubmit={submitBulk}>
-            <label>
-              Gegenstand
-              <select name="itemTypeId" required>
-                {rules?.items.map((item) => (
-                  <option value={item.id} key={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Anzahl
-              <input name="quantity" type="number" min="1" max="10" defaultValue="1" required />
-            </label>
-            <label>
-              Termin
-              <select name="slotId" required>
-                {slots.map((slot) => (
-                  <option value={slot.id} key={slot.id}>
-                    {formatDate(slot.date)}, {slot.timeWindow} ({slot.remainingCapacity} frei)
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              E-Mail (optional)
-              <input name="email" type="email" />
-            </label>
-            <label className="check">
-              <input name="consent" type="checkbox" required /> Ich stimme der lokalen
-              Demo-Verarbeitung zu.
-            </label>
-            <button type="submit">Verbindlich im Demo-System bestellen</button>
-          </form>
-        </section>
-        {lastCase && (
+        {view === "services" && (
+          <section className="home-section form-grid" id="meldung">
+            <div>
+              <p className="eyebrow">Reklamation</p>
+              <h2 className="section-title">
+                <span>
+                  <Icon name="warning" />
+                </span>
+                Problem melden
+              </h2>
+              <p>
+                Das Foto wird im Pilot nur ausgewählt und namentlich vermerkt, nicht hochgeladen.
+              </p>
+            </div>
+            <form className="waste-card waste-card--raised pilot-form" onSubmit={submitDefect}>
+              <label>
+                Kategorie
+                <select name="category" required>
+                  <option value="bin-not-emptied">Tonne nicht geleert</option>
+                  <option value="illegal-dumping">Wilde Ablagerung</option>
+                  <option value="damaged-bin">Behälter beschädigt</option>
+                </select>
+              </label>
+              <label>
+                Ort oder Adresse
+                <input name="address" defaultValue={address?.displayLabel} minLength={4} required />
+              </label>
+              <label>
+                Zeitpunkt
+                <input name="occurredAt" type="datetime-local" required />
+              </label>
+              <label>
+                Beschreibung
+                <textarea name="description" minLength={10} maxLength={2000} required />
+              </label>
+              <label>
+                E-Mail (optional)
+                <input name="email" type="email" />
+              </label>
+              <label>
+                Fotos auswählen (max. 3)
+                <input name="attachments" type="file" accept="image/*" multiple />
+              </label>
+              <label className="check">
+                <input name="consent" type="checkbox" required /> Ich stimme der Verarbeitung in der
+                isolierten Demo-Umgebung zu.
+              </label>
+              <button type="submit">Meldung absenden</button>
+            </form>
+          </section>
+        )}
+        {view === "services" && (
+          <section className="home-section form-grid" id="sperrmuell">
+            <div>
+              <p className="eyebrow">Sperrmüll</p>
+              <h2 className="section-title">
+                <span>
+                  <Icon name="truck" />
+                </span>
+                Abholung bestellen
+              </h2>
+              <p>{rules?.preparationInstructions}</p>
+            </div>
+            <form className="waste-card waste-card--raised pilot-form" onSubmit={submitBulk}>
+              <label>
+                Gegenstand
+                <select name="itemTypeId" required>
+                  {rules?.items.map((item) => (
+                    <option value={item.id} key={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Anzahl
+                <input name="quantity" type="number" min="1" max="10" defaultValue="1" required />
+              </label>
+              <label>
+                Termin
+                <select name="slotId" required>
+                  {slots.map((slot) => (
+                    <option value={slot.id} key={slot.id}>
+                      {formatDate(slot.date)}, {slot.timeWindow} ({slot.remainingCapacity} frei)
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                E-Mail (optional)
+                <input name="email" type="email" />
+              </label>
+              <label className="check">
+                <input name="consent" type="checkbox" required /> Ich stimme der Verarbeitung in der
+                isolierten Demo-Umgebung zu.
+              </label>
+              <button type="submit">Verbindlich im Demo-System bestellen</button>
+            </form>
+          </section>
+        )}
+        {view === "services" && lastCase && (
           <section className="home-section confirmation" id="vorgang">
             <p className="eyebrow">Bestätigung</p>
             <h2>Ihr Vorgang: {lastCase.reference}</h2>
-            <p>Bewahren Sie diese Referenz für den lokalen Test auf.</p>
+            <p>Bewahren Sie diese Referenz für den geschützten Pilot-Test auf.</p>
             {lastNotificationEmail && (
               <p className="mail-confirmation">
                 Die Bestätigung für <strong>{lastNotificationEmail}</strong> finden Sie im{" "}
@@ -843,31 +992,31 @@ export function CitizenPilot({ config, tenantKey }: { config: TenantConfig; tena
           </p>
           <nav aria-label="Fußnavigation">
             <a href="#demo-hinweis">Hinweise</a>
-            <a href="#adresse">Adresse</a>
-            <a href="#meldung">Problem melden</a>
+            <a href={`/${tenantKey}#adresse`}>Adresse</a>
+            <a href={`/${tenantKey}/services#meldung`}>Problem melden</a>
           </nav>
         </div>
       </footer>
       <nav className="mobile-nav" aria-label="Mobile Hauptnavigation">
-        <a aria-current="page" href={`/${tenantKey}`}>
+        <a aria-current={view === "home" ? "page" : undefined} href={`/${tenantKey}`}>
           <Icon name="home" />
           Start
         </a>
-        <a href="#kalender">
+        <a aria-current={view === "calendar" ? "page" : undefined} href={`/${tenantKey}/kalender`}>
           <Icon name="calendar" />
           Kalender
         </a>
-        <a href="#abfall-abc">
+        <a aria-current={view === "guide" ? "page" : undefined} href={`/${tenantKey}/abfall-abc`}>
           <Icon name="recycle" />
           ABC
         </a>
-        <a href="#meldung">
-          <Icon name="warning" />
-          Melden
+        <a aria-current={view === "sites" ? "page" : undefined} href={`/${tenantKey}/standorte`}>
+          <Icon name="map-pin" />
+          Standorte
         </a>
-        <a href="#mehr">
+        <a aria-current={view === "services" ? "page" : undefined} href={`/${tenantKey}/services`}>
           <Icon name="info" />
-          Mehr
+          Services
         </a>
       </nav>
     </div>

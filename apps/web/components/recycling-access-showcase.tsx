@@ -3,8 +3,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
-
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
+import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
 
 type AccessEvent = { eventType: string; label: string; occurredAt: string };
 type AccessRequest = {
@@ -25,6 +24,36 @@ type AccessRequest = {
 };
 
 type SiteSummary = { id: string; name: string };
+
+type StoredAccessState = {
+  access: AccessRequest | null;
+  credential: string;
+  itemDescription: string;
+  licensePlate: string;
+  method: "code" | "license-plate";
+  plannedArrival: string;
+};
+
+function storageKey(tenantKey: string) {
+  return `waste-recycling-access-${tenantKey}`;
+}
+
+function isStoredAccessState(value: unknown): value is StoredAccessState {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<StoredAccessState>;
+  return (
+    (candidate.access === null ||
+      (typeof candidate.access === "object" &&
+        typeof candidate.access.reference === "string" &&
+        typeof candidate.access.accessToken === "string" &&
+        Array.isArray(candidate.access.events))) &&
+    typeof candidate.credential === "string" &&
+    typeof candidate.itemDescription === "string" &&
+    typeof candidate.licensePlate === "string" &&
+    (candidate.method === "code" || candidate.method === "license-plate") &&
+    typeof candidate.plannedArrival === "string"
+  );
+}
 
 const statusLabels: Record<AccessRequest["status"], string> = {
   authorized: "Zugang erteilt",
@@ -108,10 +137,67 @@ export function RecyclingAccessShowcase({
 }) {
   const [plannedArrival, setPlannedArrival] = useState(tomorrowAtTen);
   const [method, setMethod] = useState<"code" | "license-plate">("license-plate");
+  const [itemDescription, setItemDescription] = useState("Fernseher");
+  const [licensePlate, setLicensePlate] = useState("DEMO-TV-22");
   const [access, setAccess] = useState<AccessRequest | null>(null);
   const [credential, setCredential] = useState("");
   const [message, setMessage] = useState("Noch keine Zufahrt beantragt.");
   const [pending, setPending] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        const stored = window.sessionStorage.getItem(storageKey(tenantKey));
+        if (!stored) return;
+        const state = JSON.parse(stored) as unknown;
+        if (!isStoredAccessState(state)) {
+          window.sessionStorage.removeItem(storageKey(tenantKey));
+          return;
+        }
+        setAccess(state.access);
+        setCredential(state.credential);
+        setItemDescription(state.itemDescription);
+        setLicensePlate(state.licensePlate);
+        setMethod(state.method);
+        setPlannedArrival(state.plannedArrival);
+        if (state.access) {
+          setMessage(
+            state.access.status === "completed"
+              ? "Der zuletzt simulierte Besuch ist abgeschlossen."
+              : `Zugang ${state.access.reference} wurde in dieser Sitzung wiederhergestellt.`,
+          );
+        }
+      } catch {
+        window.sessionStorage.removeItem(storageKey(tenantKey));
+      } finally {
+        setStorageReady(true);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [tenantKey]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    const state: StoredAccessState = {
+      access,
+      credential,
+      itemDescription,
+      licensePlate,
+      method,
+      plannedArrival,
+    };
+    window.sessionStorage.setItem(storageKey(tenantKey), JSON.stringify(state));
+  }, [
+    access,
+    credential,
+    itemDescription,
+    licensePlate,
+    method,
+    plannedArrival,
+    storageReady,
+    tenantKey,
+  ]);
 
   useEffect(() => {
     if (window.location.hash !== "#nachtzufahrt") return;
@@ -139,9 +225,9 @@ export function RecyclingAccessShowcase({
           siteId: site.id,
           plannedArrivalAt: new Date(String(data.get("plannedArrivalAt"))).toISOString(),
           wasteType: "electronics",
-          itemDescription: data.get("itemDescription"),
+          itemDescription,
           identificationMethod: method,
-          syntheticLicensePlate: method === "license-plate" ? data.get("licensePlate") : null,
+          syntheticLicensePlate: method === "license-plate" ? licensePlate : null,
           syntheticDataConfirmed: data.get("syntheticDataConfirmed") === "on",
         }),
       });
@@ -181,6 +267,12 @@ export function RecyclingAccessShowcase({
     } finally {
       setPending(false);
     }
+  }
+
+  function startNewSimulation() {
+    setAccess(null);
+    setCredential("");
+    setMessage("Noch keine Zufahrt beantragt.");
   }
 
   const gateOpen = access != null && access.gateState !== "closed";
@@ -235,7 +327,12 @@ export function RecyclingAccessShowcase({
             </label>
             <label>
               Gegenstand
-              <select defaultValue="Fernseher" name="itemDescription" required>
+              <select
+                name="itemDescription"
+                onChange={(event) => setItemDescription(event.target.value)}
+                required
+                value={itemDescription}
+              >
                 <option>Fernseher</option>
                 <option>Computerbildschirm</option>
                 <option>Kleines Elektrogerät</option>
@@ -285,10 +382,11 @@ export function RecyclingAccessShowcase({
                 Demo-Kennzeichen
                 <input
                   autoCapitalize="characters"
-                  defaultValue="DEMO-TV-22"
                   name="licensePlate"
+                  onChange={(event) => setLicensePlate(event.target.value)}
                   pattern="DEMO-[A-Za-z0-9-]{2,20}"
                   required
+                  value={licensePlate}
                 />
                 <small>Nur Werte mit „DEMO-“ werden akzeptiert.</small>
               </label>
@@ -344,6 +442,9 @@ export function RecyclingAccessShowcase({
               <p className="access-pass-note">
                 Am realen Tor würde dieses Medium durch eine zugelassene Gerätekomponente geprüft.
               </p>
+              <button onClick={startNewSimulation} type="button">
+                Neue Simulation starten
+              </button>
             </>
           ) : (
             <div className="access-empty-state">

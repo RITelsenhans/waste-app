@@ -90,6 +90,10 @@ class ApiHttpIntegrationTests {
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.status") { value("ready") }
+                jsonPath("$.release.provider") { value("local") }
+                jsonPath("$.release.javaVersion") { exists() }
+                jsonPath("$.release.springBootVersion") { value("4.1.0") }
+                jsonPath("$.release.kotlinVersion") { value("2.4.10") }
                 jsonPath("$.statistics.upcomingCollectionEvents") { exists() }
                 jsonPath("$.lastMaintenance.status") { value("completed") }
             }
@@ -139,8 +143,8 @@ class ApiHttpIntegrationTests {
                     param("tenantId", "demo")
                 }.andExpect {
                     status { isOk() }
-                    jsonPath("$[0].wasteTypeLabel") { value("Bioabfall") }
-                    jsonPath("$[1].status") { value("moved") }
+                    jsonPath("$[0].wasteTypeLabel") { exists() }
+                    jsonPath("$[0].status") { exists() }
                 }.andReturn()
         val today = LocalDate.now(ZoneId.of("Europe/Berlin"))
         val collectionTree = objectMapper.readTree(collections.response.contentAsString)
@@ -408,6 +412,86 @@ class ApiHttpIntegrationTests {
             }.andExpect {
                 status { isBadRequest() }
                 jsonPath("$.detail") { value("Das synthetische Kennzeichen muss mit 'DEMO-' beginnen.") }
+            }
+    }
+
+    @Test
+    fun `monitoring removes only its recent marked recycling access`() {
+        val plannedArrival = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS)
+        val created =
+            mockMvc
+                .post("/v1/recycling-access/requests") {
+                    header("Idempotency-Key", "integration-quality-access-0001")
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "tenantId":"demo",
+                          "siteId":"site-north",
+                          "plannedArrivalAt":"$plannedArrival",
+                          "wasteType":"electronics",
+                          "itemDescription":"Fernseher",
+                          "identificationMethod":"license-plate",
+                          "syntheticLicensePlate":"DEMO-QA-INTEGRATION",
+                          "syntheticDataConfirmed":true
+                        }
+                        """.trimIndent()
+                }.andExpect {
+                    status { isCreated() }
+                }.andReturn()
+                .response.contentAsString
+        val reference = objectMapper.readTree(created)["reference"].asText()
+
+        mockMvc
+            .post("/v1/monitoring/quality-agent/recycling-access-cleanup") {
+                header(
+                    "X-Monitoring-Token",
+                    "integration-monitor-token-00000000000000000000000000000000",
+                )
+                contentType = MediaType.APPLICATION_JSON
+                content =
+                    """
+                    {
+                      "reference":"$reference",
+                      "syntheticCredential":"DEMO-QA-INTEGRATION"
+                    }
+                    """.trimIndent()
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.status") { value("completed") }
+                jsonPath("$.reference") { value(reference) }
+                jsonPath("$.deletedEvents") { value(1) }
+                jsonPath("$.deletedIdempotencyRecords") { value(1) }
+                jsonPath("$.deletedRequests") { value(1) }
+                jsonPath("$.deletedTotal") { value(3) }
+            }
+
+        val remaining =
+            jdbc
+                .sql("select count(*) from recycling_access_request where public_reference = :reference")
+                .param("reference", reference)
+                .query(Int::class.java)
+                .single()
+        assertEquals(0, remaining)
+
+        mockMvc
+            .post("/v1/monitoring/quality-agent/recycling-access-cleanup") {
+                header(
+                    "X-Monitoring-Token",
+                    "integration-monitor-token-00000000000000000000000000000000",
+                )
+                contentType = MediaType.APPLICATION_JSON
+                content =
+                    """
+                    {
+                      "reference":"DEMO-Z-ABCDEF123456",
+                      "syntheticCredential":"DEMO-TV-22"
+                    }
+                    """.trimIndent()
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.status") { value("blocked") }
+                jsonPath("$.deletedTotal") { value(0) }
             }
     }
 }

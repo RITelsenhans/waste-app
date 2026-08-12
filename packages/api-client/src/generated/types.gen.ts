@@ -22,6 +22,16 @@ export type MonitoringStatistics = {
   cleanupCandidates: number;
 };
 
+export type MonitoringRelease = {
+  provider: "railway" | "local";
+  commitSha: string;
+  branch: string;
+  applicationVersion: string;
+  javaVersion: string;
+  springBootVersion: string;
+  kotlinVersion: string;
+};
+
 export type MaintenanceResult = {
   status: "completed" | "disabled" | "blocked";
   executedAt: string;
@@ -34,10 +44,26 @@ export type MaintenanceResult = {
   finding: string;
 };
 
+export type QualityAgentAccessCleanupInput = {
+  reference: string;
+  syntheticCredential: string;
+};
+
+export type QualityAgentAccessCleanupResult = {
+  status: "completed" | "disabled" | "blocked";
+  reference: string;
+  deletedEvents: number;
+  deletedIdempotencyRecords: number;
+  deletedRequests: number;
+  readonly deletedTotal: number;
+  finding: string;
+};
+
 export type MonitoringSummary = {
   status: "ready";
   generatedAt: string;
   retentionDays: number;
+  release: MonitoringRelease;
   statistics: MonitoringStatistics;
   lastMaintenance?: MaintenanceResult | null;
 };
@@ -379,10 +405,20 @@ export type MaintenanceResultWritable = {
   finding: string;
 };
 
+export type QualityAgentAccessCleanupResultWritable = {
+  status: "completed" | "disabled" | "blocked";
+  reference: string;
+  deletedEvents: number;
+  deletedIdempotencyRecords: number;
+  deletedRequests: number;
+  finding: string;
+};
+
 export type MonitoringSummaryWritable = {
   status: "ready";
   generatedAt: string;
   retentionDays: number;
+  release: MonitoringRelease;
   statistics: MonitoringStatistics;
   lastMaintenance?: MaintenanceResultWritable | null;
 };
@@ -451,7 +487,7 @@ export type GetMonitoringSummaryError =
 
 export type GetMonitoringSummaryResponses = {
   /**
-   * Aggregierter Betriebsstand ohne fachliche Inhalte oder personenbezogene Daten.
+   * Aggregierter Betriebsstand und nicht geheime Laufzeitversionen ohne fachliche Inhalte oder personenbezogene Daten.
    */
   200: MonitoringSummary;
 };
@@ -485,6 +521,33 @@ export type RunTechnicalMaintenanceResponses = {
 
 export type RunTechnicalMaintenanceResponse =
   RunTechnicalMaintenanceResponses[keyof RunTechnicalMaintenanceResponses];
+
+export type CleanupQualityAgentRecyclingAccessData = {
+  body: QualityAgentAccessCleanupInput;
+  path?: never;
+  query?: never;
+  url: "/v1/monitoring/quality-agent/recycling-access-cleanup";
+};
+
+export type CleanupQualityAgentRecyclingAccessErrors = {
+  /**
+   * Das Monitoring-Geheimnis fehlt oder ist ungültig.
+   */
+  403: Problem;
+};
+
+export type CleanupQualityAgentRecyclingAccessError =
+  CleanupQualityAgentRecyclingAccessErrors[keyof CleanupQualityAgentRecyclingAccessErrors];
+
+export type CleanupQualityAgentRecyclingAccessResponses = {
+  /**
+   * Ergebnis der ausgeführten, deaktivierten oder blockierten Selbstbereinigung.
+   */
+  200: QualityAgentAccessCleanupResult;
+};
+
+export type CleanupQualityAgentRecyclingAccessResponse =
+  CleanupQualityAgentRecyclingAccessResponses[keyof CleanupQualityAgentRecyclingAccessResponses];
 
 export type GetMunicipalitiesData = {
   body?: never;

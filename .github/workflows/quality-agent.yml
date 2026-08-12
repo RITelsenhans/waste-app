@@ -1,4 +1,8 @@
 name: Qualitätsagent
+run-name: Qualitätsagent · Produktion feat/phase1-phase2-functional-pilot
+
+env:
+  QUALITY_PRODUCTION_BRANCH: feat/phase1-phase2-functional-pilot
 
 on:
   schedule:
@@ -7,7 +11,10 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
+  pull-requests: read
+  security-events: read
 
 concurrency:
   group: quality-agent-production
@@ -27,7 +34,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: feat/phase1-phase2-functional-pilot
+          ref: ${{ env.QUALITY_PRODUCTION_BRANCH }}
+
+      - name: Erwartete Produktionsrevision feststellen
+        id: production-revision
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Node.js einrichten
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -41,6 +52,11 @@ jobs:
       - name: Abhängigkeiten reproduzierbar installieren
         run: pnpm install --frozen-lockfile
 
+      - name: JavaScript-Abhängigkeiten auf Advisories prüfen
+        id: dependency-audit
+        continue-on-error: true
+        run: pnpm security:audit
+
       - name: Chromium installieren
         run: pnpm exec playwright install --with-deps chromium
 
@@ -49,16 +65,34 @@ jobs:
         continue-on-error: true
         env:
           DEMO_MONITOR_PASSWORD: ${{ secrets.DEMO_MONITOR_PASSWORD }}
+          EXPECTED_PRODUCTION_REVISION: ${{ steps.production-revision.outputs.sha }}
           MONITORING_API_TOKEN: ${{ secrets.MONITORING_API_TOKEN }}
         run: pnpm test:monitor:live
 
+      - name: Versions-, Update- und Securitybefunde ergänzen
+        if: always()
+        env:
+          DEPENDENCY_AUDIT_OUTCOME: ${{ steps.dependency-audit.outcome }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node tooling/quality-agent/collect-technical-findings.mjs
+
       - name: Animierten Bericht erzeugen
         if: always()
+        env:
+          QUALITY_REPORT_BRANCH: ${{ env.QUALITY_PRODUCTION_BRANCH }}
+          QUALITY_REPORT_REVISION: ${{ steps.production-revision.outputs.sha }}
+          QUALITY_WORKFLOW_BRANCH: ${{ github.ref_name }}
         run: pnpm quality-agent:report
+
+      - name: Berichtsstatus feststellen
+        id: report-status
+        if: always()
+        continue-on-error: true
+        run: node tooling/quality-agent/assert-report-status.mjs
 
       - name: Optionale KI-Analyse feststellen
         id: ai-key
-        if: steps.live.outcome == 'failure'
+        if: steps.report-status.outcome == 'failure'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
@@ -70,7 +104,7 @@ jobs:
 
       - name: Findings mit Codex einordnen
         id: codex
-        if: steps.live.outcome == 'failure' && steps.ai-key.outputs.available == 'true'
+        if: steps.report-status.outcome == 'failure' && steps.ai-key.outputs.available == 'true'
         uses: openai/codex-action@b11346a6fa031e2e164ab4b7c7ea201afffd7d59 # v1
         with:
           allow-bots: true
@@ -96,6 +130,7 @@ jobs:
 
       - name: Bericht als Datei bereitstellen
         if: always()
+        id: report-artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: quality-agent-report
@@ -108,8 +143,30 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Direkten Bericht-Link ergänzen
+        if: always() && steps.report-artifact.outcome == 'success'
+        env:
+          REPORT_ARTIFACT_URL: ${{ steps.report-artifact.outputs.artifact-url }}
+        run: |
+          printf '\n## Animierten Bericht öffnen\n\n[quality-agent-report direkt herunterladen](%s)\n' \
+            "$REPORT_ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Qualitätsbericht per Microsoft 365 versenden
+        id: report-email
+        if: always() && steps.report-artifact.outcome == 'success'
+        continue-on-error: true
+        env:
+          M365_TENANT_ID: ${{ secrets.M365_TENANT_ID }}
+          M365_CLIENT_ID: ${{ secrets.M365_CLIENT_ID }}
+          M365_CLIENT_SECRET: ${{ secrets.M365_CLIENT_SECRET }}
+          QUALITY_REPORT_EMAIL_SENDER: ${{ secrets.QUALITY_REPORT_EMAIL_SENDER }}
+          QUALITY_REPORT_EMAIL_TO: ${{ secrets.QUALITY_REPORT_EMAIL_TO }}
+          REPORT_ARTIFACT_URL: ${{ steps.report-artifact.outputs.artifact-url }}
+          QUALITY_REPORT_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node tooling/quality-agent/send-report-email.mjs
+
       - name: Laufstatus übernehmen
         if: always()
         env:
-          LIVE_OUTCOME: ${{ steps.live.outcome }}
-        run: test "$LIVE_OUTCOME" = "success"
+          REPORT_OUTCOME: ${{ steps.report-status.outcome }}
+        run: test "$REPORT_OUTCOME" = "success"

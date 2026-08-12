@@ -98,10 +98,14 @@ Sitzungen (mind. 32 Zeichen) und wird niemandem weitergegeben.
    | `DEMO_ACCESS_PASSWORD`     | _(Ergebnis von `openssl rand -base64 24`)_ |
    | `DEMO_SESSION_SECRET`      | _(Ergebnis von `openssl rand -hex 32`)_    |
    | `API_BASE_URL`             | _(Railway-URL aus Schritt 1.5)_            |
-   | `NEXT_PUBLIC_API_BASE_URL` | _(leer lassen)_                            |
+   | `NEXT_PUBLIC_API_BASE_URL` | _(nicht anlegen)_                          |
 
 5. **Deploy** anstoßen. Nach dem Build zeigt Vercel die Adresse an, z. B.
    `https://waste-app-web.vercel.app`. **Diese URL notieren.**
+
+   Ohne `NEXT_PUBLIC_API_BASE_URL` ruft der Browser bewusst nur `/v1/*` auf derselben
+   Vercel-Adresse auf. Die serverseitige Weiterleitung verwendet `API_BASE_URL`; eine
+   direkte Browserverbindung zur Railway-API ist weder nötig noch vorgesehen.
 
 ---
 

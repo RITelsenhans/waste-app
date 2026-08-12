@@ -33,7 +33,14 @@ test("workflows use least privilege and never pull_request_target", async () => 
   for (const workflowName of workflowNames) {
     const workflow = await readRepositoryFile(`.github/workflows/${workflowName}`);
 
-    assert.match(workflow, /^permissions:\n  contents: read$/m);
+    if (workflowName === "quality-agent.yml") {
+      assert.match(
+        workflow,
+        /^permissions:\n  actions: read\n  contents: read\n  pull-requests: read\n  security-events: read$/m,
+      );
+    } else {
+      assert.match(workflow, /^permissions:\n  contents: read$/m);
+    }
     assert.doesNotMatch(workflow, /pull_request_target/);
   }
 });
@@ -136,6 +143,7 @@ test("CI uses a digest-pinned Mailpit service for the existing mail browser test
 
 test("quality agent is read-only for GitHub and publishes an animated report", async () => {
   const workflow = await readRepositoryFile(".github/workflows/quality-agent.yml");
+  const liveMonitor = await readRepositoryFile("apps/web/tests/live-monitor/production.spec.ts");
   const packageManifest = JSON.parse(await readRepositoryFile("package.json"));
 
   assert.match(workflow, /cron: "30 7,18 \* \* \*"/);
@@ -143,6 +151,31 @@ test("quality agent is read-only for GitHub and publishes an animated report", a
   assert.match(workflow, /safety-strategy: read-only/);
   assert.match(workflow, /continue-on-error: true/);
   assert.match(workflow, /quality-agent-report/);
+  assert.match(workflow, /steps\.report-artifact\.outputs\.artifact-url/);
+  assert.match(workflow, /quality-agent-report direkt herunterladen/);
+  assert.match(workflow, /collect-technical-findings\.mjs/);
+  assert.match(workflow, /EXPECTED_PRODUCTION_REVISION/);
+  assert.match(
+    workflow,
+    /run-name: Qualitätsagent · Produktion feat\/phase1-phase2-functional-pilot/,
+  );
+  assert.match(
+    workflow,
+    /QUALITY_REPORT_REVISION: \$\{\{ steps\.production-revision\.outputs\.sha \}\}/,
+  );
+  assert.match(workflow, /QUALITY_WORKFLOW_BRANCH: \$\{\{ github\.ref_name \}\}/);
+  assert.match(workflow, /node tooling\/quality-agent\/send-report-email\.mjs/);
+  assert.match(workflow, /M365_CLIENT_SECRET: \$\{\{ secrets\.M365_CLIENT_SECRET \}\}/);
+  assert.match(workflow, /QUALITY_REPORT_EMAIL_TO: \$\{\{ secrets\.QUALITY_REPORT_EMAIL_TO \}\}/);
+  assert.match(
+    workflow,
+    /name: Qualitätsbericht per Microsoft 365 versenden[\s\S]*?continue-on-error: true/,
+  );
+  assert.match(workflow, /pnpm security:audit/);
+  assert.match(liveMonitor, /DEMO-QA-/);
+  assert.match(liveMonitor, /quality-agent\/recycling-access-cleanup/);
+  assert.match(liveMonitor, /finally/);
+  assert.match(liveMonitor, /deletedRequests/);
   assert.doesNotMatch(workflow, /^\s+(?:contents|pull-requests): write$/m);
   assert.equal(
     packageManifest.scripts["test:monitor:live"],

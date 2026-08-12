@@ -4,7 +4,7 @@
   "private": true,
   "description": "Technischer Projektstart für Phase 1 der Abfall APP",
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22.x"
   },
   "packageManager": "pnpm@11.9.0",
   "scripts": {

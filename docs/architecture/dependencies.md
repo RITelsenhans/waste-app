@@ -58,7 +58,8 @@ Sicherheitsbedingte transitive Overrides:
 | Komponente      | Erzwungene Version | Bedarf                                                                   | Lizenz     |
 | --------------- | ------------------ | ------------------------------------------------------------------------ | ---------- |
 | brace-expansion | 5.0.9              | schließt CVE-2026-14257 und GHSA-rgw5-rvv9-x895 im ESLint/Minimatch-Pfad | MIT        |
-| js-yaml         | 4.3.0              | schließt die im OpenAPI-Tooling gemeldete High-Severity-Lücke            | MIT        |
+| js-yaml         | 4.3.1              | schließt CVE-2026-59870 in den ESLint- und OpenAPI-Tooling-Pfaden        | MIT        |
+| nanoid          | 3.3.17             | schließt GHSA-2v37-7h3g-55p8 in den Next.js- und PostCSS-Pfaden          | MIT        |
 | postcss         | 8.5.25             | schließt die im Next.js-Buildpfad gemeldete High-Severity-Lücke          | MIT        |
 | sharp           | 0.35.0             | schließt die im Next.js-Bildpfad gemeldete High-Severity-Lücke           | Apache-2.0 |
 

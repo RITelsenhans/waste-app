@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -36,5 +37,14 @@ class MonitoringController(
     ): MaintenanceResult {
         guard.check(token)
         return service.cleanup()
+    }
+
+    @PostMapping("/quality-agent/recycling-access-cleanup")
+    fun cleanupQualityAgentAccess(
+        @RequestHeader("X-Monitoring-Token", required = false) token: String?,
+        @RequestBody input: QualityAgentAccessCleanupInput,
+    ): QualityAgentAccessCleanupResult {
+        guard.check(token)
+        return service.cleanupQualityAgentAccess(input)
     }
 }
