@@ -3,8 +3,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Icon } from "@waste/ui";
-
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
+import { adminRequest } from "../lib/admin-api";
 
 type Customization = {
   tenantId: string;
@@ -26,48 +25,48 @@ const colorPalettes = [
   { name: "Warm", primary: "#A84300", info: "#8B6B00" },
 ];
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API}${path}`, options);
-  if (!response.ok) {
-    const problem = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new Error(problem?.detail ?? `Anfrage fehlgeschlagen (${response.status}).`);
-  }
-  return response.json() as Promise<T>;
-}
-
-export function MunicipalityCustomization({ onMessage }: { onMessage: (message: string) => void }) {
+export function MunicipalityCustomization({
+  onMessage,
+  tenantId,
+}: {
+  onMessage: (message: string) => void;
+  tenantId: string;
+}) {
   const [customization, setCustomization] = useState<Customization | null>(null);
   const [primaryColor, setPrimaryColor] = useState("#C8102E");
   const [infoColor, setInfoColor] = useState("#008F8C");
 
   useEffect(() => {
-    void request<Customization>("/v1/admin/tenants/demo")
+    void adminRequest<Customization>(`/v1/admin/tenants/${encodeURIComponent(tenantId)}`)
       .then((item) => {
         setCustomization(item);
         setPrimaryColor(item.primaryColor);
         setInfoColor(item.infoColor);
       })
       .catch((error: Error) => onMessage(error.message));
-  }, [onMessage]);
+  }, [onMessage, tenantId]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {
-      const updated = await request<Customization>("/v1/admin/tenants/demo", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.get("name"),
-          shortName: form.get("shortName"),
-          city: form.get("city"),
-          reportingOffice: form.get("reportingOffice"),
-          phone: form.get("phone"),
-          email: form.get("email"),
-          primaryColor,
-          infoColor,
-        }),
-      });
+      const updated = await adminRequest<Customization>(
+        `/v1/admin/tenants/${encodeURIComponent(tenantId)}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.get("name"),
+            shortName: form.get("shortName"),
+            city: form.get("city"),
+            reportingOffice: form.get("reportingOffice"),
+            phone: form.get("phone"),
+            email: form.get("email"),
+            primaryColor,
+            infoColor,
+          }),
+        },
+      );
       setCustomization(updated);
       onMessage(
         "Kommunenprofil gespeichert. Die Bürgeransicht übernimmt es beim nächsten Neuladen.",

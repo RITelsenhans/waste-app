@@ -38,6 +38,7 @@ waste:
     poll-interval-ms: ${WASTE_MAIL_POLL_INTERVAL_MS:1000}
   pilot:
     admin-enabled: ${WASTE_PILOT_ADMIN_ENABLED:true}
+    admin-token: ${WASTE_PILOT_ADMIN_TOKEN:}
     allowed-origins:
       - ${WASTE_WEB_ORIGIN:http://localhost:3000}
       - ${WASTE_ADMIN_ORIGIN:http://localhost:3001}

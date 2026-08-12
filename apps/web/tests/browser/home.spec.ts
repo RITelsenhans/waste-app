@@ -232,6 +232,8 @@ test("zeigt für einen unbekannten Mandanten einen verständlichen Fehlerzustand
 
 test("Pflege-Unit zeigt Eingabeformulare und Vorgangsliste", async ({ page }) => {
   await page.goto("http://localhost:13001");
+  await expect(page.getByLabel("Kommune auswählen")).toHaveValue("demo");
+  await expect(page.getByLabel("Kommune auswählen")).toContainText("Stadt Aachen");
   await expect(page.getByRole("heading", { name: "Kommunale Daten pflegen" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Abfuhrtermin" })).toBeVisible();
   await page.getByRole("button", { name: "Vorgänge" }).click();
@@ -306,7 +308,8 @@ test("findet Adressen auch über den gepflegten Kommunennamen", async ({ page, r
 
 test("lädt einen neu gepflegten Hinweis sichtbar nach", async ({ page, request }) => {
   const title = `Kurzfristiger Hinweis ${Date.now()}`;
-  const created = await request.post("http://127.0.0.1:18080/v1/admin/notices", {
+  const created = await request.post("http://localhost:13001/admin-api/v1/admin/notices", {
+    headers: { Origin: "http://localhost:13001" },
     data: {
       tenantId: "demo",
       addressId: null,
@@ -326,7 +329,8 @@ test("lädt einen neu gepflegten Hinweis sichtbar nach", async ({ page, request 
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
 
   const removed = await request.delete(
-    `http://127.0.0.1:18080/v1/admin/notices/${notice.id}?tenantId=demo`,
+    `http://localhost:13001/admin-api/v1/admin/notices/${notice.id}?tenantId=demo`,
+    { headers: { Origin: "http://localhost:13001" } },
   );
   expect(removed.ok()).toBeTruthy();
 });

@@ -76,8 +76,9 @@ Danach:
 - Readiness: <http://localhost:8080/v1/health/ready>
 - Demo-Konfiguration: <http://localhost:8080/v1/tenants/demo/config>
 
-Die Pflege-Unit besitzt im lokalen Pilot bewusst noch keine Anmeldung und darf nicht
-öffentlich erreichbar gemacht werden. Die Web-App verwendet standardmäßig
+Die Pflege-Unit läuft lokal ohne Anmeldung auf Loopback. Die veröffentlichte Pilotvariante besitzt
+einen eigenen Passwortschutz und leitet administrative Aufrufe serverseitig mit einem separaten
+Service-Geheimnis weiter; siehe ADR-0011. Die Web-App verwendet standardmäßig
 `http://localhost:8080` als API. Eine andere Basis-URL kann mit `API_BASE_URL` gesetzt werden.
 
 ## Geschützt im Browser teilen

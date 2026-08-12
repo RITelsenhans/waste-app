@@ -218,6 +218,7 @@ export type {
   Notice,
   NoticeInput,
   NoticePriority,
+  PilotAdminToken,
   Problem,
   QualityAgentAccessCleanupInput,
   QualityAgentAccessCleanupResult,

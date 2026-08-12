@@ -15,3 +15,4 @@ waste:
     maximum-rows-per-run: 500
   pilot:
     admin-enabled: true
+    admin-token: integration-admin-token-0000000000000000000000000000000000

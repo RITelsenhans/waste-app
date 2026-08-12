@@ -285,6 +285,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/collections:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminCollections
       summary: Listet alle synthetischen Abholtermine zur Pflege.
@@ -319,6 +320,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/tenants/{tenantKey}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminMunicipalityCustomization
       summary: Lädt das kommunale Customizing zur Pflege.
@@ -363,6 +365,7 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/waste-guide:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminWasteGuide
       summary: Listet alle synthetischen ABC-Einträge zur Pflege.
@@ -397,6 +400,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/sites:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminSites
       summary: Listet alle synthetischen Standorte zur Pflege.
@@ -431,6 +435,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/notices:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminNotices
       summary: Listet aktive, künftige und abgelaufene Hinweise zur Pflege.
@@ -465,6 +470,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/collections/{id}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
       operationId: updateCollection
       summary: Korrigiert einen synthetischen Abholtermin.
@@ -494,6 +500,7 @@ paths:
         "204": { description: Termin gelöscht. }
         "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/waste-guide/{id}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
       operationId: updateWasteGuideEntry
       summary: Korrigiert einen synthetischen ABC-Eintrag.
@@ -523,6 +530,7 @@ paths:
         "204": { description: ABC-Eintrag gelöscht. }
         "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/sites/{id}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
       operationId: updateSite
       summary: Korrigiert einen synthetischen Standort.
@@ -552,6 +560,7 @@ paths:
         "204": { description: Standort gelöscht. }
         "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/notices/{id}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
       operationId: updateNotice
       summary: Korrigiert einen synthetischen Hinweis.
@@ -770,6 +779,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
   /v1/admin/cases:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminCases
       summary: Listet synthetische Pilotvorgänge für die lokale Bearbeitung.
@@ -788,6 +798,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/cases/{reference}/status:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     patch:
       operationId: updateCaseStatus
       summary: Ändert den öffentlichen Status eines synthetischen Pilotvorgangs.
@@ -819,6 +830,14 @@ components:
       name: X-Monitoring-Token
       description: Separates, mindestens 32 Zeichen langes Geheimnis für den Qualitätsagenten.
   parameters:
+    PilotAdminToken:
+      name: X-Pilot-Admin-Token
+      in: header
+      required: true
+      description: Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+      schema:
+        type: string
+        minLength: 32
     ContentId:
       name: id
       in: path
