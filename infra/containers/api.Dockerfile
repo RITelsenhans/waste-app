@@ -15,7 +15,12 @@ COPY . .
 
 # Nur den API-Boot-Jar bauen. --no-daemon ist im Container korrekt.
 RUN chmod +x gradlew \
- && ./gradlew --no-daemon :services:api:bootJar \
+ && for attempt in 1 2 3; do \
+      ./gradlew --no-daemon :services:api:bootJar && break; \
+      if [ "$attempt" -eq 3 ]; then exit 1; fi; \
+      echo "Gradle download/build attempt $attempt failed; retrying..." >&2; \
+      sleep "$((attempt * 5))"; \
+    done \
  && cp "$(ls services/api/build/libs/*.jar | grep -v -- '-plain' | head -n1)" /app.jar
 
 # --- Laufzeit-Stufe --------------------------------------------------------
