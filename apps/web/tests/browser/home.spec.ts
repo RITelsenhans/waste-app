@@ -24,16 +24,56 @@ test("ordnet den Desktop-Kopf zweizeilig und zentriert", async ({ page }) => {
   expect(Math.abs(navigation!.x + navigation!.width / 2 - 640)).toBeLessThan(4);
 });
 
-test("lädt personalisierte Pilotdaten und durchsucht das Abfall-ABC", async ({ page }) => {
+test("verlinkt die fünf Kernaufgaben stabil und markiert die aktive Seite", async ({ page }) => {
+  await page.goto("/demo/standorte");
+
+  const navigation = page.getByRole("navigation", { name: "Hauptnavigation" });
+  await expect(navigation.getByRole("link", { name: "Kalender" })).toHaveAttribute(
+    "href",
+    "/demo/kalender",
+  );
+  await expect(navigation.getByRole("link", { name: "Standorte" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Entsorgungsmöglichkeiten in Ihrer Nähe",
+  );
+});
+
+test("lädt die kompakte personalisierte Aachen-Pilotstartseite", async ({ page }) => {
   await page.goto("/demo");
 
-  await expect(page.getByText("Lokaler Pilot", { exact: true })).toBeVisible();
+  await expect(page.getByText("Geschützte Pilot-Demo", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("August");
   await expect(page.getByRole("heading", { level: 1 })).not.toContainText("04. August");
-  await expect(page.getByText("Musterstraße 12, 52062 Demo-Stadt").first()).toBeVisible();
+  await expect(page.locator(".collection-address")).toHaveText("Musterstraße 12, 52062 Aachen");
+  await expect(page.locator("#kalender .collection-card")).toHaveCount(3);
+  await expect(page.locator("#sortierkompass")).not.toBeVisible();
+});
+
+test("aktualisiert eine gespeicherte Demo-Adresse auf den aktuellen Aachen-Datensatz", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "waste-address-demo",
+      JSON.stringify({
+        id: "demo-musterstrasse-12",
+        displayLabel: "Musterstraße 12, 52062 Demo-Stadt",
+      }),
+    );
+  });
+
+  await page.goto("/demo");
+  await expect(page.locator(".collection-address")).toHaveText("Musterstraße 12, 52062 Aachen");
+});
+
+test("durchsucht das Abfall-ABC auf einer direkt verlinkbaren Seite", async ({ page }) => {
+  await page.goto("/demo/abfall-abc");
 
   await page.getByLabel("Gegenstand", { exact: true }).first().fill("Akku");
-  await page.getByRole("button", { name: "Suchen" }).last().click();
+  await page.getByRole("button", { name: "Suchen" }).click();
   await expect(page.getByRole("heading", { name: "Batterien" })).toBeVisible();
   await expect(page.getByText("Nicht in den Restabfall werfen.")).toBeVisible();
 });
@@ -44,8 +84,9 @@ test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu",
   await page.goto("/demo");
   await expect(page.getByRole("link", { name: /SortierKompass testen/ })).toHaveAttribute(
     "href",
-    "#sortierkompass",
+    "/demo/services#sortierkompass",
   );
+  await page.goto("/demo/services");
   const sorter = page.locator("#sortierkompass");
 
   await expect(sorter.getByRole("heading", { name: "SortierKompass" })).toBeVisible();
@@ -65,14 +106,14 @@ test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu",
 });
 
 test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ page }) => {
-  await page.goto("/demo");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("August");
+  await page.goto("/demo/services");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Anliegen direkt erledigen");
 
-  await page.getByLabel("Ort oder Adresse").fill("Musterstraße 12, Demo-Stadt");
+  await page.getByLabel("Ort oder Adresse").fill("Musterstraße 12, Aachen");
   await page.getByLabel("Zeitpunkt").fill("2026-07-31T10:30");
   await page.getByLabel("Beschreibung").fill("Die Restabfalltonne wurde heute nicht geleert.");
   await page
-    .getByLabel(/lokalen Demo-Verarbeitung/)
+    .getByLabel(/isolierten Demo-Umgebung/)
     .first()
     .check();
   await page.getByRole("button", { name: "Meldung absenden" }).click();
@@ -83,7 +124,7 @@ test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ 
 });
 
 test("simuliert den 24-7-Zugang vom Antrag bis zur geschlossenen Ausfahrt", async ({ page }) => {
-  await page.goto("/demo");
+  await page.goto("/demo/services");
   const showcase = page.locator("#nachtzugang");
 
   await expect(
@@ -100,6 +141,18 @@ test("simuliert den 24-7-Zugang vom Antrag bis zur geschlossenen Ausfahrt", asyn
 
   await expect(showcase.getByText("DEMO-TV-22", { exact: true })).toBeVisible();
   await expect(showcase.getByText("Zugang erteilt", { exact: true })).toBeVisible();
+  const reference = (await showcase.locator(".gate-message").innerText()).match(
+    /DEMO-Z-[A-F0-9]{12}/,
+  )?.[0];
+  expect(reference).toBeDefined();
+
+  await page.reload();
+  await expect(showcase.locator(".gate-message")).toContainText(
+    "wurde in dieser Sitzung wiederhergestellt",
+  );
+  await expect(showcase.locator(".gate-message")).toContainText(reference!);
+  await expect(showcase.getByText("DEMO-TV-22", { exact: true })).toBeVisible();
+
   await showcase.getByRole("button", { name: "Ankunft jetzt scannen" }).click();
   await expect(showcase.getByText("Schranke geöffnet", { exact: true })).toBeVisible();
   await showcase.getByRole("button", { name: "Einfahrt jetzt bestätigen" }).click();
@@ -118,13 +171,13 @@ test("versendet eine Beschwerdebestätigung in das lokale Testpostfach", async (
   request,
 }) => {
   const recipient = `mailtest-${Date.now()}@example.invalid`;
-  await page.goto("/demo");
-  await page.getByLabel("Ort oder Adresse").fill("Musterstraße 12, Demo-Stadt");
+  await page.goto("/demo/services");
+  await page.getByLabel("Ort oder Adresse").fill("Musterstraße 12, Aachen");
   await page.getByLabel("Zeitpunkt").fill("2026-08-01T09:15");
   await page.getByLabel("Beschreibung").fill("Die Biotonne wurde heute nicht geleert.");
   await page.getByLabel("E-Mail (optional)").first().fill(recipient);
   await page
-    .getByLabel(/lokalen Demo-Verarbeitung/)
+    .getByLabel(/isolierten Demo-Umgebung/)
     .first()
     .check();
   await page.getByRole("button", { name: "Meldung absenden" }).click();
@@ -156,7 +209,7 @@ test("unterstützt den Tastaturweg über den Sprunglink", async ({ page }) => {
 test("@visual bleibt bei 320 Pixeln ohne horizontalen Überlauf bedienbar", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/demo");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("August");
+  await expect(page.locator(".collection-address")).toHaveText("Musterstraße 12, 52062 Aachen");
 
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
@@ -187,18 +240,19 @@ test("Pflege-Unit zeigt Eingabeformulare und Vorgangsliste", async ({ page }) =>
 });
 
 test("zeigt eine interaktive Standortkarte und mehrere Demo-Adressen", async ({ page }) => {
-  await page.goto("/demo");
+  await page.goto("/demo/standorte");
 
   await expect(page.getByTitle(/Karte für/)).toBeVisible();
   await expect(page.getByRole("link", { name: /Große Karte öffnen/ })).toBeVisible();
 
-  await page.getByLabel("Straße, Hausnummer, Ort oder Postleitzahl").fill("Demo-Stadt");
+  await page.goto("/demo");
+  await page.getByLabel("Straße, Hausnummer, Ort oder Postleitzahl").fill("Aachen");
   await page.getByRole("button", { name: "Suchen" }).first().click();
   await expect(page.locator(".result-button")).toHaveCount(12);
 });
 
 test("öffnet den optionalen Kalender für das nächste Quartal", async ({ page }) => {
-  await page.goto("/demo");
+  await page.goto("/demo/kalender");
   const toggle = page.getByRole("button", {
     name: "Kalenderansicht für drei Monate öffnen",
   });
@@ -212,9 +266,23 @@ test("öffnet den optionalen Kalender für das nächste Quartal", async ({ page 
   await expect(page.getByRole("button", { name: "Kalenderansicht schließen" })).toBeVisible();
 });
 
+test("speichert die Abfallartenfilter für den Kalender lokal", async ({ page }) => {
+  await page.goto("/demo/kalender");
+  const residualFilter = page.getByLabel("Restabfall", { exact: true });
+
+  await expect(residualFilter).toBeChecked();
+  await residualFilter.uncheck();
+  await expect(page.locator("#kalender .collection-card", { hasText: "Restabfall" })).toHaveCount(
+    0,
+  );
+
+  await page.reload();
+  await expect(page.getByLabel("Restabfall", { exact: true })).not.toBeChecked();
+});
+
 test("der geöffnete Quartalskalender bleibt bei 320 Pixeln bedienbar", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
-  await page.goto("/demo");
+  await page.goto("/demo/kalender");
   await page.getByRole("button", { name: "Kalenderansicht für drei Monate öffnen" }).click();
 
   const dimensions = await page.evaluate(() => ({
@@ -230,8 +298,9 @@ test("findet Adressen auch über den gepflegten Kommunennamen", async ({ page, r
   const config = (await response.json()) as { name: string };
   await page.goto("/demo");
 
-  await page.getByLabel("Straße, Hausnummer, Ort oder Postleitzahl").fill(config.name);
-  await page.getByRole("button", { name: "Suchen" }).first().click();
+  const addressSearch = page.getByLabel("Straße, Hausnummer, Ort oder Postleitzahl");
+  await addressSearch.fill(config.name);
+  await addressSearch.press("Enter");
   await expect(page.locator(".result-button")).toHaveCount(12);
 });
 

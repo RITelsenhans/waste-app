@@ -34,8 +34,8 @@ export default async function RootPage() {
           ))}
           {municipalities.length === 0 && (
             <Link href="/demo">
-              <strong>Demo-Kommune öffnen</strong>
-              <small>Lokaler Pilot</small>
+              <strong>Aachen-Pilot öffnen</strong>
+              <small>Geschützte Demo mit synthetischen Daten</small>
             </Link>
           )}
         </div>

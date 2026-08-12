@@ -2,11 +2,19 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 test("@a11y hat keine automatisch erkennbaren WCAG-A/AA-Verstöße", async ({ page }) => {
-  await page.goto("/demo");
+  for (const path of [
+    "/demo",
+    "/demo/kalender",
+    "/demo/abfall-abc",
+    "/demo/standorte",
+    "/demo/services",
+  ]) {
+    await page.goto(path);
 
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
-    .analyze();
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .analyze();
 
-  expect(results.violations).toEqual([]);
+    expect(results.violations, `WCAG-Verstöße auf ${path}`).toEqual([]);
+  }
 });
