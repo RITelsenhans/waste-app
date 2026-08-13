@@ -139,10 +139,12 @@ export function WasteSortingShowcase({ tenantKey }: { tenantKey: string }) {
               </div>
               <p>{result.notes}</p>
               <div className="sorting-result__actions">
-                <a className="button-link" href="#standorte">
+                <a className="button-link" href={`/${tenantKey}/standorte`}>
                   <Icon name="map-pin" /> Standort finden
                 </a>
-                {selectedId === "toaster" && <a href="#nachtzugang">24/7-Abgabe ansehen →</a>}
+                {selectedId === "toaster" && (
+                  <a href={`/${tenantKey}/services/recyclinghof-24-7`}>24/7-Abgabe ansehen →</a>
+                )}
               </div>
             </div>
           ) : (

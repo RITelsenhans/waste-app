@@ -33,10 +33,27 @@ type CaseDetail = {
   events: { publicLabel: string; occurredAt: string }[];
 };
 
-export type CitizenView = "home" | "calendar" | "guide" | "sites" | "services";
+export type CitizenView =
+  | "home"
+  | "calendar"
+  | "guide"
+  | "sites"
+  | "services"
+  | "sorting"
+  | "complaint"
+  | "bulk"
+  | "access";
+
+type ServiceView = "services" | "sorting" | "complaint" | "bulk" | "access";
+
+const serviceViews: ServiceView[] = ["services", "sorting", "complaint", "bulk", "access"];
+
+function isServiceView(view: CitizenView): view is ServiceView {
+  return serviceViews.includes(view as ServiceView);
+}
 
 const viewTitles: Record<
-  Exclude<CitizenView, "home">,
+  Exclude<CitizenView, "home" | "services" | "sorting" | "complaint" | "bulk" | "access">,
   { eyebrow: string; title: string; text: string }
 > = {
   calendar: {
@@ -54,11 +71,13 @@ const viewTitles: Record<
     title: "Entsorgungsmöglichkeiten in Ihrer Nähe",
     text: "Öffnungszeiten prüfen, Standort auswählen und die Kartenansicht öffnen.",
   },
-  services: {
-    eyebrow: "Digitale Services",
-    title: "Anliegen direkt erledigen",
-    text: "Sortierhilfe, Reklamation, Sperrmüll und 24/7-Zugang in der geschützten Demo testen.",
-  },
+};
+
+const servicePageTitles: Record<Exclude<ServiceView, "services">, string> = {
+  sorting: "SortierKompass",
+  complaint: "Problem melden",
+  bulk: "Sperrmüll bestellen",
+  access: "24/7-Zugang zum Recyclinghof",
 };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -376,12 +395,63 @@ export function CitizenPilot({
         <p className="live-message" role="status">
           {message}
         </p>
-        {view !== "home" && (
+        {view !== "home" && !isServiceView(view) && (
           <header className="page-intro">
             <p className="eyebrow">{viewTitles[view].eyebrow}</p>
             <h1>{viewTitles[view].title}</h1>
             <p>{viewTitles[view].text}</p>
           </header>
+        )}
+        {isServiceView(view) && view !== "services" && (
+          <>
+            <h1 className="visually-hidden">{servicePageTitles[view]}</h1>
+            <nav className="service-back" aria-label="Service-Navigation">
+              <a href={`/${tenantKey}/services`}>
+                <Icon name="chevron-right" /> Alle Services
+              </a>
+            </nav>
+          </>
+        )}
+        {view === "services" && (
+          <section className="service-hub home-section" aria-labelledby="services-title">
+            <header className="service-hub__intro">
+              <p className="eyebrow">Digitale Services</p>
+              <h1 id="services-title">Services</h1>
+              <p>Wählen Sie die passende Aufgabe. Jeder Service öffnet auf einer eigenen Seite.</p>
+            </header>
+            <div className="service-grid">
+              <a href={`/${tenantKey}/services/sortierkompass`}>
+                <span>
+                  <Icon name="camera" />
+                </span>
+                <strong>SortierKompass</strong>
+                <small>Gegenstand erkennen und richtig entsorgen</small>
+              </a>
+              <a href={`/${tenantKey}/services/maengel/new`}>
+                <span>
+                  <Icon name="warning" />
+                </span>
+                <strong>Problem melden</strong>
+                <small>Reklamation oder wilden Abfall erfassen</small>
+              </a>
+              <a href={`/${tenantKey}/services/sperrmuell/new`}>
+                <span>
+                  <Icon name="truck" />
+                </span>
+                <strong>Sperrmüll bestellen</strong>
+                <small>Gegenstände und Abholtermin auswählen</small>
+              </a>
+              {config.enabledFeatures.recyclingAccessShowcase && (
+                <a href={`/${tenantKey}/services/recyclinghof-24-7`}>
+                  <span>
+                    <Icon name="recycle" />
+                  </span>
+                  <strong>24/7-Zugang</strong>
+                  <small>Nachtabgabe mit Tor-Simulation testen</small>
+                </a>
+              )}
+            </div>
+          </section>
         )}
         {view === "home" && (
           <section className="home-hero" aria-labelledby="page-title">
@@ -410,21 +480,21 @@ export function CitizenPilot({
               <p className="eyebrow">Direkt erledigen</p>
               <h2>Was möchten Sie tun?</h2>
               <nav aria-label="Schnellaktionen">
-                <a href={`/${tenantKey}/services#sortierkompass`}>
+                <a href={`/${tenantKey}/services/sortierkompass`}>
                   <span>
                     <Icon name="camera" />
                   </span>
                   <strong>SortierKompass testen</strong>
                   <small>Beispielfoto prüfen</small>
                 </a>
-                <a href={`/${tenantKey}/services#meldung`}>
+                <a href={`/${tenantKey}/services/maengel/new`}>
                   <span>
                     <Icon name="warning" />
                   </span>
                   <strong>Problem melden</strong>
                   <small>Formular öffnen</small>
                 </a>
-                <a href={`/${tenantKey}/services#sperrmuell`}>
+                <a href={`/${tenantKey}/services/sperrmuell/new`}>
                   <span>
                     <Icon name="truck" />
                   </span>
@@ -432,7 +502,7 @@ export function CitizenPilot({
                   <small>Termin wählen</small>
                 </a>
                 {config.enabledFeatures.recyclingAccessShowcase && (
-                  <a href={`/${tenantKey}/services#nachtzugang`}>
+                  <a href={`/${tenantKey}/services/recyclinghof-24-7`}>
                     <span>
                       <Icon name="recycle" />
                     </span>
@@ -688,7 +758,7 @@ export function CitizenPilot({
             )}
           </section>
         )}
-        {view === "services" && <WasteSortingShowcase tenantKey={tenantKey} />}
+        {view === "sorting" && <WasteSortingShowcase tenantKey={tenantKey} />}
         {(view === "home" || view === "guide") && (
           <section className="home-section split-section" id="abfall-abc">
             <Card as="article" className="guide-card">
@@ -834,13 +904,13 @@ export function CitizenPilot({
             </div>
           </section>
         )}
-        {view === "services" && config.enabledFeatures.recyclingAccessShowcase && (
+        {view === "access" && config.enabledFeatures.recyclingAccessShowcase && (
           <RecyclingAccessShowcase
             site={sites.find((site) => site.id === "site-north") ?? null}
             tenantKey={tenantKey}
           />
         )}
-        {view === "services" && (
+        {view === "complaint" && (
           <section className="home-section form-grid" id="meldung">
             <div>
               <p className="eyebrow">Reklamation</p>
@@ -891,7 +961,7 @@ export function CitizenPilot({
             </form>
           </section>
         )}
-        {view === "services" && (
+        {view === "bulk" && (
           <section className="home-section form-grid" id="sperrmuell">
             <div>
               <p className="eyebrow">Sperrmüll</p>
@@ -940,7 +1010,7 @@ export function CitizenPilot({
             </form>
           </section>
         )}
-        {view === "services" && lastCase && (
+        {(view === "complaint" || view === "bulk") && lastCase && (
           <section className="home-section confirmation" id="vorgang">
             <p className="eyebrow">Bestätigung</p>
             <h2>Ihr Vorgang: {lastCase.reference}</h2>
@@ -984,7 +1054,7 @@ export function CitizenPilot({
           <nav aria-label="Fußnavigation">
             <a href={`/${tenantKey}#hinweise`}>Hinweise</a>
             <a href={`/${tenantKey}#adresse`}>Adresse</a>
-            <a href={`/${tenantKey}/services#meldung`}>Problem melden</a>
+            <a href={`/${tenantKey}/services/maengel/new`}>Problem melden</a>
           </nav>
         </div>
       </footer>
@@ -1005,7 +1075,7 @@ export function CitizenPilot({
           <Icon name="map-pin" />
           Standorte
         </a>
-        <a aria-current={view === "services" ? "page" : undefined} href={`/${tenantKey}/services`}>
+        <a aria-current={isServiceView(view) ? "page" : undefined} href={`/${tenantKey}/services`}>
           <Icon name="info" />
           Services
         </a>

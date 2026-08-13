@@ -304,7 +304,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Beispielfoto zuordnen",
     "Der synthetische Toaster wird transparent als Elektrogerät eingeordnet.",
     async () => {
-      await page.goto("/demo/services", { waitUntil: "domcontentloaded" });
+      await page.goto("/demo/services/sortierkompass", { waitUntil: "domcontentloaded" });
       const sorter = page.locator("#sortierkompass");
       await sorter.getByRole("button", { name: "Beispielfoto prüfen" }).click();
       await expect(sorter.getByText("Beispiel zugeordnet")).toBeVisible();
@@ -332,11 +332,13 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Schreibende Wege sicher bereitstellen",
     "Mängel- und Sperrmüllformular sind bedienbar; deren produktive Übertragung bleibt bewusst deaktiviert.",
     async () => {
-      await page.goto("/demo/services", { waitUntil: "domcontentloaded" });
+      await page.goto("/demo/services/maengel/new", { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("button", { name: "Meldung absenden" })).toBeEnabled();
+      await page.goto("/demo/services/sperrmuell/new", { waitUntil: "domcontentloaded" });
       await expect(
         page.getByRole("button", { name: "Verbindlich im Demo-System bestellen" }),
       ).toBeVisible();
+      await page.goto("/demo/services/recyclinghof-24-7", { waitUntil: "domcontentloaded" });
       const access = page.locator("#nachtzugang");
       await expect(access.getByText("Hardware-Simulation.")).toBeVisible();
       await expect(access.getByText("Schranke geschlossen", { exact: true })).toBeVisible();
@@ -352,7 +354,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "24/7-Zugang buchen, durchlaufen und bereinigen",
     () => accessFinding,
     async () => {
-      await page.goto("/demo/services", { waitUntil: "domcontentloaded" });
+      await page.goto("/demo/services/recyclinghof-24-7", { waitUntil: "domcontentloaded" });
       const token = process.env.MONITORING_API_TOKEN;
       if (!token) throw new Error("GitHub-Secret MONITORING_API_TOKEN fehlt.");
       const access = page.locator("#nachtzugang");

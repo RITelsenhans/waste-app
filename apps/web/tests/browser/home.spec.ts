@@ -89,9 +89,9 @@ test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu",
   await page.goto("/demo");
   await expect(page.getByRole("link", { name: /SortierKompass testen/ })).toHaveAttribute(
     "href",
-    "/demo/services#sortierkompass",
+    "/demo/services/sortierkompass",
   );
-  await page.goto("/demo/services");
+  await page.goto("/demo/services/sortierkompass");
   const sorter = page.locator("#sortierkompass");
 
   await expect(sorter.getByRole("heading", { name: "SortierKompass" })).toBeVisible();
@@ -110,9 +110,34 @@ test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu",
   await expect(sorter.getByText("Nicht in den Restabfall werfen.")).toBeVisible();
 });
 
-test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ page }) => {
+test("verteilt die vier digitalen Services auf eigene Seiten", async ({ page }) => {
   await page.goto("/demo/services");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Anliegen direkt erledigen");
+
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Services");
+  await expect(page.getByText("Anliegen direkt erledigen")).toHaveCount(0);
+  await expect(page.locator(".service-grid a")).toHaveCount(4);
+  const serviceGrid = page.locator(".service-grid");
+  await expect(serviceGrid.getByRole("link", { name: /SortierKompass/ })).toHaveAttribute(
+    "href",
+    "/demo/services/sortierkompass",
+  );
+  await expect(serviceGrid.getByRole("link", { name: /Problem melden/ })).toHaveAttribute(
+    "href",
+    "/demo/services/maengel/new",
+  );
+  await expect(serviceGrid.getByRole("link", { name: /Sperrmüll bestellen/ })).toHaveAttribute(
+    "href",
+    "/demo/services/sperrmuell/new",
+  );
+  await expect(serviceGrid.getByRole("link", { name: /24\/7-Zugang/ })).toHaveAttribute(
+    "href",
+    "/demo/services/recyclinghof-24-7",
+  );
+  await expect(page.locator("#sortierkompass, #meldung, #sperrmuell, #nachtzugang")).toHaveCount(0);
+});
+
+test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ page }) => {
+  await page.goto("/demo/services/maengel/new");
 
   await page.getByLabel("Ort oder Adresse").fill("Musterstraße 12, Aachen");
   await page.getByLabel("Zeitpunkt").fill("2026-07-31T10:30");
@@ -129,7 +154,7 @@ test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ 
 });
 
 test("simuliert den 24-7-Zugang vom Antrag bis zur geschlossenen Ausfahrt", async ({ page }) => {
-  await page.goto("/demo/services");
+  await page.goto("/demo/services/recyclinghof-24-7");
   const showcase = page.locator("#nachtzugang");
 
   await expect(
@@ -176,7 +201,7 @@ test("versendet eine Beschwerdebestätigung in das lokale Testpostfach", async (
   request,
 }) => {
   const recipient = `mailtest-${Date.now()}@example.invalid`;
-  await page.goto("/demo/services");
+  await page.goto("/demo/services/maengel/new");
   await page.getByLabel("Ort oder Adresse").fill("Musterstraße 12, Aachen");
   await page.getByLabel("Zeitpunkt").fill("2026-08-01T09:15");
   await page.getByLabel("Beschreibung").fill("Die Biotonne wurde heute nicht geleert.");
