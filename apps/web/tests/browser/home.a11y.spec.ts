@@ -8,6 +8,10 @@ test("@a11y hat keine automatisch erkennbaren WCAG-A/AA-Verstöße", async ({ pa
     "/demo/abfall-abc",
     "/demo/standorte",
     "/demo/services",
+    "/demo/services/sortierkompass",
+    "/demo/services/maengel/new",
+    "/demo/services/sperrmuell/new",
+    "/demo/services/recyclinghof-24-7",
   ]) {
     await page.goto(path);
 

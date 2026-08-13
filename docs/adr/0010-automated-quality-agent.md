@@ -2,7 +2,7 @@
 
 - Status: angenommen
 - Datum: 5. August 2026
-- Aktualisiert: 9. August 2026
+- Aktualisiert: 13. August 2026
 
 ## Kontext
 
@@ -48,8 +48,10 @@ die begrenzte Entra-ID-App und ihre administrative Freigabe stehen noch aus.
   zusätzlichen roten Folgefehler erzeugen; unabhängige Funktions- und Laufzeitchecks
   werden weiter ausgeführt. Jeder fachliche Browsercheck öffnet dafür zuerst seinen
   stabilen Aufgabenpfad, statt den Seitenzustand eines vorherigen Checks zu
-  übernehmen. Ein technischer Ausfall des GitHub-Jobs bleibt in GitHub sichtbar, ist
-  aber nicht automatisch ein Produktionsalarm.
+  übernehmen. SortierKompass, Mängelmeldung, Sperrmüll und 24/7-Zugang werden dafür
+  jeweils über ihren eigenen Service-Deep-Link geprüft. Ein technischer Ausfall des
+  GitHub-Jobs bleibt in GitHub sichtbar, ist aber nicht automatisch ein
+  Produktionsalarm.
 - Automatisch löschbar sind nach 30 Tagen ausschließlich veröffentlichte Outbox-
   Ereignisse sowie Fall- und 24/7-Idempotenzschlüssel. Fachvorgänge, Ereignisverläufe,
   Termine, Hinweise und Inhaltsdaten werden nicht automatisch gelöscht. Mehr als 500

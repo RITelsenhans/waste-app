@@ -2370,6 +2370,16 @@ button:hover,
 }
 
 /* Sprint 1: aufgabenorientierte Seiten statt einer einzigen langen Präsentationsseite. */
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .page-intro {
   margin-inline: auto;
   max-width: var(--layout-content-max);
@@ -2386,6 +2396,112 @@ button:hover,
   color: var(--text-muted);
   font-size: 1.08rem;
   max-width: 46rem;
+}
+
+.service-back {
+  margin: 0.7rem auto -1rem;
+  max-width: var(--layout-content-max);
+  padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+.service-back a {
+  align-items: center;
+  color: #0a6e6b;
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: var(--typography-weight-bold);
+  gap: 0.35rem;
+  min-height: var(--control-target-min);
+  text-decoration: none;
+}
+
+.service-back .waste-icon {
+  height: 1rem;
+  transform: rotate(180deg);
+  width: 1rem;
+}
+
+.service-hub {
+  padding-top: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.service-hub__intro {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 2rem;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.service-hub__intro .eyebrow {
+  flex-basis: 100%;
+}
+
+.service-hub__intro h1 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  margin: 0;
+}
+
+.service-hub__intro > p:last-child {
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 34rem;
+}
+
+.service-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.service-grid a {
+  align-items: center;
+  background: linear-gradient(145deg, #fff, #f4faf9);
+  border: 1px solid #c9d9dc;
+  border-radius: 1.25rem;
+  box-shadow: 0 0.8rem 1.8rem rgb(7 29 45 / 8%);
+  display: grid;
+  gap: 0.15rem 1rem;
+  grid-template-columns: 3.4rem minmax(0, 1fr);
+  min-height: 8.5rem;
+  padding: 1.2rem;
+  text-decoration: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.service-grid a:hover {
+  border-color: #4ec8c1;
+  box-shadow: 0 1.1rem 2.2rem rgb(7 29 45 / 13%);
+  transform: translateY(-0.12rem);
+}
+
+.service-grid a > span {
+  align-items: center;
+  background: linear-gradient(145deg, #c8f1ed, #e1f6f4);
+  border-radius: 1rem;
+  color: #0a6e6b;
+  display: inline-flex;
+  grid-row: 1 / 3;
+  height: 3.4rem;
+  justify-content: center;
+  width: 3.4rem;
+}
+
+.service-grid .waste-icon {
+  height: 1.6rem;
+  width: 1.6rem;
+}
+
+.service-grid strong {
+  font-size: 1.2rem;
+}
+
+.service-grid small {
+  color: var(--text-muted);
 }
 
 .collection-filter {
@@ -2450,7 +2566,7 @@ button:hover,
   min-height: 8.5rem;
 }
 
-.view-services #sortierkompass {
+.view-sorting #sortierkompass {
   padding-top: clamp(2rem, 4vw, 3.5rem);
 }
 
@@ -2545,6 +2661,15 @@ button:hover,
   .site-explorer,
   .access-showcase__grid,
   .sorting-showcase__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .service-hub__intro {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .service-grid {
     grid-template-columns: 1fr;
   }
 
