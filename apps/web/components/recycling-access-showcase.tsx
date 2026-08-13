@@ -237,6 +237,14 @@ export function RecyclingAccessShowcase({
       setMessage(
         `Zugang ${created.reference} ist ausgestellt. Starten Sie jetzt die Hardware-Simulation.`,
       );
+      window.setTimeout(() => {
+        document.getElementById("nachtzufahrt-aktion")?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+      }, 0);
     } catch (error) {
       setMessage((error as Error).message);
     } finally {
@@ -285,6 +293,11 @@ export function RecyclingAccessShowcase({
     currentJourneyStep < 0
       ? 0
       : Math.min(100, (currentJourneyStep / (journeySteps.length - 1)) * 100);
+  const focusedJourneyIndex =
+    currentJourneyStep === journeySteps.length
+      ? journeySteps.length - 1
+      : Math.max(0, currentJourneyStep);
+  const focusedJourneyStep = journeySteps[focusedJourneyIndex];
 
   return (
     <section className="home-section access-showcase" id="nachtzugang">
@@ -523,23 +536,7 @@ export function RecyclingAccessShowcase({
                         <h4>{step.title}</h4>
                       </div>
                     </div>
-                    <p>{step.description}</p>
-                    <button
-                      className="journey-action"
-                      disabled={!current || pending}
-                      onClick={() => void simulateNext()}
-                      type="button"
-                    >
-                      {pending && current
-                        ? "Wird verarbeitet …"
-                        : current
-                          ? actionLabels[step.eventType]
-                          : completed
-                            ? "Schritt erledigt"
-                            : access
-                              ? "Folgt als Nächstes"
-                              : "Zuerst Zugang beantragen"}
-                    </button>
+                    <p>{completed ? "Erledigt" : current ? "Jetzt aktiv" : "Folgt"}</p>
                   </div>
                 </section>
               );
@@ -547,14 +544,43 @@ export function RecyclingAccessShowcase({
           </div>
         </div>
 
-        <div className="journey-live-status">
-          <span aria-hidden="true">
-            <Icon name={access?.status === "completed" ? "sparkles" : "info"} />
-          </span>
-          <p aria-live="polite" className="gate-message">
-            <strong>Live-Status</strong>
-            {message}
-          </p>
+        <div className="journey-control" id="nachtzufahrt-aktion" aria-live="polite">
+          <div
+            aria-label={`Aktuelle Zeichentrickszene: ${focusedJourneyStep.description}`}
+            className={`journey-control__scene journey-card__scene--${focusedJourneyStep.scene}`}
+            role="img"
+          >
+            <span className="journey-control__label">
+              Schritt {focusedJourneyIndex + 1} · {focusedJourneyStep.title}
+            </span>
+          </div>
+          <div className="journey-control__panel">
+            <p className="eyebrow">Aktion und Ergebnis</p>
+            <h4>{focusedJourneyStep.description}</h4>
+            <button
+              className="journey-action"
+              disabled={!access?.nextSimulationEvent || pending}
+              onClick={() => void simulateNext()}
+              type="button"
+            >
+              {pending
+                ? "Wird verarbeitet …"
+                : access?.nextSimulationEvent
+                  ? actionLabels[access.nextSimulationEvent]
+                  : access?.status === "completed"
+                    ? "Simulation abgeschlossen"
+                    : "Zuerst Zugang beantragen"}
+            </button>
+            <div className="journey-live-status">
+              <span aria-hidden="true">
+                <Icon name={access?.status === "completed" ? "sparkles" : "info"} />
+              </span>
+              <p className="gate-message">
+                <strong>Unmittelbares Ergebnis</strong>
+                {message}
+              </p>
+            </div>
+          </div>
         </div>
 
         {access && (

@@ -486,7 +486,7 @@ export default function AdminPage() {
           </form>
         </div>
       )}
-      {workspace === "manage" && (
+      {workspace === "manage" && tenantId && (
         <ContentManager
           key={`${tenantId}-${contentRevision}`}
           addresses={addresses}
