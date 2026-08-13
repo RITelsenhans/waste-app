@@ -504,12 +504,12 @@ const findingGuidance = {
     "Überbreite Komponente mit responsiven CSS-Regeln korrigieren und den mobilen Browserlauf wiederholen.",
   ],
   "web-deployment": [
-    "Vercels veröffentlichter Commit und Branch wurden mit der erwarteten GitHub-Revision verglichen.",
-    "Bei Abweichung Vercel-Production-Branch und Deployment prüfen, Redeploy auslösen und erst danach erneut testen.",
+    "Vercels veröffentlichter Commit und Branch wurden mit der erwarteten GitHub-Revision verglichen. Bei abweichender Commit-ID gilt ausschließlich ein im Repository nachgewiesener identischer Git-Tree als gleichwertig.",
+    "Nur bei einer nicht inhaltsgleichen Abweichung Vercel-Production-Branch und Deployment prüfen, Redeploy auslösen und erst danach erneut testen.",
   ],
   "api-deployment": [
-    "Railways veröffentlichter Commit und Branch wurden mit der erwarteten GitHub-Revision verglichen.",
-    "Bei Abweichung Railway-Quellbranch und Deployment-Logs prüfen, anschließend neu deployen.",
+    "Railways veröffentlichter Commit und Branch wurden mit der erwarteten GitHub-Revision verglichen. Bei abweichender Commit-ID gilt ausschließlich ein im Repository nachgewiesener identischer Git-Tree als gleichwertig.",
+    "Nur bei einer nicht inhaltsgleichen Abweichung Railway-Quellbranch und Deployment-Logs prüfen, anschließend neu deployen.",
   ],
   "web-runtime": [
     "Die von Vercel gemeldeten Node.js-, Next.js- und App-Versionen wurden mit der freigegebenen Baseline verglichen.",

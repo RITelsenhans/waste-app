@@ -73,7 +73,8 @@ Agent gibt weder Commitnachrichten noch Autorendaten aus.
 
 Zusätzlich zu den Bürgerwegen kontrolliert jeder Lauf:
 
-- ob Vercel und Railway exakt den aktuellen Commit des Produktionsbranches ausliefern,
+- ob Vercel und Railway den aktuellen Commit des Produktionsbranches oder einen im
+  Repository nachgewiesenen, inhaltsgleichen Git-Tree ausliefern,
 - ob beide Deployments vom vorgesehenen Produktionsbranch stammen,
 - ob Node.js 22, Java 21 sowie die festgelegten Next.js-, Spring-Boot- und
   Kotlin-Versionen aktiv sind,
@@ -85,8 +86,11 @@ Zusätzlich zu den Bürgerwegen kontrolliert jeder Lauf:
   vier simulierten Torzustände führen und anschließend vollständig bereinigen lässt.
 
 Reguläre Versionsupdates werden gelb als Hinweis gezeigt und machen den Lauf nicht
-rot. Baselineabweichungen, nicht ausgerollte Commits sowie bekannte hohe oder
-kritische Sicherheitswarnungen sind Fehler. Diese Prüfungen erkennen bekannte und
+rot. Eine andere Commit-ID bei identischem Git-Tree ist bestanden und wird mit beiden
+Revisionen sowie dem gemeinsamen Tree im Bericht erklärt; dies deckt insbesondere von
+Vercel übersprungene inhaltsgleiche Builds ab. Baselineabweichungen, nicht
+ausgerollte Inhalte sowie bekannte hohe oder kritische Sicherheitswarnungen sind
+Fehler. Diese Prüfungen erkennen bekannte und
 maschinell sichtbare Risiken; sie ersetzen weder Container- und Betriebssystemscans
 noch Penetrationstest oder Betriebsfreigabe.
 
