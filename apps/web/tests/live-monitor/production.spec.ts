@@ -1,7 +1,7 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import technicalBaseline from "../../../../tooling/quality-agent/technical-baseline.json";
 import type { WebReleaseInfo } from "../../lib/release-info";
-import { assessProductionRevision } from "../../lib/quality-monitoring";
+import { assessProductionRevision, compareProductionRevision } from "../../lib/quality-monitoring";
 
 type FindingStatus = "passed" | "warning" | "failed";
 
@@ -16,7 +16,11 @@ type Finding = {
 
 const findings: Finding[] = [];
 const password = process.env.DEMO_MONITOR_PASSWORD;
-const productionRevision = assessProductionRevision(process.env.EXPECTED_PRODUCTION_REVISION);
+const productionRevision = assessProductionRevision(
+  process.env.EXPECTED_PRODUCTION_REVISION,
+  process.env.EXPECTED_PRODUCTION_TREE,
+  process.env.EQUIVALENT_PRODUCTION_REVISIONS,
+);
 const qualityAgentCredential = `DEMO-QA-${String(process.env.GITHUB_RUN_ID ?? Date.now())
   .replace(/[^A-Z0-9]/gi, "")
   .slice(-12)
@@ -90,7 +94,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
   );
 
   let webRelease: WebReleaseInfo | undefined;
-  let webDeploymentFinding = "Die Vercel-Revision entspricht dem GitHub-Produktionsbranch.";
+  let webDeploymentFinding = "Der Vercel-Inhalt entspricht dem GitHub-Produktionsbranch.";
   await record(
     testInfo,
     "web-deployment",
@@ -104,8 +108,12 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
       expect(webRelease.provider).toBe("vercel");
       expect(webRelease.branch).toBe(technicalBaseline.productionBranch);
       if (productionRevision.available) {
-        expect(webRelease.commitSha).toBe(productionRevision.revision);
-        webDeploymentFinding = `Vercel liefert Commit ${webRelease.commitSha.slice(0, 12)} aus ${webRelease.branch} aus.`;
+        const revisionMatch = compareProductionRevision(webRelease.commitSha, productionRevision);
+        expect(revisionMatch).not.toBe("mismatch");
+        webDeploymentFinding =
+          revisionMatch === "exact"
+            ? `Vercel liefert den erwarteten Commit ${webRelease.commitSha.slice(0, 12)} aus ${webRelease.branch} aus.`
+            : `Vercel liefert Commit ${webRelease.commitSha.slice(0, 12)} aus ${webRelease.branch} aus. Sein Git-Inhalt entspricht nachweislich Tree ${productionRevision.tree?.slice(0, 12)} der erwarteten Revision ${productionRevision.revision.slice(0, 12)}; kein Eingriff erforderlich.`;
       } else {
         webDeploymentFinding = `Vercel meldet Commit ${webRelease.commitSha.slice(0, 12)} aus ${webRelease.branch}; der Vergleich mit GitHub ist in diesem Lauf nicht verfügbar.`;
       }
@@ -197,7 +205,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     },
   );
 
-  let apiDeploymentFinding = "Die Railway-Revision entspricht dem GitHub-Produktionsbranch.";
+  let apiDeploymentFinding = "Der Railway-Inhalt entspricht dem GitHub-Produktionsbranch.";
   await record(
     testInfo,
     "api-deployment",
@@ -209,8 +217,15 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
       expect(apiRelease?.provider).toBe("railway");
       expect(apiRelease?.branch).toBe(technicalBaseline.productionBranch);
       if (productionRevision.available) {
-        expect(apiRelease?.commitSha).toBe(productionRevision.revision);
-        apiDeploymentFinding = `Railway liefert Commit ${apiRelease?.commitSha.slice(0, 12)} aus ${apiRelease?.branch} aus.`;
+        const revisionMatch = compareProductionRevision(
+          apiRelease?.commitSha ?? "unknown",
+          productionRevision,
+        );
+        expect(revisionMatch).not.toBe("mismatch");
+        apiDeploymentFinding =
+          revisionMatch === "exact"
+            ? `Railway liefert den erwarteten Commit ${apiRelease?.commitSha.slice(0, 12)} aus ${apiRelease?.branch} aus.`
+            : `Railway liefert Commit ${apiRelease?.commitSha.slice(0, 12)} aus ${apiRelease?.branch} aus. Sein Git-Inhalt entspricht nachweislich Tree ${productionRevision.tree?.slice(0, 12)} der erwarteten Revision ${productionRevision.revision.slice(0, 12)}; kein Eingriff erforderlich.`;
       } else {
         apiDeploymentFinding = `Railway meldet Commit ${apiRelease?.commitSha.slice(0, 12)} aus ${apiRelease?.branch}; der Vergleich mit GitHub ist in diesem Lauf nicht verfügbar.`;
       }

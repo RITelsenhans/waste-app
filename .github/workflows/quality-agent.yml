@@ -34,17 +34,18 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
           ref: ${{ env.QUALITY_PRODUCTION_BRANCH }}
-
-      - name: Erwartete Produktionsrevision feststellen
-        id: production-revision
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Node.js einrichten
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.14.0
           package-manager-cache: false
+
+      - name: Erwartete Produktionsrevision feststellen
+        id: production-revision
+        run: node tooling/quality-agent/resolve-production-revision.mjs
 
       - name: pnpm über Corepack aktivieren
         run: corepack enable
@@ -66,6 +67,8 @@ jobs:
         env:
           DEMO_MONITOR_PASSWORD: ${{ secrets.DEMO_MONITOR_PASSWORD }}
           EXPECTED_PRODUCTION_REVISION: ${{ steps.production-revision.outputs.sha }}
+          EXPECTED_PRODUCTION_TREE: ${{ steps.production-revision.outputs.tree }}
+          EQUIVALENT_PRODUCTION_REVISIONS: ${{ steps.production-revision.outputs.equivalent-shas }}
           MONITORING_API_TOKEN: ${{ secrets.MONITORING_API_TOKEN }}
         run: pnpm test:monitor:live
 

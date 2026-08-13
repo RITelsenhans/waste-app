@@ -32,7 +32,12 @@ die begrenzte Entra-ID-App und ihre administrative Freigabe stehen noch aus.
   markierten eigenen 24/7-Testzugang. Die Webanwendung liefert
   Vercel-Releaseinformationen nur innerhalb der geschützten Demo-Sitzung. Der Agent
   vergleicht beide Deployment-SHAs und Branches mit dem ausgecheckten
-  Produktionsbranch.
+  Produktionsbranch. Neben der exakten Commit-ID akzeptiert er ausschließlich
+  Revisionen, deren Git-Tree im vollständig ausgecheckten Verlauf des
+  Produktionsbranches nachweislich dem erwarteten Tree entspricht. Damit bleibt ein
+  von der Plattform übersprungener, inhaltsgleicher Folgebuild grün; eine echte
+  Inhaltsabweichung bleibt rot. Die Suche ist auf die jüngsten 1.000 erreichbaren
+  Commits begrenzt und akzeptiert ohne gültigen Tree-Nachweis keine abweichende ID.
 - Die freigegebene technische Baseline liegt maschinenlesbar im Repository. Der Lauf
   vergleicht Node.js, Java, Next.js, Spring Boot und Kotlin mit den deklarierten und
   tatsächlich gemeldeten Versionen. Zusätzlich prüft er `pnpm audit`, offene hohe
