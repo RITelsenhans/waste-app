@@ -1968,11 +1968,18 @@ button:hover,
 }
 
 .sorting-showcase__head {
-  align-items: flex-start;
-  display: flex;
-  gap: 2rem;
-  justify-content: space-between;
   margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.sorting-showcase__meta {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.sorting-showcase__head .section-title {
+  margin-top: 0.45rem;
 }
 
 .sorting-showcase__head .eyebrow {
@@ -2058,6 +2065,18 @@ button:hover,
 .sorting-stage__camera-label .waste-icon {
   height: 1rem;
   width: 1rem;
+}
+
+.sorting-stage__action {
+  align-items: center;
+  background: linear-gradient(135deg, #52dfd5, #ffce6b);
+  bottom: 0.8rem;
+  color: #132a2d;
+  gap: 0.45rem;
+  min-height: 3rem;
+  position: absolute;
+  right: 0.8rem;
+  z-index: 2;
 }
 
 .sorting-stage__scan {
@@ -2577,6 +2596,290 @@ button:hover,
   place-items: center;
 }
 
+/* Aufgabenorientierte Detailseiten: Ergebnis und nächste Aktion bleiben im Blick. */
+.view-calendar #kalender {
+  display: flex;
+  flex-direction: column;
+}
+
+.view-calendar #kalender > .quarter-calendar {
+  order: 1;
+}
+
+.view-calendar #kalender > .collection-list {
+  order: 2;
+}
+
+.guide-empty-result {
+  background: #fff8e8;
+  border: 1px solid #e3c57a !important;
+  border-radius: var(--radius-card);
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem !important;
+}
+
+.guide-empty-result h3,
+.guide-empty-result p,
+.guide-empty-result small {
+  margin: 0;
+}
+
+.guide-empty-result .waste-status-badge {
+  justify-self: start;
+}
+
+.guide-empty-result .button-link {
+  align-items: center;
+  justify-self: start;
+}
+
+.guide-empty-result small {
+  color: var(--text-muted);
+}
+
+.service-task {
+  gap: clamp(1rem, 3vw, 2rem);
+  grid-template-columns: minmax(16rem, 0.72fr) minmax(0, 1.28fr);
+  padding-top: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.service-task__intro {
+  align-items: flex-start;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+}
+
+.service-task__visual {
+  align-items: center;
+  background:
+    radial-gradient(circle at 70% 25%, rgb(255 207 105 / 58%), transparent 2.5rem),
+    linear-gradient(145deg, #113946, #176963);
+  border-radius: 1.25rem;
+  box-shadow: 0 0.8rem 1.8rem rgb(7 29 45 / 14%);
+  color: #d8fffa;
+  display: inline-flex;
+  height: 5.5rem;
+  justify-content: center;
+  width: 5.5rem;
+}
+
+.service-task__visual .waste-icon {
+  height: 2.7rem;
+  width: 2.7rem;
+}
+
+.service-task__intro .section-title > span {
+  display: none;
+}
+
+.service-task__intro h2 {
+  font-size: clamp(1.7rem, 3vw, 2.25rem);
+}
+
+.case-confirmation-inline {
+  background:
+    radial-gradient(circle at 100% 0%, rgb(74 207 171 / 20%), transparent 16rem),
+    linear-gradient(145deg, #effbf5, #e4f4ed);
+  border-color: #83c7aa !important;
+  display: grid;
+  gap: 0.85rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  scroll-margin-top: 5.5rem;
+}
+
+.case-confirmation-inline h2,
+.case-confirmation-inline p {
+  margin: 0;
+}
+
+.case-confirmation-inline__summary {
+  background: white;
+  border: 1px solid #b7dcca;
+  border-radius: var(--radius-control);
+  font-weight: 750;
+  padding: 0.9rem 1rem;
+}
+
+.case-confirmation-inline__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.secondary-button {
+  background: white;
+  border: 1px solid #75929a;
+  color: var(--text-strong);
+}
+
+.case-detail {
+  margin-top: 0.25rem;
+}
+
+/* Der SortierKompass bleibt bewusst bildstark, benötigt aber keinen Bildschirmlauf mehr. */
+.view-sorting #sortierkompass {
+  padding-bottom: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.sorting-showcase__head {
+  margin-bottom: clamp(0.8rem, 2vw, 1.25rem);
+}
+
+.sorting-showcase__layout {
+  gap: clamp(0.85rem, 2vw, 1.35rem);
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.85fr);
+}
+
+.sorting-stage__photo {
+  aspect-ratio: auto;
+  height: clamp(11rem, 28vh, 16rem);
+}
+
+.sorting-samples {
+  margin-top: 0.65rem;
+}
+
+.app-shell .sorting-result {
+  min-height: 0;
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.sorting-result__empty,
+.sorting-result__content {
+  margin-top: 0.85rem;
+}
+
+.sorting-result__number {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+}
+
+.sorting-result h3 {
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  margin-top: 0.6rem;
+}
+
+.sorting-result__empty button {
+  min-height: 3.2rem;
+}
+
+.sorting-showcase__disclaimer {
+  font-size: 0.82rem;
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.85rem;
+}
+
+/* Vier kompakte Stationen plus eine gemeinsame Aktions-/Ergebnisfläche. */
+.journey-progress {
+  grid-template-columns: repeat(4, minmax(7rem, 1fr));
+  min-width: 32rem;
+}
+
+.journey-scenes {
+  grid-template-columns: repeat(4, minmax(7rem, 1fr));
+  min-width: 32rem;
+}
+
+.journey-card__scene {
+  aspect-ratio: 16 / 9;
+}
+
+.journey-card__body {
+  gap: 0.35rem;
+  min-height: 0;
+  padding: 0.7rem;
+}
+
+.journey-card__title {
+  gap: 0.45rem;
+}
+
+.journey-card__title > span {
+  height: 2rem;
+  width: 2rem;
+}
+
+.journey-card__title h4 {
+  font-size: 1rem;
+}
+
+.journey-card__title small,
+.journey-card__body > p {
+  font-size: 0.72rem;
+}
+
+.journey-card__number {
+  height: 1.8rem;
+  left: 0.5rem;
+  top: 0.5rem;
+  width: 1.8rem;
+}
+
+.journey-card__done {
+  font-size: 0.68rem;
+  padding: 0.35rem 0.5rem;
+  right: 0.5rem;
+  top: 0.5rem;
+}
+
+.journey-control {
+  background: #102832;
+  border: 2px solid #4a737b;
+  border-radius: 1.1rem;
+  display: grid;
+  gap: 0;
+  grid-template-columns: minmax(15rem, 0.9fr) minmax(18rem, 1.1fr);
+  margin-top: 1rem;
+  overflow: hidden;
+  scroll-margin-top: 5.5rem;
+}
+
+.journey-control__scene {
+  background-image:
+    linear-gradient(to top, rgb(4 16 24 / 18%), transparent 42%),
+    url("/recycling-access-storyboard.jpg");
+  background-repeat: no-repeat;
+  background-size:
+    100% 100%,
+    400% auto;
+  min-height: 18rem;
+  position: relative;
+}
+
+.journey-control__label {
+  backdrop-filter: blur(0.4rem);
+  background: rgb(5 23 34 / 82%);
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: var(--radius-pill);
+  color: white;
+  font-weight: 800;
+  left: 1rem;
+  padding: 0.55rem 0.8rem;
+  position: absolute;
+  top: 1rem;
+}
+
+.journey-control__panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.journey-control__panel h4 {
+  font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+  margin: 0;
+}
+
+.journey-control .journey-action {
+  margin-top: 0;
+  min-height: 3.5rem;
+}
+
+.journey-control .journey-live-status {
+  margin-top: 0;
+}
+
 .state-card {
   max-width: 40rem;
   padding: clamp(1.5rem, 5vw, 3rem);
@@ -2674,15 +2977,119 @@ button:hover,
   }
 
   .sorting-showcase__head {
-    flex-direction: column;
+    display: block;
+  }
+
+  .sorting-showcase__head .sorting-showcase__lead {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .sorting-showcase__head .section-title {
+    font-size: clamp(1.65rem, 8vw, 2rem);
+    margin-bottom: 0;
+  }
+
+  .sorting-showcase__head .waste-status-badge {
+    font-size: 0.68rem;
+    padding: 0.4rem 0.55rem;
   }
 
   .sorting-stage__photo {
-    aspect-ratio: 1.15 / 1;
+    aspect-ratio: auto;
+    height: 9.5rem;
   }
 
   .sorting-samples {
+    gap: 0.4rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sorting-samples button {
+    display: grid;
+    gap: 0.35rem;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    padding: 0.35rem;
+  }
+
+  .sorting-samples button small {
+    display: none;
+  }
+
+  .sorting-samples button strong {
+    font-size: 0.72rem;
+  }
+
+  .sorting-showcase__disclaimer {
+    line-height: 1.35;
+  }
+
+  .service-task {
+    gap: 0.85rem;
+    padding-top: 1rem;
+  }
+
+  .service-task__intro {
+    align-items: center;
+    gap: 0.75rem;
+    grid-template-columns: 3.8rem minmax(0, 1fr);
+  }
+
+  .service-task__visual {
+    border-radius: 1rem;
+    height: 3.8rem;
+    width: 3.8rem;
+  }
+
+  .service-task__visual .waste-icon {
+    height: 2rem;
+    width: 2rem;
+  }
+
+  .service-task__intro .eyebrow {
+    margin-bottom: 0.2rem;
+  }
+
+  .service-task__intro h2 {
+    font-size: 1.65rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .service-task__intro p:last-child {
+    font-size: 0.88rem;
+    line-height: 1.4;
+    margin-bottom: 0;
+  }
+
+  .service-task .pilot-form {
+    gap: 0.8rem;
+    padding: 1rem;
+  }
+
+  .journey-control {
     grid-template-columns: 1fr;
+  }
+
+  .journey-control__scene {
+    min-height: 8rem;
+  }
+
+  .journey-control__panel {
+    gap: 0.7rem;
+  }
+
+  .journey-control .journey-live-status {
+    grid-template-columns: 1fr;
+    padding: 0.75rem;
+  }
+
+  .journey-control .journey-live-status > span {
+    display: none;
+  }
+
+  .journey-control .gate-message {
+    font-size: 0.86rem;
+    line-height: 1.35;
   }
 
   .access-journey__head {
@@ -2691,12 +3098,23 @@ button:hover,
   }
 
   .access-journey {
+    display: flex;
+    flex-direction: column;
     padding-inline: 1rem;
+  }
+
+  .access-journey .journey-control {
+    order: 1;
   }
 
   .journey-scroll {
     margin-inline: -0.35rem;
+    order: 2;
     padding-inline: 0.35rem;
+  }
+
+  .access-timeline {
+    order: 3;
   }
 
   .map-panel {

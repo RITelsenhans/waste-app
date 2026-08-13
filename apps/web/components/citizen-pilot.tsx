@@ -101,6 +101,12 @@ const statusLabel: Record<string, string> = {
   closed: "Abgeschlossen",
 };
 
+const defectCategoryLabels: Record<string, string> = {
+  "bin-not-emptied": "Tonne nicht geleert",
+  "illegal-dumping": "Wilde Ablagerung",
+  "damaged-bin": "Behälter beschädigt",
+};
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("de-DE", {
     weekday: "short",
@@ -154,9 +160,12 @@ export function CitizenPilot({
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
   const [guideQuery, setGuideQuery] = useState("");
   const [guide, setGuide] = useState<GuideEntry[]>([]);
+  const [guideSearchCompleted, setGuideSearchCompleted] = useState(false);
+  const [lastGuideQuery, setLastGuideQuery] = useState("");
   const [rules, setRules] = useState<Rule | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [lastCase, setLastCase] = useState<CaseCreated | null>(null);
+  const [lastCaseSummary, setLastCaseSummary] = useState<string | null>(null);
   const [lastNotificationEmail, setLastNotificationEmail] = useState<string | null>(null);
   const [caseDetail, setCaseDetail] = useState<CaseDetail | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -237,6 +246,14 @@ export function CitizenPilot({
     return () => window.clearTimeout(timeout);
   }, [tenantKey]);
 
+  useEffect(() => {
+    if (!lastCase || (view !== "complaint" && view !== "bulk")) return;
+    const timeout = window.setTimeout(() => {
+      document.getElementById("case-confirmation")?.scrollIntoView({ block: "start" });
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [lastCase, view]);
+
   const nextCollection = collections[0];
   const wasteTypes = useMemo(
     () => Array.from(new Set(collections.map((item) => item.wasteTypeLabel))),
@@ -293,12 +310,14 @@ export function CitizenPilot({
 
   async function searchGuide(event: FormEvent) {
     event.preventDefault();
+    const query = guideQuery.trim();
     try {
-      setGuide(
-        await request<GuideEntry[]>(
-          `/v1/waste-guide/search?tenantId=${tenantKey}&q=${encodeURIComponent(guideQuery)}`,
-        ),
+      const results = await request<GuideEntry[]>(
+        `/v1/waste-guide/search?tenantId=${tenantKey}&q=${encodeURIComponent(query)}`,
       );
+      setGuide(results);
+      setLastGuideQuery(query);
+      setGuideSearchCompleted(true);
     } catch (error) {
       setMessage((error as Error).message);
     }
@@ -327,6 +346,10 @@ export function CitizenPilot({
         }),
       });
       setLastCase(created);
+      const category = String(data.get("category"));
+      setLastCaseSummary(
+        `${defectCategoryLabels[category] ?? category} · ${String(data.get("address"))}`,
+      );
       const email = String(data.get("email") ?? "").trim();
       setLastNotificationEmail(email || null);
       setMessage(
@@ -362,6 +385,13 @@ export function CitizenPilot({
         }),
       });
       setLastCase(created);
+      const selectedItem = rules?.items.find((item) => item.id === data.get("itemTypeId"));
+      const selectedSlot = slots.find((slot) => slot.id === data.get("slotId"));
+      setLastCaseSummary(
+        `${Number(data.get("quantity"))} × ${selectedItem?.label ?? "Gegenstand"}${
+          selectedSlot ? ` · ${formatDate(selectedSlot.date)}, ${selectedSlot.timeWindow}` : ""
+        }`,
+      );
       setLastNotificationEmail(null);
       setMessage(`Sperrmüllauftrag ${created.reference} wurde angelegt.`);
       form.reset();
@@ -381,6 +411,55 @@ export function CitizenPilot({
     } catch (error) {
       setMessage((error as Error).message);
     }
+  }
+
+  function resetCase() {
+    setLastCase(null);
+    setLastCaseSummary(null);
+    setLastNotificationEmail(null);
+    setCaseDetail(null);
+  }
+
+  function renderCaseConfirmation() {
+    if (!lastCase) return null;
+    return (
+      <Card
+        as="section"
+        className="case-confirmation-inline"
+        id="case-confirmation"
+        aria-live="polite"
+      >
+        <StatusBadge tone="success">Erfolgreich übermittelt</StatusBadge>
+        <p className="eyebrow">Bestätigung</p>
+        <h2>Ihr Vorgang: {lastCase.reference}</h2>
+        {lastCaseSummary && <p className="case-confirmation-inline__summary">{lastCaseSummary}</p>}
+        <p>Bewahren Sie diese Referenz für den geschützten Pilot-Test auf.</p>
+        {lastNotificationEmail && (
+          <p className="mail-confirmation">
+            Die Bestätigung wurde an <strong>{lastNotificationEmail}</strong> versendet.
+          </p>
+        )}
+        <div className="case-confirmation-inline__actions">
+          <button type="button" onClick={() => void loadCase()}>
+            Status abrufen
+          </button>
+          <button className="secondary-button" type="button" onClick={resetCase}>
+            {view === "bulk" ? "Weitere Abholung bestellen" : "Weitere Meldung erfassen"}
+          </button>
+        </div>
+        {caseDetail && (
+          <Card className="case-detail" elevation="flat">
+            <h3>{caseDetail.subject}</h3>
+            <p>{caseDetail.summary}</p>
+            <ol>
+              {caseDetail.events.map((item) => (
+                <li key={item.occurredAt}>{item.publicLabel}</li>
+              ))}
+            </ol>
+          </Card>
+        )}
+      </Card>
+    );
   }
 
   return (
@@ -774,7 +853,10 @@ export function CitizenPilot({
                   Gegenstand
                   <input
                     value={guideQuery}
-                    onChange={(event) => setGuideQuery(event.target.value)}
+                    onChange={(event) => {
+                      setGuideQuery(event.target.value);
+                      setGuideSearchCompleted(false);
+                    }}
                     placeholder="z. B. Akku"
                     minLength={2}
                     required
@@ -792,6 +874,31 @@ export function CitizenPilot({
                     <p>{item.notes}</p>
                   </article>
                 ))}
+                {guideSearchCompleted && guide.length === 0 && (
+                  <article className="guide-empty-result" role="status">
+                    <StatusBadge tone="warning">Noch nicht im Abfall-ABC</StatusBadge>
+                    <h3>Kein Eintrag für „{lastGuideQuery}“</h3>
+                    <p>
+                      Für diesen Suchbegriff gibt es in {config.serviceArea.city} noch keine
+                      eindeutige Entsprechung. Bitte entsorgen Sie den Gegenstand nicht auf
+                      Verdacht.
+                    </p>
+                    <a
+                      className="button-link"
+                      href={`mailto:${config.serviceArea.email}?subject=${encodeURIComponent(
+                        `Fehlender Begriff im Abfall-ABC: ${lastGuideQuery}`,
+                      )}&body=${encodeURIComponent(
+                        `Im Abfall-ABC für ${config.serviceArea.city} wurde nach „${lastGuideQuery}“ gesucht, aber kein Eintrag gefunden. Bitte prüfen und gegebenenfalls ergänzen.`,
+                      )}`}
+                    >
+                      <Icon name="megaphone" /> Begriff an die Redaktion melden
+                    </a>
+                    <small>
+                      Erst mit dem Klick wird Ihr E-Mail-Programm geöffnet. Die Suche wird nicht
+                      unbemerkt gespeichert.
+                    </small>
+                  </article>
+                )}
               </div>
             </Card>
             <Card as="article" className="updates-card" id="hinweise">
@@ -911,132 +1018,131 @@ export function CitizenPilot({
           />
         )}
         {view === "complaint" && (
-          <section className="home-section form-grid" id="meldung">
-            <div>
-              <p className="eyebrow">Reklamation</p>
-              <h2 className="section-title">
-                <span>
-                  <Icon name="warning" />
-                </span>
-                Problem melden
-              </h2>
-              <p>
-                Das Foto wird im Pilot nur ausgewählt und namentlich vermerkt, nicht hochgeladen.
-              </p>
+          <section
+            className="home-section form-grid service-task service-task--complaint"
+            id="meldung"
+          >
+            <div className="service-task__intro">
+              <span className="service-task__visual" aria-hidden="true">
+                <Icon name="warning" />
+              </span>
+              <div>
+                <p className="eyebrow">Reklamation</p>
+                <h2 className="section-title">
+                  <span>
+                    <Icon name="warning" />
+                  </span>
+                  Problem melden
+                </h2>
+                <p>
+                  Das Foto wird im Pilot nur ausgewählt und namentlich vermerkt, nicht hochgeladen.
+                </p>
+              </div>
             </div>
-            <form className="waste-card waste-card--raised pilot-form" onSubmit={submitDefect}>
-              <label>
-                Kategorie
-                <select name="category" required>
-                  <option value="bin-not-emptied">Tonne nicht geleert</option>
-                  <option value="illegal-dumping">Wilde Ablagerung</option>
-                  <option value="damaged-bin">Behälter beschädigt</option>
-                </select>
-              </label>
-              <label>
-                Ort oder Adresse
-                <input name="address" defaultValue={address?.displayLabel} minLength={4} required />
-              </label>
-              <label>
-                Zeitpunkt
-                <input name="occurredAt" type="datetime-local" required />
-              </label>
-              <label>
-                Beschreibung
-                <textarea name="description" minLength={10} maxLength={2000} required />
-              </label>
-              <label>
-                E-Mail (optional)
-                <input name="email" type="email" />
-              </label>
-              <label>
-                Fotos auswählen (max. 3)
-                <input name="attachments" type="file" accept="image/*" multiple />
-              </label>
-              <label className="check">
-                <input name="consent" type="checkbox" required /> Ich stimme der Verarbeitung in der
-                isolierten Demo-Umgebung zu.
-              </label>
-              <button type="submit">Meldung absenden</button>
-            </form>
+            {lastCase ? (
+              renderCaseConfirmation()
+            ) : (
+              <form className="waste-card waste-card--raised pilot-form" onSubmit={submitDefect}>
+                <label>
+                  Kategorie
+                  <select name="category" required>
+                    <option value="bin-not-emptied">Tonne nicht geleert</option>
+                    <option value="illegal-dumping">Wilde Ablagerung</option>
+                    <option value="damaged-bin">Behälter beschädigt</option>
+                  </select>
+                </label>
+                <label>
+                  Ort oder Adresse
+                  <input
+                    name="address"
+                    defaultValue={address?.displayLabel}
+                    minLength={4}
+                    required
+                  />
+                </label>
+                <label>
+                  Zeitpunkt
+                  <input name="occurredAt" type="datetime-local" required />
+                </label>
+                <label>
+                  Beschreibung
+                  <textarea name="description" minLength={10} maxLength={2000} required />
+                </label>
+                <label>
+                  E-Mail (optional)
+                  <input name="email" type="email" />
+                </label>
+                <label>
+                  Fotos auswählen (max. 3)
+                  <input name="attachments" type="file" accept="image/*" multiple />
+                </label>
+                <label className="check">
+                  <input name="consent" type="checkbox" required /> Ich stimme der Verarbeitung in
+                  der isolierten Demo-Umgebung zu.
+                </label>
+                <button type="submit">Meldung absenden</button>
+              </form>
+            )}
           </section>
         )}
         {view === "bulk" && (
-          <section className="home-section form-grid" id="sperrmuell">
-            <div>
-              <p className="eyebrow">Sperrmüll</p>
-              <h2 className="section-title">
-                <span>
-                  <Icon name="truck" />
-                </span>
-                Abholung bestellen
-              </h2>
-              <p>{rules?.preparationInstructions}</p>
+          <section
+            className="home-section form-grid service-task service-task--bulk"
+            id="sperrmuell"
+          >
+            <div className="service-task__intro">
+              <span className="service-task__visual" aria-hidden="true">
+                <Icon name="truck" />
+              </span>
+              <div>
+                <p className="eyebrow">Sperrmüll</p>
+                <h2 className="section-title">
+                  <span>
+                    <Icon name="truck" />
+                  </span>
+                  Abholung bestellen
+                </h2>
+                <p>{rules?.preparationInstructions}</p>
+              </div>
             </div>
-            <form className="waste-card waste-card--raised pilot-form" onSubmit={submitBulk}>
-              <label>
-                Gegenstand
-                <select name="itemTypeId" required>
-                  {rules?.items.map((item) => (
-                    <option value={item.id} key={item.id}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Anzahl
-                <input name="quantity" type="number" min="1" max="10" defaultValue="1" required />
-              </label>
-              <label>
-                Termin
-                <select name="slotId" required>
-                  {slots.map((slot) => (
-                    <option value={slot.id} key={slot.id}>
-                      {formatDate(slot.date)}, {slot.timeWindow} ({slot.remainingCapacity} frei)
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                E-Mail (optional)
-                <input name="email" type="email" />
-              </label>
-              <label className="check">
-                <input name="consent" type="checkbox" required /> Ich stimme der Verarbeitung in der
-                isolierten Demo-Umgebung zu.
-              </label>
-              <button type="submit">Verbindlich im Demo-System bestellen</button>
-            </form>
-          </section>
-        )}
-        {(view === "complaint" || view === "bulk") && lastCase && (
-          <section className="home-section confirmation" id="vorgang">
-            <p className="eyebrow">Bestätigung</p>
-            <h2>Ihr Vorgang: {lastCase.reference}</h2>
-            <p>Bewahren Sie diese Referenz für den geschützten Pilot-Test auf.</p>
-            {lastNotificationEmail && (
-              <p className="mail-confirmation">
-                Die Bestätigung für <strong>{lastNotificationEmail}</strong> finden Sie im{" "}
-                <a href="http://localhost:8025" rel="noreferrer" target="_blank">
-                  lokalen Testpostfach
-                </a>
-                .
-              </p>
-            )}
-            <button type="button" onClick={() => void loadCase()}>
-              Status abrufen
-            </button>
-            {caseDetail && (
-              <Card>
-                <h3>{caseDetail.subject}</h3>
-                <p>{caseDetail.summary}</p>
-                <ol>
-                  {caseDetail.events.map((item) => (
-                    <li key={item.occurredAt}>{item.publicLabel}</li>
-                  ))}
-                </ol>
-              </Card>
+            {lastCase ? (
+              renderCaseConfirmation()
+            ) : (
+              <form className="waste-card waste-card--raised pilot-form" onSubmit={submitBulk}>
+                <label>
+                  Gegenstand
+                  <select name="itemTypeId" required>
+                    {rules?.items.map((item) => (
+                      <option value={item.id} key={item.id}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Anzahl
+                  <input name="quantity" type="number" min="1" max="10" defaultValue="1" required />
+                </label>
+                <label>
+                  Termin
+                  <select name="slotId" required>
+                    {slots.map((slot) => (
+                      <option value={slot.id} key={slot.id}>
+                        {formatDate(slot.date)}, {slot.timeWindow} ({slot.remainingCapacity} frei)
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  E-Mail (optional)
+                  <input name="email" type="email" />
+                </label>
+                <label className="check">
+                  <input name="consent" type="checkbox" required /> Ich stimme der Verarbeitung in
+                  der isolierten Demo-Umgebung zu.
+                </label>
+                <button type="submit">Verbindlich im Demo-System bestellen</button>
+              </form>
             )}
           </section>
         )}

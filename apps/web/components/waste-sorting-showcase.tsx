@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
 import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
 
@@ -43,6 +43,14 @@ export function WasteSortingShowcase({ tenantKey }: { tenantKey: string }) {
   const [state, setState] = useState<"ready" | "analysing" | "complete" | "error">("ready");
   const selected = samples.find((sample) => sample.id === selectedId) ?? samples[1];
 
+  useEffect(() => {
+    if (state !== "complete" && state !== "error") return;
+    document.getElementById("sorting-result")?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "nearest",
+    });
+  }, [state]);
+
   async function analyse() {
     setState("analysing");
     setResult(null);
@@ -72,33 +80,41 @@ export function WasteSortingShowcase({ tenantKey }: { tenantKey: string }) {
   return (
     <section className="home-section sorting-showcase" id="sortierkompass">
       <div className="sorting-showcase__head">
-        <div>
+        <div className="sorting-showcase__meta">
           <p className="eyebrow">Neu · Visuelle Entsorgungshilfe</p>
-          <h2 className="section-title">
-            <span>
-              <Icon name="camera" />
-            </span>
-            SortierKompass
-          </h2>
-          <p className="sorting-showcase__lead">
-            Gegenstand ansehen, kommunale Regeln zuordnen und den richtigen Entsorgungsweg sofort
-            verstehen.
-          </p>
+          <StatusBadge tone="info">Interaktiver Pilot</StatusBadge>
         </div>
-        <StatusBadge tone="info">Interaktiver Pilot</StatusBadge>
+        <h2 className="section-title">
+          <span>
+            <Icon name="camera" />
+          </span>
+          SortierKompass
+        </h2>
+        <p className="sorting-showcase__lead">
+          Gegenstand ansehen, kommunale Regeln zuordnen und den richtigen Entsorgungsweg sofort
+          verstehen.
+        </p>
       </div>
 
-      <div className="sorting-showcase__layout">
+      <div className={`sorting-showcase__layout is-${state}`}>
         <div className="sorting-stage">
           <div
-            aria-label={`Synthetisches Beispielfoto: ${selected.label}`}
             className={`sorting-stage__photo sorting-stage__photo--${selected.scene} ${state === "analysing" ? "is-analysing" : ""}`}
-            role="img"
           >
+            <span className="visually-hidden">Synthetisches Beispielfoto: {selected.label}</span>
             <span className="sorting-stage__camera-label">
               <Icon name="camera" /> Beispielfoto
             </span>
             {state === "analysing" && <span className="sorting-stage__scan" aria-hidden="true" />}
+            <button
+              className="sorting-stage__action"
+              disabled={state === "analysing"}
+              onClick={() => void analyse()}
+              type="button"
+            >
+              <Icon name="scan" />
+              {state === "analysing" ? "Wird geprüft …" : "Beispielfoto prüfen"}
+            </button>
           </div>
 
           <div aria-label="Synthetisches Beispielfoto auswählen" className="sorting-samples">
@@ -122,7 +138,7 @@ export function WasteSortingShowcase({ tenantKey }: { tenantKey: string }) {
           </div>
         </div>
 
-        <Card as="article" className="sorting-result">
+        <Card as="article" className="sorting-result" id="sorting-result">
           <div className="sorting-result__topline">
             <span>Kommunale Zuordnung</span>
             <Icon name={state === "complete" ? "sparkles" : "scan"} />
@@ -160,10 +176,6 @@ export function WasteSortingShowcase({ tenantKey }: { tenantKey: string }) {
                     ? "Das Beispielfoto wird mit dem Demo-Abfall-ABC abgeglichen."
                     : "Wählen Sie ein Beispiel und starten Sie die transparente Demo-Zuordnung."}
               </p>
-              <button disabled={state === "analysing"} onClick={() => void analyse()} type="button">
-                <Icon name="scan" />
-                {state === "analysing" ? "Wird geprüft …" : "Beispielfoto prüfen"}
-              </button>
             </div>
           )}
         </Card>

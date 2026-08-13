@@ -83,9 +83,30 @@ test("durchsucht das Abfall-ABC auf einer direkt verlinkbaren Seite", async ({ p
   await expect(page.getByText("Nicht in den Restabfall werfen.")).toBeVisible();
 });
 
+test("erklärt einen fehlenden Begriff und bietet eine bewusste Redaktionsmeldung an", async ({
+  page,
+}) => {
+  await page.goto("/demo/abfall-abc");
+
+  await page.getByLabel("Gegenstand", { exact: true }).fill("Quantenkomposter");
+  await page.getByRole("button", { name: "Suchen" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Kein Eintrag für „Quantenkomposter“" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Bitte entsorgen Sie den Gegenstand nicht auf Verdacht/),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Begriff an die Redaktion melden" })).toHaveAttribute(
+    "href",
+    /mailto:.*Quantenkomposter/,
+  );
+});
+
 test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/demo");
   await expect(page.getByRole("link", { name: /SortierKompass testen/ })).toHaveAttribute(
     "href",
@@ -99,12 +120,16 @@ test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu",
     "aria-pressed",
     "true",
   );
+  const samplePhoto = await sorter.locator(".sorting-stage__photo").boundingBox();
+  expect(samplePhoto).not.toBeNull();
+  expect(samplePhoto!.height).toBeLessThanOrEqual(170);
+  await expect(sorter.getByRole("button", { name: "Beispielfoto prüfen" })).toBeInViewport();
   await sorter.getByRole("button", { name: "Beispielfoto prüfen" }).click();
   await expect(sorter.getByText("Beispiel zugeordnet")).toBeVisible();
   await expect(sorter.getByRole("heading", { name: "Elektrogeräte" })).toBeVisible();
   await expect(sorter.getByText(/Am Recyclinghof oder über die Rücknahme/)).toBeVisible();
 
-  await sorter.getByRole("button", { name: /Batterien AA-Zellen/ }).click();
+  await sorter.getByRole("button", { name: "Batterien", exact: true }).click();
   await sorter.getByRole("button", { name: "Beispielfoto prüfen" }).click();
   await expect(sorter.getByRole("heading", { name: "Batterien" })).toBeVisible();
   await expect(sorter.getByText("Nicht in den Restabfall werfen.")).toBeVisible();
@@ -153,6 +178,23 @@ test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ 
   await expect(page.getByText("Meldung eingegangen")).toBeVisible();
 });
 
+test("zeigt eine Sperrmüllbestellung unmittelbar mit Termin und Referenz an", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.goto("/demo/services/sperrmuell/new");
+
+  await page.getByLabel(/isolierten Demo-Umgebung/).check();
+  await page.getByRole("button", { name: "Verbindlich im Demo-System bestellen" }).click();
+
+  const confirmation = page.locator("#case-confirmation");
+  await expect(confirmation).toBeInViewport();
+  await expect(confirmation.getByText("Erfolgreich übermittelt")).toBeVisible();
+  await expect(confirmation.getByRole("heading", { name: /Ihr Vorgang: DEMO-/ })).toBeVisible();
+  await expect(confirmation.getByText(/Elektrogroßgerät.*07:00–12:00/)).toBeVisible();
+  await expect(
+    confirmation.getByRole("button", { name: "Weitere Abholung bestellen" }),
+  ).toBeVisible();
+});
+
 test("simuliert den 24-7-Zugang vom Antrag bis zur geschlossenen Ausfahrt", async ({ page }) => {
   await page.goto("/demo/services/recyclinghof-24-7");
   const showcase = page.locator("#nachtzugang");
@@ -171,6 +213,8 @@ test("simuliert den 24-7-Zugang vom Antrag bis zur geschlossenen Ausfahrt", asyn
 
   await expect(showcase.getByText("DEMO-TV-22", { exact: true })).toBeVisible();
   await expect(showcase.getByText("Zugang erteilt", { exact: true })).toBeVisible();
+  await expect(showcase.locator(".journey-action")).toBeInViewport();
+  await expect(showcase.locator(".journey-live-status")).toBeInViewport();
   const reference = (await showcase.locator(".gate-message").innerText()).match(
     /DEMO-Z-[A-F0-9]{12}/,
   )?.[0];
@@ -296,6 +340,11 @@ test("öffnet den optionalen Kalender für das nächste Quartal", async ({ page 
   await expect(page.locator(".calendar-event").first()).toBeVisible();
   await expect(page.locator(".calendar-agenda strong").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Kalenderansicht schließen" })).toBeVisible();
+  const calendar = await page.locator("#quarter-calendar").boundingBox();
+  const individualDates = await page.locator("#kalender .collection-list").boundingBox();
+  expect(calendar).not.toBeNull();
+  expect(individualDates).not.toBeNull();
+  expect(calendar!.y).toBeLessThan(individualDates!.y);
 });
 
 test("speichert die Abfallartenfilter für den Kalender lokal", async ({ page }) => {
