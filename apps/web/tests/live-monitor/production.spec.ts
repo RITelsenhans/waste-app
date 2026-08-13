@@ -274,9 +274,10 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "address",
     "Adresse",
     "Adresssuche ausführen",
-    "Die Demo-Stadt liefert auswählbare Abholadressen.",
+    "Die Pilotkommune Aachen liefert auswählbare synthetische Abholadressen.",
     async () => {
-      await page.getByLabel("Straße, Hausnummer, Ort oder Postleitzahl").fill("Demo-Stadt");
+      await page.goto("/demo", { waitUntil: "domcontentloaded" });
+      await page.getByLabel("Straße, Hausnummer, Ort oder Postleitzahl").fill("Aachen");
       await page.getByRole("button", { name: "Suchen" }).first().click();
       await expect(page.locator(".result-button").first()).toBeVisible();
     },
@@ -289,8 +290,9 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Entsorgungsweg suchen",
     "Die Suche ordnet Akku dem Eintrag Batterien zu.",
     async () => {
+      await page.goto("/demo/abfall-abc", { waitUntil: "domcontentloaded" });
       await page.getByLabel("Gegenstand", { exact: true }).first().fill("Akku");
-      await page.getByRole("button", { name: "Suchen" }).last().click();
+      await page.getByRole("button", { name: "Suchen" }).click();
       await expect(page.getByRole("heading", { name: "Batterien" })).toBeVisible();
     },
   );
@@ -302,6 +304,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Beispielfoto zuordnen",
     "Der synthetische Toaster wird transparent als Elektrogerät eingeordnet.",
     async () => {
+      await page.goto("/demo/services", { waitUntil: "domcontentloaded" });
       const sorter = page.locator("#sortierkompass");
       await sorter.getByRole("button", { name: "Beispielfoto prüfen" }).click();
       await expect(sorter.getByText("Beispiel zugeordnet")).toBeVisible();
@@ -316,6 +319,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Recyclinghof anzeigen",
     "Standortliste und Kartenbereich werden geladen.",
     async () => {
+      await page.goto("/demo/standorte", { waitUntil: "domcontentloaded" });
       await expect(page.locator("#standorte .site-card").first()).toBeVisible();
       await expect(page.getByTitle(/Karte für/)).toBeVisible();
     },
@@ -328,6 +332,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Schreibende Wege sicher bereitstellen",
     "Mängel- und Sperrmüllformular sind bedienbar; deren produktive Übertragung bleibt bewusst deaktiviert.",
     async () => {
+      await page.goto("/demo/services", { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("button", { name: "Meldung absenden" })).toBeEnabled();
       await expect(
         page.getByRole("button", { name: "Verbindlich im Demo-System bestellen" }),
@@ -347,6 +352,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "24/7-Zugang buchen, durchlaufen und bereinigen",
     () => accessFinding,
     async () => {
+      await page.goto("/demo/services", { waitUntil: "domcontentloaded" });
       const token = process.env.MONITORING_API_TOKEN;
       if (!token) throw new Error("GitHub-Secret MONITORING_API_TOKEN fehlt.");
       const access = page.locator("#nachtzugang");
@@ -415,6 +421,7 @@ test("prüft die veröffentlichte Bürgeranwendung und begrenzte technische Wart
     "Bei 320 Pixeln entsteht kein horizontaler Seitenüberlauf.",
     async () => {
       await page.setViewportSize({ width: 320, height: 720 });
+      await page.goto("/demo", { waitUntil: "domcontentloaded" });
       const dimensions = await page.evaluate(() => ({
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,

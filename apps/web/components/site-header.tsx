@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Icon } from "@waste/ui";
 import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
 import type { TenantConfig } from "../lib/tenant-config";
 import type { CitizenView } from "./citizen-pilot";
@@ -29,6 +30,7 @@ const navigation: { href: string; label: string; view: CitizenView }[] = [
 ];
 
 export function SiteHeader({ addressLabel, config, tenantKey, view }: SiteHeaderProps) {
+  const municipalityDisplayName = config.name.replace(/\s*·\s*Pilot\s*$/iu, "");
   const [municipalities, setMunicipalities] = useState<Municipality[]>([
     { tenantId: tenantKey, name: config.name, city: config.serviceArea.city },
   ]);
@@ -48,7 +50,7 @@ export function SiteHeader({ addressLabel, config, tenantKey, view }: SiteHeader
       </a>
       <div className="header-inner">
         <Link
-          aria-label={`${config.name} – Startseite`}
+          aria-label={`${municipalityDisplayName} – Startseite`}
           className="brand-link"
           href={`/${tenantKey}`}
         >
@@ -60,38 +62,11 @@ export function SiteHeader({ addressLabel, config, tenantKey, view }: SiteHeader
             src={config.branding.logoUrl}
             width={171}
           />
-          <span className="municipality-name">{config.name}</span>
+          <span className="brand-copy">
+            <strong>Abfall &amp; Recycling</strong>
+            <small>{municipalityDisplayName}</small>
+          </span>
         </Link>
-        <div className="header-context">
-          <label className="municipality-switcher">
-            <small>Kommune</small>
-            <select
-              aria-label="Kommune auswählen"
-              value={tenantKey}
-              onChange={(event) => {
-                const tenant = municipalities.find(
-                  (municipality) => municipality.tenantId === event.currentTarget.value,
-                );
-                if (tenant) window.location.assign(`/${encodeURIComponent(tenant.tenantId)}`);
-              }}
-            >
-              {municipalities.map((municipality) => (
-                <option key={municipality.tenantId} value={municipality.tenantId}>
-                  {municipality.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          {addressLabel && (
-            <Link className="address-label" href={`/${tenantKey}#adresse`}>
-              <span aria-hidden="true">●</span>
-              <span>
-                <small>Abholadresse</small>
-                {addressLabel}
-              </span>
-            </Link>
-          )}
-        </div>
         <nav className="desktop-nav" aria-label="Hauptnavigation">
           {navigation.map((item) => (
             <Link
@@ -103,6 +78,38 @@ export function SiteHeader({ addressLabel, config, tenantKey, view }: SiteHeader
             </Link>
           ))}
         </nav>
+        <div className="header-context">
+          {municipalities.length > 1 && (
+            <label className="municipality-switcher">
+              <small>Kommune</small>
+              <select
+                aria-label="Kommune auswählen"
+                value={tenantKey}
+                onChange={(event) => {
+                  const tenant = municipalities.find(
+                    (municipality) => municipality.tenantId === event.currentTarget.value,
+                  );
+                  if (tenant) window.location.assign(`/${encodeURIComponent(tenant.tenantId)}`);
+                }}
+              >
+                {municipalities.map((municipality) => (
+                  <option key={municipality.tenantId} value={municipality.tenantId}>
+                    {municipality.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {addressLabel && (
+            <Link className="address-label" href={`/${tenantKey}#adresse`}>
+              <Icon aria-hidden="true" name="map-pin" />
+              <span>
+                <small>Abholadresse</small>
+                {addressLabel}
+              </span>
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );

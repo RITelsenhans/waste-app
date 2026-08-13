@@ -9,19 +9,25 @@ test("bietet die öffentliche Kommunenauswahl ohne Anmeldung", async ({ page }) 
   await expect(page.locator(".municipality-grid a")).toHaveCount(1);
 
   await page.goto("/demo");
-  await expect(page.getByLabel("Kommune auswählen")).toHaveValue("demo");
+  await expect(page.getByText("Stadt Aachen", { exact: true })).toHaveCount(1);
+  await expect(page.getByLabel("Kommune auswählen")).toHaveCount(0);
 });
 
-test("ordnet den Desktop-Kopf zweizeilig und zentriert", async ({ page }) => {
+test("ordnet Marke, Navigation und Adresse in einer ruhigen Desktop-Zeile", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/demo");
 
   const brand = await page.locator(".brand-link").boundingBox();
   const navigation = await page.getByRole("navigation", { name: "Hauptnavigation" }).boundingBox();
+  const address = await page.locator(".address-label").boundingBox();
   expect(brand).not.toBeNull();
   expect(navigation).not.toBeNull();
-  expect(navigation!.y).toBeGreaterThan(brand!.y + brand!.height - 4);
-  expect(Math.abs(navigation!.x + navigation!.width / 2 - 640)).toBeLessThan(4);
+  expect(address).not.toBeNull();
+  expect(navigation!.x).toBeGreaterThan(brand!.x + brand!.width - 4);
+  expect(address!.x).toBeGreaterThan(navigation!.x + navigation!.width - 4);
+  expect(
+    Math.abs(navigation!.y + navigation!.height / 2 - (brand!.y + brand!.height / 2)),
+  ).toBeLessThan(8);
 });
 
 test("verlinkt die fünf Kernaufgaben stabil und markiert die aktive Seite", async ({ page }) => {
@@ -44,7 +50,6 @@ test("verlinkt die fünf Kernaufgaben stabil und markiert die aktive Seite", asy
 test("lädt die kompakte personalisierte Aachen-Pilotstartseite", async ({ page }) => {
   await page.goto("/demo");
 
-  await expect(page.getByText("Geschützte Pilot-Demo", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toContainText("August");
   await expect(page.getByRole("heading", { level: 1 })).not.toContainText("04. August");
   await expect(page.locator(".collection-address")).toHaveText("Musterstraße 12, 52062 Aachen");

@@ -46,8 +46,10 @@ die begrenzte Entra-ID-App und ihre administrative Freigabe stehen noch aus.
   fehlerhafte Eingaben des Prüfwerkzeugs werden einmalig als gelber Zustand
   **Monitoring unvollständig** ausgewiesen. Abhängige Prüfungen dürfen daraus keine
   zusätzlichen roten Folgefehler erzeugen; unabhängige Funktions- und Laufzeitchecks
-  werden weiter ausgeführt. Ein technischer Ausfall des GitHub-Jobs bleibt in GitHub
-  sichtbar, ist aber nicht automatisch ein Produktionsalarm.
+  werden weiter ausgeführt. Jeder fachliche Browsercheck öffnet dafür zuerst seinen
+  stabilen Aufgabenpfad, statt den Seitenzustand eines vorherigen Checks zu
+  übernehmen. Ein technischer Ausfall des GitHub-Jobs bleibt in GitHub sichtbar, ist
+  aber nicht automatisch ein Produktionsalarm.
 - Automatisch löschbar sind nach 30 Tagen ausschließlich veröffentlichte Outbox-
   Ereignisse sowie Fall- und 24/7-Idempotenzschlüssel. Fachvorgänge, Ereignisverläufe,
   Termine, Hinweise und Inhaltsdaten werden nicht automatisch gelöscht. Mehr als 500

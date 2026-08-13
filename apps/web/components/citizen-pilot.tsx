@@ -372,15 +372,6 @@ export function CitizenPilot({
         tenantKey={tenantKey}
         view={view}
       />
-      <aside className="demo-banner" id="demo-hinweis">
-        <div className="demo-banner__inner">
-          <span className="demo-banner__label">Geschützte Pilot-Demo</span>
-          <p>
-            <strong>Hier dürfen Sie wirklich ausprobieren.</strong> Alle Inhalte sind synthetisch;
-            Eingaben werden ausschließlich in der isolierten Demo-Umgebung verarbeitet.
-          </p>
-        </div>
-      </aside>
       <main id="main-content" tabIndex={-1}>
         <p className="live-message" role="status">
           {message}
@@ -733,7 +724,7 @@ export function CitizenPilot({
                 ))}
               </div>
             </Card>
-            <Card as="article" className="updates-card">
+            <Card as="article" className="updates-card" id="hinweise">
               <div className="updates-card__head">
                 <div>
                   <p className="eyebrow">Aktuelle Hinweise</p>
@@ -991,7 +982,7 @@ export function CitizenPilot({
             <a href={`mailto:${config.serviceArea.email}`}>{config.serviceArea.email}</a>
           </p>
           <nav aria-label="Fußnavigation">
-            <a href="#demo-hinweis">Hinweise</a>
+            <a href={`/${tenantKey}#hinweise`}>Hinweise</a>
             <a href={`/${tenantKey}#adresse`}>Adresse</a>
             <a href={`/${tenantKey}/services#meldung`}>Problem melden</a>
           </nav>

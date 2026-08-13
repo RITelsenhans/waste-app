@@ -37,7 +37,8 @@ test("meldet an, leitet die API gleichursprünglich weiter und deaktiviert Admin
   page,
 }) => {
   await logIn(page);
-  await expect(page.getByLabel("Kommune auswählen")).toHaveValue("demo");
+  await expect(page.getByRole("link", { name: "Stadt Aachen – Startseite" })).toBeVisible();
+  await expect(page.getByLabel("Kommune auswählen")).toHaveCount(0);
 
   const healthResponse = await page.request.get("/v1/health/ready");
   expect(healthResponse.status()).toBe(200);

@@ -1,13 +1,14 @@
 .bar {
   align-items: center;
-  background: #222;
-  color: white;
+  background: #0a2a37;
+  border-bottom: 1px solid #234c56;
+  color: #d5e2e5;
   display: flex;
-  font-size: 0.85rem;
-  gap: 1rem;
-  justify-content: center;
-  min-height: 2.75rem;
-  padding: 0.35rem 1rem;
+  font-size: 0.72rem;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  min-height: 2rem;
+  padding: 0.2rem max(1rem, calc((100vw - 80rem) / 2 + 2rem));
 }
 
 .bar form {
@@ -16,14 +17,17 @@
 
 .bar button {
   background: transparent;
-  border: 1px solid white;
-  min-height: 2rem;
-  padding: 0.2rem 0.65rem;
+  border: 0;
+  color: white;
+  font-size: 0.72rem;
+  min-height: 1.6rem;
+  padding: 0.1rem 0.35rem;
+  text-decoration: underline;
+  text-underline-offset: 0.15rem;
 }
 
 @media (max-width: 35rem) {
   .bar {
-    align-items: flex-start;
-    flex-direction: column;
+    padding-inline: 0.75rem;
   }
 }

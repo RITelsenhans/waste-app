@@ -1,6 +1,6 @@
 # Decision Log
 
-Stand: 12. August 2026
+Stand: 13. August 2026
 
 ## Fehlende Voraussetzungen
 
@@ -79,6 +79,8 @@ Stand: 12. August 2026
 | D-056 | Der Railway-Containerbau verwendet das offizielle Gradle-9.6.1/JDK-21-Build-Image statt die Gradle-Distribution während jedes Builds über den Wrapper herunterzuladen.                                                                                                                                            | Produktions-Rollout und Retry scheiterten vor dem Anwendungscode an Downloads von `services.gradle.org`. Das Image enthält Gradle bereits; echte Abhängigkeits- und Kompilierungsfehler bleiben sichtbar.                                                                                                              |
 | D-057 | Die synthetische Admin-Pilotoberfläche wird separat mit demselben menschlichen Passwort wie die Bürgerdemo veröffentlicht; ein serverseitiger Admin-BFF und ein zusätzliches Service-Geheimnis sichern alle Railway-Admin-Endpunkte ab.                                                                           | Ermöglicht die gewünschte frühe Pflege ohne ein technisches Geheimnis an den Browser auszuliefern. Kommunenauswahl und Mandantenschlüssel bleiben getrennt; OIDC und Rollen sind weiterhin das Zielbild, siehe ADR-0011.                                                                                               |
 | D-058 | Pflegbare synthetische Inhalte erhalten die Zustände `draft` und `published`; öffentliche Abfragen liefern nur Freigaben, während jede Änderung mandantengenau protokolliert wird.                                                                                                                                | Ermöglicht kontrollierte Vorbereitung und Rücknahme ohne versehentliche Veröffentlichung. Der gemeinsame Pilot-Akteur ist ausdrücklich keine persönliche oder revisionssichere Identität; echte Daten benötigen OIDC, Rollen und weitergehende Auditfreigaben, siehe ADR-0012.                                         |
+| D-059 | Der Bürgerkopf zeigt auf Desktop Marke, Kernnavigation und Abholadresse in einer Linie; bei nur einer verfügbaren Kommune entfällt ein redundanter Kommunenwähler. Der ausführliche zweite Demo-Banner wird durch den kompakten Sitzungsstatus ersetzt.                                                           | Stellt die Aufgabenhierarchie der Spezifikation wieder her, nennt Aachen nur einmal und reduziert konkurrierende Flächen, ohne Mandantenwechsel bei künftig mehreren Kommunen oder die transparente Pilotkennzeichnung zu entfernen.                                                                                   |
+| D-060 | Jeder Live-Prüfschritt des Qualitätsagenten öffnet vor seiner Interaktion den eigenen stabilen Aufgabenpfad.                                                                                                                                                                                                      | Verhindert, dass eine geänderte Seitennavigation oder ein einzelner Fehler alle nachfolgenden Prüfungen auf der falschen Ansicht ausführt und als rote Fehlerkaskade erscheinen lässt.                                                                                                                                 |
 
 ## Offene Entscheidungen
 
