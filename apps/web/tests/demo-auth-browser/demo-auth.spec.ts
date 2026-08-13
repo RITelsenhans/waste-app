@@ -37,11 +37,21 @@ test("meldet an, leitet die API gleichursprünglich weiter und deaktiviert Admin
   page,
 }) => {
   await logIn(page);
-  await expect(page.getByLabel("Kommune auswählen")).toHaveValue("demo");
+  await expect(page.getByRole("link", { name: "Stadt Aachen – Startseite" })).toBeVisible();
+  await expect(page.getByLabel("Kommune auswählen")).toHaveCount(0);
 
   const healthResponse = await page.request.get("/v1/health/ready");
   expect(healthResponse.status()).toBe(200);
   await expect(healthResponse.json()).resolves.toMatchObject({ status: "ready" });
+
+  const releaseResponse = await page.request.get("/demo-auth/release");
+  expect(releaseResponse.status()).toBe(200);
+  await expect(releaseResponse.json()).resolves.toMatchObject({
+    status: "ready",
+    provider: "local",
+    branch: "local",
+    commitSha: "unknown",
+  });
 
   const adminResponse = await page.request.get("/v1/admin/collections?tenantId=demo");
   expect(adminResponse.status()).toBe(403);

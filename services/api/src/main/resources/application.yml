@@ -29,6 +29,8 @@ waste:
     cleanup-enabled: ${WASTE_MONITORING_CLEANUP_ENABLED:false}
     retention-days: ${WASTE_MONITORING_RETENTION_DAYS:30}
     maximum-rows-per-run: ${WASTE_MONITORING_MAXIMUM_ROWS_PER_RUN:500}
+    release-commit-sha: ${RAILWAY_GIT_COMMIT_SHA:unknown}
+    release-branch: ${RAILWAY_GIT_BRANCH:local}
   mail:
     enabled: ${WASTE_MAIL_ENABLED:false}
     from: ${WASTE_MAIL_FROM:abfall-app@demo.invalid}
@@ -36,14 +38,15 @@ waste:
     poll-interval-ms: ${WASTE_MAIL_POLL_INTERVAL_MS:1000}
   pilot:
     admin-enabled: ${WASTE_PILOT_ADMIN_ENABLED:true}
+    admin-token: ${WASTE_PILOT_ADMIN_TOKEN:}
     allowed-origins:
       - ${WASTE_WEB_ORIGIN:http://localhost:3000}
       - ${WASTE_ADMIN_ORIGIN:http://localhost:3001}
   tenants:
     demo:
       tenant-id: demo
-      name: Demo Kommune
-      short-name: Demo
+      name: Stadt Aachen · Pilot
+      short-name: Aachen
       branding:
         logo-url: /regio-it-logo.png
         primary-color: "#C8102E"
@@ -66,7 +69,7 @@ waste:
         privacy: "#datenschutz"
         accessibility: "#barrierefreiheit"
       service-area:
-        city: Demo-Stadt
+        city: Aachen
         reporting-office: Bürgerservice Abfall
         phone: 0241 000000
         email: abfall@example.invalid
@@ -74,4 +77,4 @@ waste:
         - label: Demo-Support
           email: support@example.invalid
           phone: 0241 000000
-      content-version: demo-2026-07-30
+      content-version: aachen-pilot-2026-08-12

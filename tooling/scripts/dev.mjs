@@ -4,6 +4,7 @@ import { mkdir } from "node:fs/promises";
 import { createServer } from "node:net";
 import { resolve } from "node:path";
 import process from "node:process";
+import { randomBytes } from "node:crypto";
 
 const apiPort = readPort("SERVER_PORT", "8080");
 const webPort = readPort("PORT", "3000");
@@ -47,6 +48,7 @@ const databaseEnvironment = {
   SPRING_DATASOURCE_USERNAME: process.env.SPRING_DATASOURCE_USERNAME ?? "waste_app",
 };
 const apiBaseUrl = `http://127.0.0.1:${apiPort}`;
+const localAdminToken = randomBytes(32).toString("base64url");
 
 const services = {
   api: {
@@ -61,6 +63,7 @@ const services = {
       WASTE_PILOT_ADMIN_ENABLED: sharedDemo
         ? "false"
         : (process.env.WASTE_PILOT_ADMIN_ENABLED ?? "true"),
+      WASTE_PILOT_ADMIN_TOKEN: localAdminToken,
       WASTE_WEB_ORIGIN: `http://localhost:${webPort}`,
     },
     executable: "./gradlew",
@@ -84,7 +87,10 @@ const services = {
   admin: {
     args: ["node_modules/next/dist/bin/next", "dev", "-p", String(adminPort)],
     cwd: "apps/admin",
-    env: { NEXT_PUBLIC_API_BASE_URL: apiBaseUrl },
+    env: {
+      API_BASE_URL: apiBaseUrl,
+      PILOT_ADMIN_API_TOKEN: localAdminToken,
+    },
     executable: process.execPath,
     label: "Pilotpflege",
     url: `http://localhost:${adminPort}`,

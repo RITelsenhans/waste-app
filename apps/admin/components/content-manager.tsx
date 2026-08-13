@@ -3,10 +3,13 @@
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { Icon, StatusBadge } from "@waste/ui";
-
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
+import { adminRequest } from "../lib/admin-api";
 
 type Address = { id: string; displayLabel: string };
+type Publication = {
+  publicationStatus: "draft" | "published";
+  publicationUpdatedAt: string;
+};
 type Collection = {
   id: string;
   addressId: string;
@@ -15,7 +18,7 @@ type Collection = {
   plannedDate: string;
   effectiveDate: string;
   status: string;
-};
+} & Publication;
 type GuideEntry = {
   id: string;
   name: string;
@@ -23,7 +26,7 @@ type GuideEntry = {
   disposalRoute: string;
   notes: string;
   synonyms: string[];
-};
+} & Publication;
 type Site = {
   id: string;
   name: string;
@@ -34,7 +37,7 @@ type Site = {
   openNow: boolean;
   latitude: number;
   longitude: number;
-};
+} & Publication;
 type Notice = {
   id: string;
   addressId: string | null;
@@ -44,15 +47,26 @@ type Notice = {
   priority: string;
   validFrom: string;
   validUntil: string;
-};
+} & Publication;
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API}${path}`, options);
-  if (!response.ok) {
-    const problem = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new Error(problem?.detail ?? `Anfrage fehlgeschlagen (${response.status}).`);
-  }
-  return (response.status === 204 ? undefined : await response.json()) as T;
+function PublicationEditor({ status }: { status: Publication["publicationStatus"] }) {
+  return (
+    <label>
+      Freigabe
+      <select name="publicationStatus" defaultValue={status}>
+        <option value="draft">Entwurf – nicht öffentlich</option>
+        <option value="published">Veröffentlicht</option>
+      </select>
+    </label>
+  );
+}
+
+function PublicationBadge({ status }: { status: Publication["publicationStatus"] }) {
+  return (
+    <StatusBadge tone={status === "published" ? "success" : "warning"}>
+      {status === "published" ? "Veröffentlicht" : "Entwurf"}
+    </StatusBadge>
+  );
 }
 
 function data(form: HTMLFormElement) {
@@ -75,9 +89,11 @@ function localDateTime(value: string) {
 export function ContentManager({
   addresses,
   onMessage,
+  tenantId,
 }: {
   addresses: Address[];
   onMessage: (message: string) => void;
+  tenantId: string;
 }) {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [guide, setGuide] = useState<GuideEntry[]>([]);
@@ -87,10 +103,14 @@ export function ContentManager({
   const load = useCallback(async () => {
     try {
       const [nextCollections, nextGuide, nextSites, nextNotices] = await Promise.all([
-        request<Collection[]>("/v1/admin/collections?tenantId=demo"),
-        request<GuideEntry[]>("/v1/admin/waste-guide?tenantId=demo"),
-        request<Site[]>("/v1/admin/sites?tenantId=demo"),
-        request<Notice[]>("/v1/admin/notices?tenantId=demo"),
+        adminRequest<Collection[]>(
+          `/v1/admin/collections?tenantId=${encodeURIComponent(tenantId)}`,
+        ),
+        adminRequest<GuideEntry[]>(
+          `/v1/admin/waste-guide?tenantId=${encodeURIComponent(tenantId)}`,
+        ),
+        adminRequest<Site[]>(`/v1/admin/sites?tenantId=${encodeURIComponent(tenantId)}`),
+        adminRequest<Notice[]>(`/v1/admin/notices?tenantId=${encodeURIComponent(tenantId)}`),
       ]);
       setCollections(nextCollections);
       setGuide(nextGuide);
@@ -99,14 +119,14 @@ export function ContentManager({
     } catch (error) {
       onMessage((error as Error).message);
     }
-  }, [onMessage]);
+  }, [onMessage, tenantId]);
 
   useEffect(() => {
     void Promise.all([
-      request<Collection[]>("/v1/admin/collections?tenantId=demo"),
-      request<GuideEntry[]>("/v1/admin/waste-guide?tenantId=demo"),
-      request<Site[]>("/v1/admin/sites?tenantId=demo"),
-      request<Notice[]>("/v1/admin/notices?tenantId=demo"),
+      adminRequest<Collection[]>(`/v1/admin/collections?tenantId=${encodeURIComponent(tenantId)}`),
+      adminRequest<GuideEntry[]>(`/v1/admin/waste-guide?tenantId=${encodeURIComponent(tenantId)}`),
+      adminRequest<Site[]>(`/v1/admin/sites?tenantId=${encodeURIComponent(tenantId)}`),
+      adminRequest<Notice[]>(`/v1/admin/notices?tenantId=${encodeURIComponent(tenantId)}`),
     ])
       .then(([nextCollections, nextGuide, nextSites, nextNotices]) => {
         setCollections(nextCollections);
@@ -115,16 +135,21 @@ export function ContentManager({
         setNotices(nextNotices);
       })
       .catch((error: Error) => onMessage(error.message));
-  }, [onMessage]);
+  }, [onMessage, tenantId]);
 
   async function save(path: string, id: string, payload: object) {
     try {
-      await request(`${path}/${id}`, {
+      await adminRequest(`${path}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      onMessage("Änderung wurde gespeichert und ist in der Bürgeransicht abrufbar.");
+      const status = (payload as { publicationStatus?: string }).publicationStatus;
+      onMessage(
+        status === "published"
+          ? "Änderung wurde veröffentlicht und ist in der Bürgeransicht abrufbar."
+          : "Änderung wurde als Entwurf gespeichert und ist nicht öffentlich sichtbar.",
+      );
       await load();
     } catch (error) {
       onMessage((error as Error).message);
@@ -134,7 +159,9 @@ export function ContentManager({
   async function remove(path: string, id: string, label: string) {
     if (!window.confirm(`„${label}“ wirklich aus dem lokalen Pilotbestand löschen?`)) return;
     try {
-      await request<void>(`${path}/${id}?tenantId=demo`, { method: "DELETE" });
+      await adminRequest<void>(`${path}/${id}?tenantId=${encodeURIComponent(tenantId)}`, {
+        method: "DELETE",
+      });
       onMessage(`„${label}“ wurde gelöscht.`);
       await load();
     } catch (error) {
@@ -167,7 +194,7 @@ export function ContentManager({
                 event.preventDefault();
                 const form = data(event.currentTarget);
                 void save("/v1/admin/notices", item.id, {
-                  tenantId: "demo",
+                  tenantId,
                   addressId: form.get("addressId") || null,
                   noticeType: form.get("noticeType"),
                   title: form.get("title"),
@@ -175,6 +202,7 @@ export function ContentManager({
                   priority: form.get("priority"),
                   validFrom: new Date(String(form.get("validFrom"))).toISOString(),
                   validUntil: new Date(String(form.get("validUntil"))).toISOString(),
+                  publicationStatus: form.get("publicationStatus"),
                 });
               }}
             >
@@ -183,6 +211,7 @@ export function ContentManager({
                 <StatusBadge tone={new Date(item.validUntil) < new Date() ? "neutral" : "info"}>
                   {new Date(item.validUntil) < new Date() ? "Abgelaufen" : "Aktiv/künftig"}
                 </StatusBadge>
+                <PublicationBadge status={item.publicationStatus} />
               </div>
               <label>
                 Titel
@@ -234,6 +263,7 @@ export function ContentManager({
                     required
                   />
                 </label>
+                <PublicationEditor status={item.publicationStatus} />
               </div>
               <div className="edit-actions">
                 <button type="submit">Änderungen speichern</button>
@@ -262,19 +292,23 @@ export function ContentManager({
                 event.preventDefault();
                 const form = data(event.currentTarget);
                 void save("/v1/admin/collections", item.id, {
-                  tenantId: "demo",
+                  tenantId,
                   addressId: form.get("addressId"),
                   wasteTypeId: form.get("wasteTypeId"),
                   wasteTypeLabel: form.get("wasteTypeLabel"),
                   plannedDate: form.get("plannedDate"),
                   effectiveDate: form.get("effectiveDate"),
                   status: form.get("status"),
+                  publicationStatus: form.get("publicationStatus"),
                 });
               }}
             >
-              <strong>
-                {item.wasteTypeLabel} · {item.effectiveDate}
-              </strong>
+              <div className="editable-list__title">
+                <strong>
+                  {item.wasteTypeLabel} · {item.effectiveDate}
+                </strong>
+                <PublicationBadge status={item.publicationStatus} />
+              </div>
               <div className="edit-grid">
                 <label>
                   Adresse
@@ -316,6 +350,7 @@ export function ContentManager({
                     <option value="additional">Zusatztermin</option>
                   </select>
                 </label>
+                <PublicationEditor status={item.publicationStatus} />
               </div>
               <div className="edit-actions">
                 <button type="submit">Änderungen speichern</button>
@@ -344,16 +379,20 @@ export function ContentManager({
                 event.preventDefault();
                 const form = data(event.currentTarget);
                 void save("/v1/admin/waste-guide", item.id, {
-                  tenantId: "demo",
+                  tenantId,
                   name: form.get("name"),
                   category: form.get("category"),
                   disposalRoute: form.get("disposalRoute"),
                   notes: form.get("notes"),
                   synonyms: values(form.get("synonyms")),
+                  publicationStatus: form.get("publicationStatus"),
                 });
               }}
             >
-              <strong>{item.name}</strong>
+              <div className="editable-list__title">
+                <strong>{item.name}</strong>
+                <PublicationBadge status={item.publicationStatus} />
+              </div>
               <div className="edit-grid">
                 <label>
                   Begriff
@@ -376,6 +415,7 @@ export function ContentManager({
                 Synonyme
                 <input name="synonyms" defaultValue={item.synonyms.join(", ")} />
               </label>
+              <PublicationEditor status={item.publicationStatus} />
               <div className="edit-actions">
                 <button type="submit">Änderungen speichern</button>
                 <button
@@ -403,7 +443,7 @@ export function ContentManager({
                 event.preventDefault();
                 const form = data(event.currentTarget);
                 void save("/v1/admin/sites", item.id, {
-                  tenantId: "demo",
+                  tenantId,
                   name: form.get("name"),
                   siteType: form.get("siteType"),
                   address: form.get("address"),
@@ -412,10 +452,14 @@ export function ContentManager({
                   openNow: form.get("openNow") === "on",
                   latitude: Number(form.get("latitude")),
                   longitude: Number(form.get("longitude")),
+                  publicationStatus: form.get("publicationStatus"),
                 });
               }}
             >
-              <strong>{item.name}</strong>
+              <div className="editable-list__title">
+                <strong>{item.name}</strong>
+                <PublicationBadge status={item.publicationStatus} />
+              </div>
               <div className="edit-grid">
                 <label>
                   Name
@@ -466,6 +510,7 @@ export function ContentManager({
                 <input name="openNow" type="checkbox" defaultChecked={item.openNow} /> Im
                 Demo-Zeitpunkt geöffnet
               </label>
+              <PublicationEditor status={item.publicationStatus} />
               <div className="edit-actions">
                 <button type="submit">Änderungen speichern</button>
                 <button

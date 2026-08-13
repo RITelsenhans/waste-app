@@ -1,0 +1,9 @@
+{
+  "productionBranch": "feat/phase1-phase2-functional-pilot",
+  "nodeMajor": 22,
+  "javaMajor": 21,
+  "nextVersion": "16.2.12",
+  "springBootVersion": "4.1.0",
+  "kotlinVersion": "2.4.10",
+  "maximumSecurityWorkflowAgeHours": 192
+}

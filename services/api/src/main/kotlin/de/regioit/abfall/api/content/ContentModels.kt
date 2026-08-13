@@ -25,6 +25,8 @@ data class CollectionEvent(
     val effectiveDate: LocalDate,
     val status: String,
     val lastModified: Instant,
+    val publicationStatus: String,
+    val publicationUpdatedAt: Instant,
 )
 
 data class CollectionInput(
@@ -35,6 +37,7 @@ data class CollectionInput(
     val plannedDate: LocalDate,
     val effectiveDate: LocalDate,
     @field:NotBlank val status: String,
+    val publicationStatus: String = "published",
 )
 
 data class WasteGuideEntry(
@@ -46,6 +49,8 @@ data class WasteGuideEntry(
     val notes: String,
     val synonyms: List<String>,
     val dataStatus: Instant,
+    val publicationStatus: String,
+    val publicationUpdatedAt: Instant,
 )
 
 data class WasteGuideInput(
@@ -55,6 +60,7 @@ data class WasteGuideInput(
     @field:Size(min = 2, max = 500) val disposalRoute: String,
     @field:Size(max = 1000) val notes: String,
     val synonyms: List<String> = emptyList(),
+    val publicationStatus: String = "published",
 )
 
 data class Site(
@@ -69,6 +75,8 @@ data class Site(
     val latitude: Double,
     val longitude: Double,
     val dataStatus: Instant,
+    val publicationStatus: String,
+    val publicationUpdatedAt: Instant,
 )
 
 data class SiteInput(
@@ -81,6 +89,7 @@ data class SiteInput(
     val openNow: Boolean,
     val latitude: Double,
     val longitude: Double,
+    val publicationStatus: String = "published",
 )
 
 data class Notice(
@@ -93,6 +102,8 @@ data class Notice(
     val priority: String,
     val validFrom: Instant,
     val validUntil: Instant,
+    val publicationStatus: String,
+    val publicationUpdatedAt: Instant,
 )
 
 data class NoticeInput(
@@ -104,4 +115,16 @@ data class NoticeInput(
     @field:NotBlank val priority: String,
     val validFrom: Instant,
     val validUntil: Instant,
+    val publicationStatus: String = "published",
+)
+
+data class ContentAuditEvent(
+    val id: String,
+    val tenantId: String,
+    val contentType: String,
+    val contentId: String,
+    val action: String,
+    val publicationStatus: String?,
+    val actorLabel: String,
+    val occurredAt: Instant,
 )

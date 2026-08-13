@@ -10,7 +10,7 @@ Abschnitt 9 verlangt Next.js/App Router mit React und TypeScript sowie eine eige
 ## Entscheidung
 
 - Next.js 16.2.12, React/React DOM 19.2.8 und TypeScript 6.0.3. TypeScript 7 wird erst verwendet, wenn die von `eslint-config-next` eingebundene typescript-eslint-Toolchain es unterstützt.
-- pnpm 11.9.0 und Node.js ab 22.13.
+- pnpm 11.9.0 und Node.js 22; lokale und CI-Läufe verwenden mindestens 22.13.
 - Spring Boot 4.1.0, Kotlin 2.4.10 und Gradle Wrapper 9.6.1.
 - Kompilierung auf Java-21-Bytecode; Builds dürfen mit kompatiblem JDK 21–26 laufen.
 - Gradle Wrapper und pnpm Lockfile sind die reproduzierbaren Einstiegspunkte.
@@ -18,6 +18,16 @@ Abschnitt 9 verlangt Next.js/App Router mit React und TypeScript sowie eine eige
 ## Folgen
 
 Die Baseline nutzt aktuelle, zueinander kompatible Hauptversionen und benötigt keine globale Gradle-Installation. Vor einer Regio-IT-Betriebsfreigabe müssen Supportfenster, interne Baselines und Security-Scans bestätigt werden. Ein Versionswechsel benötigt Aktualisierung dieses ADRs und vollständige Qualitätsprüfungen.
+
+Für Vercel ist die Hauptversion in den `engines.node`-Feldern des Root- und des
+Web-Manifests bewusst als `22.x` gebunden. Vercel verwendet für dieses Monorepo
+`apps/web` als Projekt-Root und liest deshalb das dortige Manifest für die
+Laufzeitwahl. Eine offene Untergrenze wie `>=22.13.0` erlaubte Vercel,
+automatisch Node 24 auszuwählen, obwohl die freigegebene und überwachte
+Laufzeitbaseline weiterhin Node 22 ist. Vercel unterstützt an dieser Stelle die
+Auswahl einer Hauptversion; konkrete Minor-/Patchstände werden durch die
+Plattform gepflegt. Der lokale Entwicklungsstand und GitHub Actions bleiben auf
+einem freigegebenen Node-22-Patchstand ab 22.13.
 
 Gradle wurde innerhalb derselben Hauptversion auf 9.6.1 aktualisiert. Das von
 Gradle empfohlene Patch-Release behebt Fehler aus 9.6.0; Lizenz (Apache-2.0),

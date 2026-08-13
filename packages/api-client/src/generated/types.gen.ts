@@ -22,6 +22,16 @@ export type MonitoringStatistics = {
   cleanupCandidates: number;
 };
 
+export type MonitoringRelease = {
+  provider: "railway" | "local";
+  commitSha: string;
+  branch: string;
+  applicationVersion: string;
+  javaVersion: string;
+  springBootVersion: string;
+  kotlinVersion: string;
+};
+
 export type MaintenanceResult = {
   status: "completed" | "disabled" | "blocked";
   executedAt: string;
@@ -34,10 +44,26 @@ export type MaintenanceResult = {
   finding: string;
 };
 
+export type QualityAgentAccessCleanupInput = {
+  reference: string;
+  syntheticCredential: string;
+};
+
+export type QualityAgentAccessCleanupResult = {
+  status: "completed" | "disabled" | "blocked";
+  reference: string;
+  deletedEvents: number;
+  deletedIdempotencyRecords: number;
+  deletedRequests: number;
+  readonly deletedTotal: number;
+  finding: string;
+};
+
 export type MonitoringSummary = {
   status: "ready";
   generatedAt: string;
   retentionDays: number;
+  release: MonitoringRelease;
   statistics: MonitoringStatistics;
   lastMaintenance?: MaintenanceResult | null;
 };
@@ -119,6 +145,8 @@ export type Address = {
 
 export type CollectionStatus = "planned" | "moved" | "cancelled" | "additional";
 
+export type PublicationStatus = "draft" | "published";
+
 export type CollectionEvent = {
   id: string;
   addressId: string;
@@ -128,6 +156,8 @@ export type CollectionEvent = {
   effectiveDate: string;
   status: CollectionStatus;
   lastModified: string;
+  publicationStatus: PublicationStatus;
+  publicationUpdatedAt: string;
 };
 
 export type CollectionInput = {
@@ -138,6 +168,7 @@ export type CollectionInput = {
   plannedDate: string;
   effectiveDate: string;
   status: CollectionStatus;
+  publicationStatus?: PublicationStatus;
 };
 
 export type WasteGuideEntry = {
@@ -149,6 +180,8 @@ export type WasteGuideEntry = {
   notes: string;
   synonyms: Array<string>;
   dataStatus: string;
+  publicationStatus: PublicationStatus;
+  publicationUpdatedAt: string;
 };
 
 export type WasteGuideInput = {
@@ -158,6 +191,7 @@ export type WasteGuideInput = {
   disposalRoute: string;
   notes: string;
   synonyms: Array<string>;
+  publicationStatus?: PublicationStatus;
 };
 
 export type Site = {
@@ -172,6 +206,8 @@ export type Site = {
   latitude: number;
   longitude: number;
   dataStatus: string;
+  publicationStatus: PublicationStatus;
+  publicationUpdatedAt: string;
 };
 
 export type SiteInput = {
@@ -184,6 +220,7 @@ export type SiteInput = {
   openNow: boolean;
   latitude: number;
   longitude: number;
+  publicationStatus?: PublicationStatus;
 };
 
 export type NoticePriority = "info" | "warning" | "critical";
@@ -198,6 +235,8 @@ export type Notice = {
   priority: NoticePriority;
   validFrom: string;
   validUntil: string;
+  publicationStatus: PublicationStatus;
+  publicationUpdatedAt: string;
 };
 
 export type NoticeInput = {
@@ -209,6 +248,18 @@ export type NoticeInput = {
   priority: NoticePriority;
   validFrom: string;
   validUntil: string;
+  publicationStatus?: PublicationStatus;
+};
+
+export type ContentAuditEvent = {
+  id: string;
+  tenantId: string;
+  contentType: "collections" | "waste-guide" | "sites" | "notices";
+  contentId: string;
+  action: "created" | "updated" | "published" | "moved-to-draft" | "deleted";
+  publicationStatus: "draft" | "published" | null;
+  actorLabel: string;
+  occurredAt: string;
 };
 
 export type DefectCategory =
@@ -379,13 +430,28 @@ export type MaintenanceResultWritable = {
   finding: string;
 };
 
+export type QualityAgentAccessCleanupResultWritable = {
+  status: "completed" | "disabled" | "blocked";
+  reference: string;
+  deletedEvents: number;
+  deletedIdempotencyRecords: number;
+  deletedRequests: number;
+  finding: string;
+};
+
 export type MonitoringSummaryWritable = {
   status: "ready";
   generatedAt: string;
   retentionDays: number;
+  release: MonitoringRelease;
   statistics: MonitoringStatistics;
   lastMaintenance?: MaintenanceResultWritable | null;
 };
+
+/**
+ * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+ */
+export type PilotAdminToken = string;
 
 export type ContentId = string;
 
@@ -451,7 +517,7 @@ export type GetMonitoringSummaryError =
 
 export type GetMonitoringSummaryResponses = {
   /**
-   * Aggregierter Betriebsstand ohne fachliche Inhalte oder personenbezogene Daten.
+   * Aggregierter Betriebsstand und nicht geheime Laufzeitversionen ohne fachliche Inhalte oder personenbezogene Daten.
    */
   200: MonitoringSummary;
 };
@@ -485,6 +551,33 @@ export type RunTechnicalMaintenanceResponses = {
 
 export type RunTechnicalMaintenanceResponse =
   RunTechnicalMaintenanceResponses[keyof RunTechnicalMaintenanceResponses];
+
+export type CleanupQualityAgentRecyclingAccessData = {
+  body: QualityAgentAccessCleanupInput;
+  path?: never;
+  query?: never;
+  url: "/v1/monitoring/quality-agent/recycling-access-cleanup";
+};
+
+export type CleanupQualityAgentRecyclingAccessErrors = {
+  /**
+   * Das Monitoring-Geheimnis fehlt oder ist ungültig.
+   */
+  403: Problem;
+};
+
+export type CleanupQualityAgentRecyclingAccessError =
+  CleanupQualityAgentRecyclingAccessErrors[keyof CleanupQualityAgentRecyclingAccessErrors];
+
+export type CleanupQualityAgentRecyclingAccessResponses = {
+  /**
+   * Ergebnis der ausgeführten, deaktivierten oder blockierten Selbstbereinigung.
+   */
+  200: QualityAgentAccessCleanupResult;
+};
+
+export type CleanupQualityAgentRecyclingAccessResponse =
+  CleanupQualityAgentRecyclingAccessResponses[keyof CleanupQualityAgentRecyclingAccessResponses];
 
 export type GetMunicipalitiesData = {
   body?: never;
@@ -689,6 +782,12 @@ export type GetNoticesResponse = GetNoticesResponses[keyof GetNoticesResponses];
 
 export type GetAdminCollectionsData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query: {
     tenantId: string;
@@ -717,6 +816,12 @@ export type GetAdminCollectionsResponse =
 
 export type CreateCollectionData = {
   body: CollectionInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query?: never;
   url: "/v1/admin/collections";
@@ -742,6 +847,12 @@ export type CreateCollectionResponse = CreateCollectionResponses[keyof CreateCol
 
 export type GetAdminMunicipalityCustomizationData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     tenantKey: string;
   };
@@ -771,6 +882,12 @@ export type GetAdminMunicipalityCustomizationResponse =
 
 export type UpdateAdminMunicipalityCustomizationData = {
   body: MunicipalityCustomizationInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     tenantKey: string;
   };
@@ -804,6 +921,12 @@ export type UpdateAdminMunicipalityCustomizationResponse =
 
 export type GetAdminWasteGuideData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query: {
     tenantId: string;
@@ -832,6 +955,12 @@ export type GetAdminWasteGuideResponse =
 
 export type CreateWasteGuideEntryData = {
   body: WasteGuideInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query?: never;
   url: "/v1/admin/waste-guide";
@@ -859,6 +988,12 @@ export type CreateWasteGuideEntryResponse =
 
 export type GetAdminSitesData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query: {
     tenantId: string;
@@ -886,6 +1021,12 @@ export type GetAdminSitesResponse = GetAdminSitesResponses[keyof GetAdminSitesRe
 
 export type CreateSiteData = {
   body: SiteInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query?: never;
   url: "/v1/admin/sites";
@@ -911,6 +1052,12 @@ export type CreateSiteResponse = CreateSiteResponses[keyof CreateSiteResponses];
 
 export type GetAdminNoticesData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query: {
     tenantId: string;
@@ -938,6 +1085,12 @@ export type GetAdminNoticesResponse = GetAdminNoticesResponses[keyof GetAdminNot
 
 export type CreateNoticeData = {
   body: NoticeInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query?: never;
   url: "/v1/admin/notices";
@@ -961,8 +1114,50 @@ export type CreateNoticeResponses = {
 
 export type CreateNoticeResponse = CreateNoticeResponses[keyof CreateNoticeResponses];
 
+export type GetAdminContentAuditData = {
+  body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
+  path?: never;
+  query: {
+    tenantId: string;
+    limit?: number;
+  };
+  url: "/v1/admin/content-audit";
+};
+
+export type GetAdminContentAuditErrors = {
+  /**
+   * Eingaben sind unvollständig oder fachlich ungültig.
+   */
+  400: Problem;
+};
+
+export type GetAdminContentAuditError =
+  GetAdminContentAuditErrors[keyof GetAdminContentAuditErrors];
+
+export type GetAdminContentAuditResponses = {
+  /**
+   * Neueste Änderungen zuerst.
+   */
+  200: Array<ContentAuditEvent>;
+};
+
+export type GetAdminContentAuditResponse =
+  GetAdminContentAuditResponses[keyof GetAdminContentAuditResponses];
+
 export type DeleteCollectionData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     id: string;
   };
@@ -992,6 +1187,12 @@ export type DeleteCollectionResponse = DeleteCollectionResponses[keyof DeleteCol
 
 export type UpdateCollectionData = {
   body: CollectionInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     id: string;
   };
@@ -1023,6 +1224,12 @@ export type UpdateCollectionResponse = UpdateCollectionResponses[keyof UpdateCol
 
 export type DeleteWasteGuideEntryData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     id: string;
   };
@@ -1054,6 +1261,12 @@ export type DeleteWasteGuideEntryResponse =
 
 export type UpdateWasteGuideEntryData = {
   body: WasteGuideInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     id: string;
   };
@@ -1087,6 +1300,12 @@ export type UpdateWasteGuideEntryResponse =
 
 export type DeleteSiteData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     id: string;
   };
@@ -1116,6 +1335,12 @@ export type DeleteSiteResponse = DeleteSiteResponses[keyof DeleteSiteResponses];
 
 export type UpdateSiteData = {
   body: SiteInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     id: string;
   };
@@ -1147,6 +1372,12 @@ export type UpdateSiteResponse = UpdateSiteResponses[keyof UpdateSiteResponses];
 
 export type DeleteNoticeData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     id: string;
   };
@@ -1176,6 +1407,12 @@ export type DeleteNoticeResponse = DeleteNoticeResponses[keyof DeleteNoticeRespo
 
 export type UpdateNoticeData = {
   body: NoticeInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     id: string;
   };
@@ -1437,6 +1674,12 @@ export type GetCaseResponse = GetCaseResponses[keyof GetCaseResponses];
 
 export type GetAdminCasesData = {
   body?: never;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path?: never;
   query: {
     tenantId: string;
@@ -1464,6 +1707,12 @@ export type GetAdminCasesResponse = GetAdminCasesResponses[keyof GetAdminCasesRe
 
 export type UpdateCaseStatusData = {
   body: CaseStatusInput;
+  headers: {
+    /**
+     * Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+     */
+    "X-Pilot-Admin-Token": string;
+  };
   path: {
     reference: string;
   };

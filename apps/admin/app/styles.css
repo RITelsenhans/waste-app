@@ -32,6 +32,41 @@ header a {
   color: #c8102e;
   font-weight: 700;
 }
+.header-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+.header-actions form {
+  margin: 0;
+}
+.secondary-button {
+  background: white;
+  border: 1px solid var(--border-default);
+  color: var(--text-strong);
+}
+.municipality-switcher {
+  background: linear-gradient(135deg, #123b45, #0b625f);
+  border-radius: var(--radius-card);
+  color: white;
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 2rem;
+  max-width: 38rem;
+  padding: 1rem 1.2rem;
+}
+.municipality-switcher label {
+  font-weight: 800;
+}
+.municipality-switcher select {
+  background: white;
+  color: var(--text-strong);
+}
+.municipality-switcher p {
+  color: #d9f4f2;
+  font-size: 0.9rem;
+  margin: 0;
+}
 
 .workspace-tabs button {
   align-items: center;
@@ -223,6 +258,16 @@ h1 > .waste-icon {
   max-width: 100%;
   min-width: 0;
 }
+.publication-field {
+  background: #fff8e8;
+  border: 1px solid #e7c36f;
+  border-radius: var(--radius-control);
+  padding: 0.75rem;
+}
+.publication-field small {
+  color: var(--text-muted);
+  font-weight: 400;
+}
 input,
 select,
 textarea {
@@ -360,6 +405,36 @@ button {
   gap: 1rem;
   justify-content: space-between;
 }
+.audit-panel {
+  border-top: 1px solid var(--border-default);
+}
+.audit-list {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+}
+.audit-list li {
+  align-items: flex-start;
+  background: white;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+}
+.audit-list li > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.audit-list small,
+.audit-list code {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
 .case-list {
   display: grid;
   gap: 1rem;
@@ -391,6 +466,14 @@ button {
   .case-list article {
     align-items: stretch;
     flex-direction: column;
+  }
+  .audit-list li {
+    flex-direction: column;
+  }
+  .header-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    width: 100%;
   }
 
   h1 {

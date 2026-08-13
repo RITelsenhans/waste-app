@@ -11,30 +11,34 @@ keine Freigabe für reale kommunale Daten.
   **PostgreSQL**-Datenbank.
 - **Vercel** betreibt die **Bürgeransicht** (`apps/web`, Next.js) mit dem
   eingebauten **Passwort-Gate** davor.
-- Die **Pflege-Unit** (`apps/admin`) wird **bewusst nicht** deployt. Sie hat noch
-  keine Anmeldung und darf nicht öffentlich erreichbar sein.
+- **Vercel** betreibt zusätzlich die **Pflege-Unit** (`apps/admin`) als getrenntes,
+  ebenfalls passwortgeschütztes Projekt. Administrative API-Aufrufe laufen nur über
+  ihren serverseitigen BFF mit separatem Service-Geheimnis.
 
 Die Bürgeransicht leitet API-Aufrufe serverseitig weiter (`/v1/*` → `API_BASE_URL`),
 darum gibt es im Browser kein CORS-Thema.
 
 Diese Deploy-Dateien liegen im Repo und müssen nicht verändert werden:
 `infra/containers/api.Dockerfile`, `railway.json`, `apps/web/vercel.json`,
-`.dockerignore`.
+`apps/admin/vercel.json`, `.dockerignore`.
 
 ---
 
-## 0. Zwei Geheimnisse erzeugen
+## 0. Vier Geheimnisse erzeugen
 
 Lokal im Terminal einmal ausführen und die beiden Ausgaben notieren (nicht ins Repo,
 nicht in Chats kopieren):
 
 ```bash
 openssl rand -base64 24   # -> DEMO_ACCESS_PASSWORD (das Passwort für die Tester)
-openssl rand -hex 32      # -> DEMO_SESSION_SECRET  (signiert Sitzungen, bleibt geheim)
+openssl rand -hex 32      # -> DEMO_SESSION_SECRET der Bürgeransicht
+openssl rand -hex 32      # -> DEMO_SESSION_SECRET der Admin Area
+openssl rand -hex 32      # -> PILOT_ADMIN_API_TOKEN / WASTE_PILOT_ADMIN_TOKEN
 ```
 
-Das erste ist das Test-Passwort (mind. 12 Zeichen), das zweite signiert die
-Sitzungen (mind. 32 Zeichen) und wird niemandem weitergegeben.
+Nur das erste Geheimnis wird als gemeinsames Pilotpasswort an Testende weitergegeben.
+Die beiden Sitzungsschlüssel bleiben getrennt. Das vierte Geheimnis wird identisch in
+Admin-Vercel und Railway gesetzt und niemals an den Browser ausgeliefert.
 
 ---
 
@@ -60,7 +64,8 @@ Sitzungen (mind. 32 Zeichen) und wird niemandem weitergegeben.
    | `SPRING_DATASOURCE_URL`      | `jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}` |
    | `SPRING_DATASOURCE_USERNAME` | `${{Postgres.PGUSER}}`                                                                 |
    | `SPRING_DATASOURCE_PASSWORD` | `${{Postgres.PGPASSWORD}}`                                                             |
-   | `WASTE_PILOT_ADMIN_ENABLED`  | `false`                                                                                |
+   | `WASTE_PILOT_ADMIN_ENABLED`  | `true`                                                                                 |
+   | `WASTE_PILOT_ADMIN_TOKEN`    | _(viertes Geheimnis aus Schritt 0)_                                                    |
    | `WASTE_MAIL_ENABLED`         | `false`                                                                                |
 
    Die optionalen, strikt token-geschützten Variablen für den automatischen
@@ -98,14 +103,40 @@ Sitzungen (mind. 32 Zeichen) und wird niemandem weitergegeben.
    | `DEMO_ACCESS_PASSWORD`     | _(Ergebnis von `openssl rand -base64 24`)_ |
    | `DEMO_SESSION_SECRET`      | _(Ergebnis von `openssl rand -hex 32`)_    |
    | `API_BASE_URL`             | _(Railway-URL aus Schritt 1.5)_            |
-   | `NEXT_PUBLIC_API_BASE_URL` | _(leer lassen)_                            |
+   | `NEXT_PUBLIC_API_BASE_URL` | _(nicht anlegen)_                          |
 
 5. **Deploy** anstoßen. Nach dem Build zeigt Vercel die Adresse an, z. B.
    `https://waste-app-web.vercel.app`. **Diese URL notieren.**
 
+   Ohne `NEXT_PUBLIC_API_BASE_URL` ruft der Browser bewusst nur `/v1/*` auf derselben
+   Vercel-Adresse auf. Die serverseitige Weiterleitung verwendet `API_BASE_URL`; eine
+   direkte Browserverbindung zur Railway-API ist weder nötig noch vorgesehen.
+
 ---
 
-## 3. Die beiden Seiten verbinden
+## 3. Vercel: Admin Area
+
+1. Das Repository ein zweites Mal als Vercel-Projekt importieren.
+2. **Root Directory** auf **`apps/admin`** setzen. Build und Installation kommen aus
+   `apps/admin/vercel.json`.
+3. Production Branch und Node-Version wie bei der Bürgeransicht setzen.
+4. Diese Variablen für Production setzen:
+
+   | Name                          | Wert                                              |
+   | ----------------------------- | ------------------------------------------------- |
+   | `ADMIN_AUTH_REQUIRED`         | `true`                                            |
+   | `DEMO_ACCESS_PASSWORD`        | _(dasselbe Passwort wie in der Bürgeransicht)_    |
+   | `DEMO_SESSION_SECRET`         | _(eigener Admin-Sitzungsschlüssel aus Schritt 0)_ |
+   | `API_BASE_URL`                | _(Railway-URL aus Schritt 1.5)_                   |
+   | `PILOT_ADMIN_API_TOKEN`       | _(viertes Geheimnis aus Schritt 0)_               |
+   | `NEXT_PUBLIC_CITIZEN_APP_URL` | _(stabile Vercel-Adresse der Bürgeransicht)_      |
+
+5. Deployen und die stabile Admin-Adresse notieren. Anschließend
+   `ADMIN_PUBLIC_ORIGIN` mit genau dieser Origin ergänzen und erneut deployen.
+
+---
+
+## 4. Die Seiten verbinden
 
 Damit Login-Weiterleitung und CORS sauber sind, jetzt die jeweils andere Adresse
 nachtragen:
@@ -117,7 +148,7 @@ nachtragen:
 
 ---
 
-## 4. Testen und Kollegen einladen
+## 5. Testen und Kollegen einladen
 
 1. Vercel-Adresse im Browser öffnen → es erscheint die **Passwortabfrage**.
 2. Mit `DEMO_ACCESS_PASSWORD` anmelden → die Bürgeransicht unter `/demo` lädt.
@@ -125,10 +156,13 @@ nachtragen:
    App-Installation nötig.
 4. An die Kollegen gehen **zwei getrennte Nachrichten**: einmal die **URL**, auf
    einem anderen Kanal das **Passwort**. Die Sitzung hält 8 Stunden.
+5. Admin-Adresse öffnen, mit demselben Passwort anmelden und kontrollieren, dass eine
+   Kommune auswählbar ist. Ein direkter Railway-Aufruf von `/v1/admin/*` ohne
+   Service-Geheimnis muss `401` liefern.
 
 ---
 
-## 5. Abbau und Hinweise
+## 6. Abbau und Hinweise
 
 - **Beenden:** In Railway den API- und den Postgres-Dienst löschen (oder das ganze
   Projekt), in Vercel das Projekt löschen. Damit ist die Demo offline und es
@@ -137,8 +171,8 @@ nachtragen:
   Sitzungen laufen nach spätestens 8 Stunden aus; zum sofortigen Sperren zusätzlich
   `DEMO_SESSION_SECRET` neu erzeugen.
 - **Nur synthetische Daten.** Keine echten kommunalen Daten einspielen. Die
-  Pflege-Unit (`apps/admin`) bleibt offline; `WASTE_PILOT_ADMIN_ENABLED=false`
-  hält auch die Admin-Endpunkte der API aus.
+  veröffentlichte Pflege-Unit ist eine zeitlich begrenzte Pilot-Ausnahme; vor echten
+  Daten sind OIDC, Rollen, Auditierung und Betriebsfreigaben erforderlich.
 - **PostgreSQL-Version:** Die Migrationen zielen auf PostgreSQL 17. Bietet Railway
   beim Anlegen eine Auswahl, möglichst Version 17 wählen; andernfalls nach dem
   ersten Deploy prüfen, dass die Flyway-Migrationen fehlerfrei durchgelaufen sind

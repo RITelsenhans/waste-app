@@ -88,6 +88,15 @@ class AdminContentController(
         return service.adminNotices(tenantId)
     }
 
+    @GetMapping("/content-audit")
+    fun contentAudit(
+        @RequestParam tenantId: String,
+        @RequestParam(defaultValue = "50") limit: Int,
+    ): List<ContentAuditEvent> {
+        guard.check()
+        return service.adminAuditEvents(tenantId, limit)
+    }
+
     @PostMapping("/collections")
     @ResponseStatus(HttpStatus.CREATED)
     fun createCollection(

@@ -3,8 +3,8 @@ import "@waste/ui/styles.css";
 import "./styles.css";
 
 export const metadata = {
-  title: "Abfall Pilotpflege",
-  description: "Lokale Pflege synthetischer Pilotdaten",
+  title: "Abfall APP Admin",
+  description: "Geschützte Pflege synthetischer kommunaler Pilotdaten",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -55,13 +55,13 @@ paths:
   /v1/monitoring/summary:
     get:
       operationId: getMonitoringSummary
-      summary: Liefert ausschließlich aggregierte Qualitäts- und Wartungsstatistiken.
+      summary: Liefert aggregierte Qualitäts-, Wartungs- und Releaseinformationen.
       tags: [Monitoring]
       security:
         - monitoringToken: []
       responses:
         "200":
-          description: Aggregierter Betriebsstand ohne fachliche Inhalte oder personenbezogene Daten.
+          description: Aggregierter Betriebsstand und nicht geheime Laufzeitversionen ohne fachliche Inhalte oder personenbezogene Daten.
           content:
             application/json:
               schema:
@@ -85,6 +85,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MaintenanceResult"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /v1/monitoring/quality-agent/recycling-access-cleanup:
+    post:
+      operationId: cleanupQualityAgentRecyclingAccess
+      summary: Entfernt ausschließlich einen unmittelbar zuvor erzeugten synthetischen Qualitätsagent-Zugang.
+      description: >-
+        Der token-geschützte Endpunkt akzeptiert nur höchstens eine Stunde alte Vorgänge
+        des Demo-Mandanten mit einer exakt passenden DEMO-QA-Kennung. Reguläre Demo- und
+        Fachvorgänge werden nicht erfasst.
+      tags: [Monitoring]
+      security:
+        - monitoringToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QualityAgentAccessCleanupInput"
+      responses:
+        "200":
+          description: Ergebnis der ausgeführten, deaktivierten oder blockierten Selbstbereinigung.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityAgentAccessCleanupResult"
         "403":
           $ref: "#/components/responses/Forbidden"
   /v1/tenants:
@@ -259,6 +285,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/collections:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminCollections
       summary: Listet alle synthetischen Abholtermine zur Pflege.
@@ -293,6 +320,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/tenants/{tenantKey}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminMunicipalityCustomization
       summary: Lädt das kommunale Customizing zur Pflege.
@@ -337,6 +365,7 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/waste-guide:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminWasteGuide
       summary: Listet alle synthetischen ABC-Einträge zur Pflege.
@@ -371,6 +400,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/sites:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminSites
       summary: Listet alle synthetischen Standorte zur Pflege.
@@ -405,6 +435,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/notices:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminNotices
       summary: Listet aktive, künftige und abgelaufene Hinweise zur Pflege.
@@ -438,7 +469,33 @@ paths:
                 $ref: "#/components/schemas/Notice"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /v1/admin/content-audit:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
+    get:
+      operationId: getAdminContentAudit
+      summary: Listet die letzten nachvollziehbaren Änderungen an synthetischen Inhalten.
+      tags: [Admin]
+      parameters:
+        - { $ref: "#/components/parameters/TenantId" }
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        "200":
+          description: Neueste Änderungen zuerst.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ContentAuditEvent" }
+        "400": { $ref: "#/components/responses/BadRequest" }
   /v1/admin/collections/{id}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
       operationId: updateCollection
       summary: Korrigiert einen synthetischen Abholtermin.
@@ -468,6 +525,7 @@ paths:
         "204": { description: Termin gelöscht. }
         "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/waste-guide/{id}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
       operationId: updateWasteGuideEntry
       summary: Korrigiert einen synthetischen ABC-Eintrag.
@@ -497,6 +555,7 @@ paths:
         "204": { description: ABC-Eintrag gelöscht. }
         "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/sites/{id}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
       operationId: updateSite
       summary: Korrigiert einen synthetischen Standort.
@@ -526,6 +585,7 @@ paths:
         "204": { description: Standort gelöscht. }
         "404": { $ref: "#/components/responses/NotFound" }
   /v1/admin/notices/{id}:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     put:
       operationId: updateNotice
       summary: Korrigiert einen synthetischen Hinweis.
@@ -744,6 +804,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
   /v1/admin/cases:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     get:
       operationId: getAdminCases
       summary: Listet synthetische Pilotvorgänge für die lokale Bearbeitung.
@@ -762,6 +823,7 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
   /v1/admin/cases/{reference}/status:
+    parameters: [{ $ref: "#/components/parameters/PilotAdminToken" }]
     patch:
       operationId: updateCaseStatus
       summary: Ändert den öffentlichen Status eines synthetischen Pilotvorgangs.
@@ -793,6 +855,14 @@ components:
       name: X-Monitoring-Token
       description: Separates, mindestens 32 Zeichen langes Geheimnis für den Qualitätsagenten.
   parameters:
+    PilotAdminToken:
+      name: X-Pilot-Admin-Token
+      in: header
+      required: true
+      description: Separates, mindestens 32 Zeichen langes Service-Geheimnis zwischen Admin-BFF und API; es wird nie an den Browser ausgeliefert.
+      schema:
+        type: string
+        minLength: 32
     ContentId:
       name: id
       in: path
@@ -893,6 +963,27 @@ components:
         failedOutboxEvents: { type: integer, minimum: 0 }
         completedRecyclingAccessRequests: { type: integer, minimum: 0 }
         cleanupCandidates: { type: integer, minimum: 0 }
+    MonitoringRelease:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          provider,
+          commitSha,
+          branch,
+          applicationVersion,
+          javaVersion,
+          springBootVersion,
+          kotlinVersion,
+        ]
+      properties:
+        provider: { type: string, enum: [railway, local] }
+        commitSha: { type: string }
+        branch: { type: string }
+        applicationVersion: { type: string }
+        javaVersion: { type: string }
+        springBootVersion: { type: string }
+        kotlinVersion: { type: string }
     MaintenanceResult:
       type: object
       additionalProperties: false
@@ -920,16 +1011,54 @@ components:
         deletedAccessIdempotencyRecords: { type: integer, minimum: 0 }
         deletedTotal: { type: integer, minimum: 0, readOnly: true }
         finding: { type: string }
+    QualityAgentAccessCleanupInput:
+      type: object
+      additionalProperties: false
+      required: [reference, syntheticCredential]
+      properties:
+        reference:
+          type: string
+          pattern: "^DEMO-Z-[A-F0-9]{12}$"
+        syntheticCredential:
+          type: string
+          pattern: "^DEMO-QA-[A-Z0-9-]{2,16}$"
+    QualityAgentAccessCleanupResult:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          status,
+          reference,
+          deletedEvents,
+          deletedIdempotencyRecords,
+          deletedRequests,
+          deletedTotal,
+          finding,
+        ]
+      properties:
+        status:
+          type: string
+          enum: [completed, disabled, blocked]
+        reference:
+          type: string
+          pattern: "^DEMO-Z-[A-F0-9]{12}$"
+        deletedEvents: { type: integer, minimum: 0 }
+        deletedIdempotencyRecords: { type: integer, minimum: 0 }
+        deletedRequests: { type: integer, minimum: 0 }
+        deletedTotal: { type: integer, minimum: 0, readOnly: true }
+        finding: { type: string }
     MonitoringSummary:
       type: object
       additionalProperties: false
-      required: [status, generatedAt, retentionDays, statistics]
+      required: [status, generatedAt, retentionDays, release, statistics]
       properties:
         status:
           type: string
           const: ready
         generatedAt: { type: string, format: date-time }
         retentionDays: { type: integer, minimum: 1 }
+        release:
+          $ref: "#/components/schemas/MonitoringRelease"
         statistics:
           $ref: "#/components/schemas/MonitoringStatistics"
         lastMaintenance:
@@ -1094,6 +1223,9 @@ components:
     CollectionStatus:
       type: string
       enum: [planned, moved, cancelled, additional]
+    PublicationStatus:
+      type: string
+      enum: [draft, published]
     CollectionEvent:
       type: object
       additionalProperties: false
@@ -1107,6 +1239,8 @@ components:
           effectiveDate,
           status,
           lastModified,
+          publicationStatus,
+          publicationUpdatedAt,
         ]
       properties:
         id:
@@ -1126,6 +1260,11 @@ components:
         status:
           $ref: "#/components/schemas/CollectionStatus"
         lastModified:
+          type: string
+          format: date-time
+        publicationStatus:
+          $ref: "#/components/schemas/PublicationStatus"
+        publicationUpdatedAt:
           type: string
           format: date-time
     CollectionInput:
@@ -1151,10 +1290,26 @@ components:
           format: date
         status:
           $ref: "#/components/schemas/CollectionStatus"
+        publicationStatus:
+          allOf:
+            - $ref: "#/components/schemas/PublicationStatus"
+          default: published
     WasteGuideEntry:
       type: object
       additionalProperties: false
-      required: [id, tenantId, name, category, disposalRoute, notes, synonyms, dataStatus]
+      required:
+        [
+          id,
+          tenantId,
+          name,
+          category,
+          disposalRoute,
+          notes,
+          synonyms,
+          dataStatus,
+          publicationStatus,
+          publicationUpdatedAt,
+        ]
       properties:
         id:
           type: string
@@ -1173,6 +1328,11 @@ components:
           items:
             type: string
         dataStatus:
+          type: string
+          format: date-time
+        publicationStatus:
+          $ref: "#/components/schemas/PublicationStatus"
+        publicationUpdatedAt:
           type: string
           format: date-time
     WasteGuideInput:
@@ -1197,6 +1357,10 @@ components:
           type: array
           items:
             type: string
+        publicationStatus:
+          allOf:
+            - $ref: "#/components/schemas/PublicationStatus"
+          default: published
     Site:
       type: object
       additionalProperties: false
@@ -1213,6 +1377,8 @@ components:
           latitude,
           longitude,
           dataStatus,
+          publicationStatus,
+          publicationUpdatedAt,
         ]
       properties:
         id:
@@ -1244,6 +1410,11 @@ components:
           minimum: -180
           maximum: 180
         dataStatus:
+          type: string
+          format: date-time
+        publicationStatus:
+          $ref: "#/components/schemas/PublicationStatus"
+        publicationUpdatedAt:
           type: string
           format: date-time
     SiteInput:
@@ -1290,13 +1461,29 @@ components:
           format: double
           minimum: -180
           maximum: 180
+        publicationStatus:
+          allOf:
+            - $ref: "#/components/schemas/PublicationStatus"
+          default: published
     NoticePriority:
       type: string
       enum: [info, warning, critical]
     Notice:
       type: object
       additionalProperties: false
-      required: [id, tenantId, noticeType, title, body, priority, validFrom, validUntil]
+      required:
+        [
+          id,
+          tenantId,
+          noticeType,
+          title,
+          body,
+          priority,
+          validFrom,
+          validUntil,
+          publicationStatus,
+          publicationUpdatedAt,
+        ]
       properties:
         id:
           type: string
@@ -1316,6 +1503,11 @@ components:
           type: string
           format: date-time
         validUntil:
+          type: string
+          format: date-time
+        publicationStatus:
+          $ref: "#/components/schemas/PublicationStatus"
+        publicationUpdatedAt:
           type: string
           format: date-time
     NoticeInput:
@@ -1341,6 +1533,36 @@ components:
           type: string
           format: date-time
         validUntil:
+          type: string
+          format: date-time
+        publicationStatus:
+          allOf:
+            - $ref: "#/components/schemas/PublicationStatus"
+          default: published
+    ContentAuditEvent:
+      type: object
+      additionalProperties: false
+      required:
+        [id, tenantId, contentType, contentId, action, publicationStatus, actorLabel, occurredAt]
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        contentType:
+          type: string
+          enum: [collections, waste-guide, sites, notices]
+        contentId:
+          type: string
+        action:
+          type: string
+          enum: [created, updated, published, moved-to-draft, deleted]
+        publicationStatus:
+          type: [string, "null"]
+          enum: [draft, published, null]
+        actorLabel:
+          type: string
+        occurredAt:
           type: string
           format: date-time
     DefectCategory:

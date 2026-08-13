@@ -4,10 +4,11 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
 import { ContentManager } from "../components/content-manager";
+import { ContentAudit } from "../components/content-audit";
 import { MunicipalityCustomization } from "../components/municipality-customization";
+import { adminRequest } from "../lib/admin-api";
 import { nextStatus, type CaseTransition } from "../lib/case-status";
 
-const API = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 type Case = {
   reference: string;
   caseType: string;
@@ -17,50 +18,102 @@ type Case = {
   updatedAt: string;
 };
 type Address = { id: string; displayLabel: string };
-type Workspace = "create" | "manage" | "cases" | "municipality";
+type Municipality = {
+  tenantId: string;
+  name: string;
+  shortName: string;
+  city: string;
+  primaryColor: string;
+};
+type Workspace = "create" | "manage" | "audit" | "cases" | "municipality";
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API}${path}`, options);
-  if (!response.ok) {
-    const problem = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new Error(problem?.detail ?? `Anfrage fehlgeschlagen (${response.status}).`);
-  }
-  return response.json() as Promise<T>;
+function PublicationSelect() {
+  return (
+    <label className="publication-field">
+      Freigabe
+      <select name="publicationStatus" defaultValue="draft">
+        <option value="draft">Als Entwurf speichern</option>
+        <option value="published">Sofort veröffentlichen</option>
+      </select>
+      <small>Entwürfe sind nur hier sichtbar.</small>
+    </label>
+  );
 }
 
 function values(form: HTMLFormElement) {
   return new FormData(form);
 }
 
+function citizenAppUrl(baseUrl: string, tenantId: string): string {
+  try {
+    const target = new URL(baseUrl);
+    if (!["http:", "https:"].includes(target.protocol) || target.username || target.password) {
+      throw new Error("Nicht unterstützte Bürger-App-URL");
+    }
+    target.pathname = `${target.pathname.replace(/\/$/, "")}/${encodeURIComponent(tenantId || "demo")}`;
+    target.search = "";
+    target.hash = "";
+    return target.toString();
+  } catch {
+    return `http://localhost:3000/${encodeURIComponent(tenantId || "demo")}`;
+  }
+}
+
 export default function AdminPage() {
+  const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
+  const [tenantId, setTenantId] = useState("");
   const [cases, setCases] = useState<Case[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [contentRevision, setContentRevision] = useState(0);
   const [workspace, setWorkspace] = useState<Workspace>("create");
   const [message, setMessage] = useState("Bereit für synthetische Eingaben.");
+  const selectedMunicipality = municipalities.find((item) => item.tenantId === tenantId);
+  const citizenBaseUrl = process.env.NEXT_PUBLIC_CITIZEN_APP_URL ?? "http://localhost:3000";
 
   async function loadCases() {
+    if (!tenantId) return;
     try {
-      setCases(await request<Case[]>("/v1/admin/cases?tenantId=demo"));
+      setCases(
+        await adminRequest<Case[]>(`/v1/admin/cases?tenantId=${encodeURIComponent(tenantId)}`),
+      );
     } catch (error) {
       setMessage((error as Error).message);
     }
   }
   useEffect(() => {
-    void Promise.all([
-      request<Case[]>("/v1/admin/cases?tenantId=demo").then(setCases),
-      request<Address[]>("/v1/addresses/search?tenantId=demo&q=Demo-Stadt").then(setAddresses),
-    ]).catch((error: Error) => setMessage(error.message));
+    void adminRequest<Municipality[]>("/v1/tenants")
+      .then((items) => {
+        setMunicipalities(items);
+        setTenantId((current) => current || items[0]?.tenantId || "");
+      })
+      .catch((error: Error) => setMessage(error.message));
   }, []);
+
+  useEffect(() => {
+    if (!tenantId || !selectedMunicipality) return;
+    void Promise.all([
+      adminRequest<Case[]>(`/v1/admin/cases?tenantId=${encodeURIComponent(tenantId)}`).then(
+        setCases,
+      ),
+      adminRequest<Address[]>(
+        `/v1/addresses/search?tenantId=${encodeURIComponent(tenantId)}&q=${encodeURIComponent(selectedMunicipality.city)}`,
+      ).then(setAddresses),
+    ]).catch((error: Error) => setMessage(error.message));
+  }, [selectedMunicipality, tenantId]);
 
   async function submit(path: string, payload: object, form: HTMLFormElement) {
     try {
-      await request(path, {
+      await adminRequest(path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      setMessage("Eintrag wurde gespeichert und ist sofort in der Bürgeransicht sichtbar.");
+      const publicationStatus = (payload as { publicationStatus?: string }).publicationStatus;
+      setMessage(
+        publicationStatus === "published"
+          ? "Eintrag wurde gespeichert und ist in der Bürgeransicht sichtbar."
+          : "Entwurf wurde gespeichert und bleibt in der Bürgeransicht verborgen.",
+      );
       setContentRevision((current) => current + 1);
       form.reset();
     } catch (error) {
@@ -74,13 +127,14 @@ export default function AdminPage() {
     await submit(
       "/v1/admin/collections",
       {
-        tenantId: "demo",
+        tenantId,
         addressId: data.get("addressId"),
         wasteTypeId: data.get("wasteTypeId"),
         wasteTypeLabel: data.get("wasteTypeLabel"),
         plannedDate: data.get("plannedDate"),
         effectiveDate: data.get("effectiveDate"),
         status: data.get("status"),
+        publicationStatus: data.get("publicationStatus"),
       },
       event.currentTarget,
     );
@@ -91,7 +145,7 @@ export default function AdminPage() {
     await submit(
       "/v1/admin/waste-guide",
       {
-        tenantId: "demo",
+        tenantId,
         name: data.get("name"),
         category: data.get("category"),
         disposalRoute: data.get("disposalRoute"),
@@ -100,6 +154,7 @@ export default function AdminPage() {
           .split(",")
           .map((item) => item.trim())
           .filter(Boolean),
+        publicationStatus: data.get("publicationStatus"),
       },
       event.currentTarget,
     );
@@ -110,7 +165,7 @@ export default function AdminPage() {
     await submit(
       "/v1/admin/sites",
       {
-        tenantId: "demo",
+        tenantId,
         name: data.get("name"),
         siteType: data.get("siteType"),
         address: data.get("address"),
@@ -122,6 +177,7 @@ export default function AdminPage() {
         openNow: data.get("openNow") === "on",
         latitude: Number(data.get("latitude")),
         longitude: Number(data.get("longitude")),
+        publicationStatus: data.get("publicationStatus"),
       },
       event.currentTarget,
     );
@@ -132,7 +188,7 @@ export default function AdminPage() {
     await submit(
       "/v1/admin/notices",
       {
-        tenantId: "demo",
+        tenantId,
         addressId: data.get("addressId") || null,
         noticeType: data.get("noticeType"),
         title: data.get("title"),
@@ -140,13 +196,14 @@ export default function AdminPage() {
         priority: data.get("priority"),
         validFrom: new Date(String(data.get("validFrom"))).toISOString(),
         validUntil: new Date(String(data.get("validUntil"))).toISOString(),
+        publicationStatus: data.get("publicationStatus"),
       },
       event.currentTarget,
     );
   }
   async function changeStatus(reference: string, transition: CaseTransition) {
     try {
-      await request(`/v1/admin/cases/${reference}/status`, {
+      await adminRequest(`/v1/admin/cases/${reference}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -168,27 +225,61 @@ export default function AdminPage() {
           <span>regio iT</span>
           <div>
             <strong>Abfall Pilotpflege</strong>
-            <small>Demo Kommune</small>
+            <small>{selectedMunicipality?.name ?? "Kommune wird geladen"}</small>
           </div>
         </div>
-        <a href="http://localhost:3000/demo">Bürgeransicht öffnen</a>
+        <div className="header-actions">
+          <a href={citizenAppUrl(citizenBaseUrl, tenantId)}>Bürgeransicht öffnen</a>
+          <form action="/admin-auth/logout" method="post">
+            <button className="secondary-button" type="submit">
+              Abmelden
+            </button>
+          </form>
+        </div>
       </header>
       <aside>
-        <strong>Nur lokal · keine Anmeldung</strong> Diese Pflegeoberfläche ist ausschließlich für
-        synthetische Testdaten vorgesehen und darf nicht öffentlich betrieben werden.
+        <strong>Geschützter Pilot</strong> Nur veröffentlichte Änderungen wirken auf die
+        synthetischen Bürgerdaten der ausgewählten Kommune. Für echte kommunale Daten ist dieser
+        Zugang nicht freigegeben.
       </aside>
       <p className="status" role="status">
         {message}
       </p>
       <section>
-        <p className="eyebrow">Eingabe-Unit</p>
+        <div className="municipality-switcher">
+          <label htmlFor="municipality-select">Kommune auswählen</label>
+          <select
+            id="municipality-select"
+            onChange={(event) => {
+              setCases([]);
+              setAddresses([]);
+              setTenantId(event.target.value);
+              setContentRevision((current) => current + 1);
+              setMessage("Kommune gewechselt. Daten werden neu geladen.");
+            }}
+            value={tenantId}
+          >
+            {municipalities.length === 0 && <option value="">Kommunen werden geladen …</option>}
+            {municipalities.map((item) => (
+              <option key={item.tenantId} value={item.tenantId}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+          {selectedMunicipality && (
+            <p>
+              {selectedMunicipality.city} · Mandant {selectedMunicipality.tenantId}
+            </p>
+          )}
+        </div>
+        <p className="eyebrow">Verwaltung</p>
         <h1>
           <Icon name="sparkles" />
           Kommunale Daten pflegen
         </h1>
         <p>
-          Termine, Entsorgungswege, Standorte und Hinweise werden hier getrennt von der
-          Bürgeransicht erfasst.
+          Termine, Entsorgungswege, Standorte, Hinweise und Vorgänge für{" "}
+          {selectedMunicipality?.shortName ?? "die ausgewählte Kommune"} verwalten.
         </p>
         <nav className="workspace-tabs" aria-label="Arbeitsbereiche">
           <button aria-pressed={workspace === "create"} onClick={() => setWorkspace("create")}>
@@ -196,6 +287,9 @@ export default function AdminPage() {
           </button>
           <button aria-pressed={workspace === "manage"} onClick={() => setWorkspace("manage")}>
             <Icon name="calendar" /> Bestand bearbeiten
+          </button>
+          <button aria-pressed={workspace === "audit"} onClick={() => setWorkspace("audit")}>
+            <Icon name="sparkles" /> Änderungsverlauf
           </button>
           <button aria-pressed={workspace === "cases"} onClick={() => setWorkspace("cases")}>
             <Icon name="warning" /> Vorgänge
@@ -253,6 +347,7 @@ export default function AdminPage() {
                 <option value="additional">Zusatztermin</option>
               </select>
             </label>
+            <PublicationSelect />
             <button>Termin speichern</button>
           </form>
           <form className="waste-card waste-card--raised" id="abc" onSubmit={guide}>
@@ -282,6 +377,7 @@ export default function AdminPage() {
               Synonyme, komma-getrennt
               <input name="synonyms" />
             </label>
+            <PublicationSelect />
             <button>ABC-Eintrag speichern</button>
           </form>
           <form className="waste-card waste-card--raised" id="orte" onSubmit={site}>
@@ -336,6 +432,7 @@ export default function AdminPage() {
             <label className="check">
               <input name="openNow" type="checkbox" /> Im Demo-Zeitpunkt geöffnet
             </label>
+            <PublicationSelect />
             <button>Standort speichern</button>
           </form>
           <form className="waste-card waste-card--raised" id="hinweise" onSubmit={notice}>
@@ -384,14 +481,23 @@ export default function AdminPage() {
               Gültig bis
               <input name="validUntil" type="datetime-local" required />
             </label>
-            <button>Hinweis veröffentlichen</button>
+            <PublicationSelect />
+            <button>Hinweis speichern</button>
           </form>
         </div>
       )}
       {workspace === "manage" && (
-        <ContentManager key={contentRevision} addresses={addresses} onMessage={setMessage} />
+        <ContentManager
+          key={`${tenantId}-${contentRevision}`}
+          addresses={addresses}
+          onMessage={setMessage}
+          tenantId={tenantId}
+        />
       )}
-      {workspace === "municipality" && <MunicipalityCustomization onMessage={setMessage} />}
+      {workspace === "audit" && tenantId && <ContentAudit key={tenantId} tenantId={tenantId} />}
+      {workspace === "municipality" && tenantId && (
+        <MunicipalityCustomization key={tenantId} onMessage={setMessage} tenantId={tenantId} />
+      )}
       {workspace === "cases" && (
         <section id="vorgaenge">
           <div className="section-head">

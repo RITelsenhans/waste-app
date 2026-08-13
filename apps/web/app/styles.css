@@ -31,11 +31,12 @@ textarea:focus-visible {
 }
 
 .live-message {
-  background: #dff4f3;
-  border-inline-start: 0.3rem solid var(--tenant-info);
-  margin: 1rem auto 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin: 0.55rem auto 0;
   max-width: var(--layout-content-max);
-  padding: 0.75rem clamp(1rem, 4vw, 2rem);
+  min-height: 1.2rem;
+  padding-inline: clamp(1rem, 4vw, 2rem);
 }
 
 .button-link,
@@ -289,7 +290,6 @@ h3 {
 }
 
 .header-inner,
-.demo-banner__inner,
 .home-hero,
 .home-section,
 .feedback-section,
@@ -303,9 +303,10 @@ h3 {
 .header-inner {
   align-items: center;
   display: grid;
-  column-gap: clamp(1rem, 3vw, 2.5rem);
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding-top: 0.75rem;
+  column-gap: clamp(0.8rem, 2vw, 1.75rem);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 5.25rem;
+  padding-block: 0.55rem;
 }
 
 .header-inner > *,
@@ -323,30 +324,36 @@ h3 {
   text-decoration: none;
 }
 
-.municipality-name {
+.brand-copy {
   border-left: 1px solid var(--border-default);
-  color: var(--text-strong);
-  font-size: 0.9rem;
-  font-weight: var(--typography-weight-bold);
+  display: grid;
+  gap: 0.05rem;
   line-height: 1.15;
-  max-width: 8rem;
   padding-left: 0.75rem;
+}
+
+.brand-copy strong {
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.brand-copy small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
 }
 
 .brand-logo {
   height: auto;
+  mix-blend-mode: multiply;
   width: 8.4rem;
 }
 
 .desktop-nav {
   align-items: center;
-  border-top: 1px solid var(--border-default);
   display: flex;
-  gap: clamp(0.35rem, 1.5vw, 1rem);
-  grid-column: 1 / -1;
+  gap: clamp(0.15rem, 0.7vw, 0.55rem);
   justify-content: center;
-  margin-top: 0.7rem;
-  min-height: 3.2rem;
+  min-height: 2.8rem;
   width: 100%;
 }
 
@@ -354,7 +361,7 @@ h3 {
   border-radius: var(--radius-pill);
   font-size: 0.94rem;
   font-weight: var(--typography-weight-semibold);
-  padding: 0.55rem clamp(0.75rem, 1.8vw, 1.25rem);
+  padding: 0.5rem clamp(0.55rem, 1vw, 0.85rem);
   text-decoration: none;
 }
 
@@ -399,14 +406,14 @@ h3 {
 
 .address-label {
   align-items: center;
-  background: var(--surface-subtle);
-  border-radius: var(--radius-pill);
+  border-left: 1px solid var(--border-default);
   display: inline-flex;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   font-weight: var(--typography-weight-bold);
-  gap: 0.55rem;
+  gap: 0.45rem;
   min-block-size: var(--control-target-min);
-  padding: 0.45rem 0.85rem;
+  max-width: 15rem;
+  padding: 0.25rem 0 0.25rem 0.85rem;
   text-decoration: none;
 }
 
@@ -421,43 +428,18 @@ h3 {
   line-height: 1.1;
 }
 
-.address-label > span:first-child {
-  color: var(--status-success);
-  font-size: 0.65rem;
-}
-
-.demo-banner {
-  background: #fff5d9;
-  border-bottom: 1px solid #e7c36f;
-}
-
-.demo-banner__inner {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  min-height: 3.75rem;
-  padding-block: 0.65rem;
-}
-
-.demo-banner__inner p {
-  margin: 0;
-}
-
-.demo-banner__label {
-  background: var(--status-warning);
-  border-radius: var(--radius-pill);
-  color: var(--text-strong);
-  flex: none;
-  font-size: 0.78rem;
-  font-weight: var(--typography-weight-bold);
-  padding: 0.28rem 0.65rem;
+.address-label > .waste-icon {
+  color: var(--tenant-primary);
+  flex: 0 0 1rem;
+  height: 1rem;
+  width: 1rem;
 }
 
 .home-hero {
   display: grid;
   gap: 1.25rem;
   grid-template-columns: minmax(0, 1.55fr) minmax(19rem, 0.75fr);
-  padding-block: clamp(2rem, 5vw, 4.5rem);
+  padding-block: clamp(1.25rem, 3vw, 2.75rem);
 }
 
 .collection-hero {
@@ -465,7 +447,7 @@ h3 {
     radial-gradient(circle at 90% 12%, rgb(0 143 140 / 28%), transparent 35%), var(--text-strong);
   border: 0;
   color: var(--text-inverse);
-  min-height: 29rem;
+  min-height: 24rem;
   overflow: hidden;
   padding: clamp(1.5rem, 5vw, 3.5rem);
   position: relative;
@@ -510,7 +492,7 @@ h3 {
   font-size: clamp(3.2rem, 8vw, 6.5rem);
   letter-spacing: -0.035em;
   line-height: 0.95;
-  margin: clamp(2.5rem, 7vw, 5rem) 0 1.5rem;
+  margin: clamp(1.75rem, 4vw, 3.25rem) 0 1.25rem;
   max-width: 9ch;
   position: relative;
   z-index: 1;
@@ -1735,7 +1717,7 @@ h3 {
 }
 
 .desktop-nav {
-  border-top-color: #d7e4e6;
+  color: #183441;
 }
 
 .desktop-nav a {
@@ -1757,36 +1739,13 @@ h3 {
 }
 
 .address-label {
-  background: linear-gradient(135deg, #edf5f5, #e6eef6);
-  border: 1px solid #d6e2e5;
-}
-
-.demo-banner {
-  background: radial-gradient(circle at 85% 50%, rgb(66 215 205 / 18%), transparent 18rem), #0a2a37;
-  border-bottom-color: #234c56;
-  color: #f7fbfc;
-}
-
-.demo-banner__inner p {
-  color: #d5e2e5;
-}
-
-.demo-banner__inner strong {
-  color: white;
-}
-
-.demo-banner__label {
-  background: #ffd06d;
-  box-shadow: 0 0.35rem 0.8rem rgb(0 0 0 / 18%);
-  color: #362600;
+  border-left-color: #d6e2e5;
 }
 
 .live-message {
-  background: linear-gradient(90deg, #daf3f0, #e8f3f7);
-  border: 1px solid #b8dad9;
-  border-inline-start: 0.35rem solid #138f8a;
-  border-radius: 0 0 var(--radius-control) var(--radius-control);
-  box-shadow: 0 0.65rem 1.3rem rgb(7 29 45 / 5%);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .home-hero {
@@ -2410,6 +2369,91 @@ button:hover,
   display: none;
 }
 
+/* Sprint 1: aufgabenorientierte Seiten statt einer einzigen langen Präsentationsseite. */
+.page-intro {
+  margin-inline: auto;
+  max-width: var(--layout-content-max);
+  padding: clamp(2.5rem, 6vw, 5rem) clamp(1rem, 4vw, 2rem) 0;
+}
+
+.page-intro h1 {
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  margin-bottom: 0.8rem;
+  max-width: 17ch;
+}
+
+.page-intro > p:last-child {
+  color: var(--text-muted);
+  font-size: 1.08rem;
+  max-width: 46rem;
+}
+
+.collection-filter {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  margin: 1.5rem 0 1rem;
+  padding: 1rem;
+}
+
+.collection-filter legend {
+  font-weight: var(--typography-weight-bold);
+  padding-inline: 0.35rem;
+}
+
+.collection-filter > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1.2rem;
+}
+
+.collection-filter label {
+  align-items: center;
+  display: inline-flex;
+  font-weight: var(--typography-weight-semibold);
+  gap: 0.45rem;
+}
+
+.collection-filter input {
+  height: 1.15rem;
+  width: 1.15rem;
+}
+
+.calendar-disclosure--first {
+  margin-bottom: 1.25rem;
+  margin-top: 0;
+}
+
+.section-link-row {
+  margin-top: 1.25rem;
+}
+
+.button-link--dark {
+  background: #102d39;
+  color: white;
+}
+
+.view-home #abfall-abc {
+  grid-template-columns: 1fr;
+}
+
+.view-home #abfall-abc .guide-card,
+.view-guide #abfall-abc .updates-card {
+  display: none;
+}
+
+.view-home #kalender {
+  padding-top: clamp(2rem, 4vw, 3.5rem);
+}
+
+.view-home .collection-card {
+  min-height: 8.5rem;
+}
+
+.view-services #sortierkompass {
+  padding-top: clamp(2rem, 4vw, 3.5rem);
+}
+
 .centered-state {
   display: grid;
   min-height: 70vh;
@@ -2427,12 +2471,23 @@ button:hover,
 }
 
 @media (max-width: 64rem) {
+  .header-inner {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
   .desktop-nav {
     gap: 0.75rem;
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .desktop-nav a {
     font-size: 0.86rem;
+  }
+
+  .header-context {
+    grid-column: 2;
+    grid-row: 1;
   }
 
   .home-hero {
@@ -2475,16 +2530,12 @@ button:hover,
     width: 7.2rem;
   }
 
-  .municipality-name {
+  .brand-copy {
     display: none;
   }
 
   .desktop-nav {
     display: none;
-  }
-
-  .demo-banner__inner {
-    align-items: start;
   }
 
   .home-hero,
@@ -2630,10 +2681,6 @@ button:hover,
     white-space: nowrap;
   }
 
-  .demo-banner__inner {
-    display: grid;
-  }
-
   .collection-hero__topline {
     align-items: start;
     flex-direction: column;
@@ -2691,7 +2738,6 @@ button:hover,
 }
 
 @media (forced-colors: active) {
-  .demo-banner,
   .notice-card {
     border: 2px solid CanvasText;
   }
