@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, Icon, StatusBadge } from "@waste/ui";
 import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
 import type { TenantConfig } from "../lib/tenant-config";
+import { ContainerShopShowcase } from "./container-shop-showcase";
 import { RecyclingAccessShowcase } from "./recycling-access-showcase";
 import { SiteHeader } from "./site-header";
 import { WasteSortingShowcase } from "./waste-sorting-showcase";
@@ -42,18 +43,29 @@ export type CitizenView =
   | "sorting"
   | "complaint"
   | "bulk"
-  | "access";
+  | "access"
+  | "containerShop";
 
-type ServiceView = "services" | "sorting" | "complaint" | "bulk" | "access";
+type ServiceView = "services" | "sorting" | "complaint" | "bulk" | "access" | "containerShop";
 
-const serviceViews: ServiceView[] = ["services", "sorting", "complaint", "bulk", "access"];
+const serviceViews: ServiceView[] = [
+  "services",
+  "sorting",
+  "complaint",
+  "bulk",
+  "access",
+  "containerShop",
+];
 
 function isServiceView(view: CitizenView): view is ServiceView {
   return serviceViews.includes(view as ServiceView);
 }
 
 const viewTitles: Record<
-  Exclude<CitizenView, "home" | "services" | "sorting" | "complaint" | "bulk" | "access">,
+  Exclude<
+    CitizenView,
+    "home" | "services" | "sorting" | "complaint" | "bulk" | "access" | "containerShop"
+  >,
   { eyebrow: string; title: string; text: string }
 > = {
   calendar: {
@@ -78,6 +90,7 @@ const servicePageTitles: Record<Exclude<ServiceView, "services">, string> = {
   complaint: "Problem melden",
   bulk: "Sperrmüll bestellen",
   access: "24/7-Zugang zum Recyclinghof",
+  containerShop: "Container-Shop",
 };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -521,6 +534,13 @@ export function CitizenPilot({
                   <small>Nachtabgabe mit Tor-Simulation testen</small>
                 </a>
               )}
+              <a href={`/${tenantKey}/services/container-shop`}>
+                <span>
+                  <Icon name="container" />
+                </span>
+                <strong>Container-Shop</strong>
+                <small>Größen vergleichen · Pilot-Vorschau</small>
+              </a>
             </div>
           </section>
         )}
@@ -555,7 +575,7 @@ export function CitizenPilot({
                   <span>
                     <Icon name="camera" />
                   </span>
-                  <strong>SortierKompass testen</strong>
+                  <strong>SortierKompass</strong>
                   <small>Beispielfoto prüfen</small>
                 </a>
                 <a href={`/${tenantKey}/services/maengel/new`}>
@@ -569,7 +589,7 @@ export function CitizenPilot({
                   <span>
                     <Icon name="truck" />
                   </span>
-                  <strong>Sperrmüll bestellen</strong>
+                  <strong>Sperrmüll</strong>
                   <small>Termin wählen</small>
                 </a>
                 {config.enabledFeatures.recyclingAccessShowcase && (
@@ -577,12 +597,38 @@ export function CitizenPilot({
                     <span>
                       <Icon name="recycle" />
                     </span>
-                    <strong>24/7-Zugang testen</strong>
+                    <strong>24/7-Zugang</strong>
                     <small>Tor-Simulation starten</small>
                   </a>
                 )}
               </nav>
             </Card>
+            <nav className="home-service-highlights" aria-label="Weitere Angebote">
+              <a className="is-yellow-bag" href={`/${tenantKey}/abfall-abc`}>
+                <span>
+                  <Icon name="bag" />
+                </span>
+                <strong>Gelber Sack</strong>
+                <small>Was gehört hinein?</small>
+                <Icon className="home-service-highlights__arrow" name="chevron-right" />
+              </a>
+              <a className="is-yellow-bin" href={`/${tenantKey}/kalender`}>
+                <span>
+                  <Icon name="bin" />
+                </span>
+                <strong>Gelbe Tonne</strong>
+                <small>Leerungen im Kalender</small>
+                <Icon className="home-service-highlights__arrow" name="chevron-right" />
+              </a>
+              <a className="is-container" href={`/${tenantKey}/services/container-shop`}>
+                <span>
+                  <Icon name="container" />
+                </span>
+                <strong>Container-Shop</strong>
+                <small>Größen vergleichen</small>
+                <Icon className="home-service-highlights__arrow" name="chevron-right" />
+              </a>
+            </nav>
           </section>
         )}
         {view === "calendar" && (
@@ -739,6 +785,7 @@ export function CitizenPilot({
           </section>
         )}
         {view === "sorting" && <WasteSortingShowcase tenantKey={tenantKey} />}
+        {view === "containerShop" && <ContainerShopShowcase tenantKey={tenantKey} />}
         {(view === "home" || view === "guide") && (
           <section className="home-section split-section" id="abfall-abc">
             <Card as="article" className="guide-card">

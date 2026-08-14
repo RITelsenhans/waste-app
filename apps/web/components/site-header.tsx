@@ -31,7 +31,14 @@ const navigation: { href: string; label: string; view: CitizenView }[] = [
 
 export function SiteHeader({ addressLabel, config, tenantKey, view }: SiteHeaderProps) {
   const municipalityDisplayName = config.name.replace(/\s*·\s*Pilot\s*$/iu, "");
-  const servicesActive = ["services", "sorting", "complaint", "bulk", "access"].includes(view);
+  const servicesActive = [
+    "services",
+    "sorting",
+    "complaint",
+    "bulk",
+    "access",
+    "containerShop",
+  ].includes(view);
   const [municipalities, setMunicipalities] = useState<Municipality[]>([
     { tenantId: tenantKey, name: config.name, city: config.serviceArea.city },
   ]);

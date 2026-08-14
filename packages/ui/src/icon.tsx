@@ -1,10 +1,13 @@
 import type { ReactNode, SVGProps } from "react";
 
 export type IconName =
+  | "bag"
+  | "bin"
   | "calendar"
   | "camera"
   | "car"
   | "chevron-right"
+  | "container"
   | "gate"
   | "home"
   | "info"
@@ -25,6 +28,18 @@ export type IconProps = Omit<SVGProps<SVGSVGElement>, "children"> & {
 };
 
 const paths: Record<IconName, ReactNode> = {
+  bag: (
+    <>
+      <path d="M7 7h10l2 14H5L7 7Z" />
+      <path d="M9 7V5a3 3 0 0 1 6 0v2M8 11h8" />
+    </>
+  ),
+  bin: (
+    <>
+      <path d="M5 7h14l-1 14H6L5 7ZM4 7h16M9 7V4h6v3" />
+      <path d="M9 11v6M12 11v6M15 11v6" />
+    </>
+  ),
   calendar: (
     <>
       <path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" />
@@ -47,6 +62,12 @@ const paths: Record<IconName, ReactNode> = {
     </>
   ),
   "chevron-right": <path d="m9 6 6 6-6 6" />,
+  container: (
+    <>
+      <path d="M3 8h18l-2 11H5L3 8Z" />
+      <path d="M6 8V5h12v3M8 12v4M12 12v4M16 12v4" />
+    </>
+  ),
   gate: (
     <>
       <path d="M4 21V8M20 21V8M4 10h16" />

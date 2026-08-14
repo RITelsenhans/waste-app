@@ -55,6 +55,19 @@ test("lädt die kompakte personalisierte Aachen-Pilotstartseite", async ({ page 
   await expect(page.locator(".collection-address")).toHaveText("Musterstraße 12, 52062 Aachen");
   await expect(page.locator("#kalender")).toHaveCount(0);
   await expect(page.locator("#sortierkompass")).not.toBeVisible();
+  const additionalServices = page.getByRole("navigation", { name: "Weitere Angebote" });
+  await expect(additionalServices.getByRole("link", { name: /Gelber Sack/ })).toHaveAttribute(
+    "href",
+    "/demo/abfall-abc",
+  );
+  await expect(additionalServices.getByRole("link", { name: /Gelbe Tonne/ })).toHaveAttribute(
+    "href",
+    "/demo/kalender",
+  );
+  await expect(additionalServices.getByRole("link", { name: /Container-Shop/ })).toHaveAttribute(
+    "href",
+    "/demo/services/container-shop",
+  );
   const notices = await page.locator("#hinweise").boundingBox();
   const address = await page.locator("#adresse").boundingBox();
   expect(notices).not.toBeNull();
@@ -113,7 +126,7 @@ test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu",
 }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/demo");
-  await expect(page.getByRole("link", { name: /SortierKompass testen/ })).toHaveAttribute(
+  await expect(page.getByRole("link", { name: /SortierKompass/ })).toHaveAttribute(
     "href",
     "/demo/services/sortierkompass",
   );
@@ -140,12 +153,12 @@ test("ordnet im SortierKompass synthetische Beispielfotos kommunalen Regeln zu",
   await expect(sorter.getByText("Nicht in den Restabfall werfen.")).toBeVisible();
 });
 
-test("verteilt die vier digitalen Services auf eigene Seiten", async ({ page }) => {
+test("verteilt die fünf digitalen Services auf eigene Seiten", async ({ page }) => {
   await page.goto("/demo/services");
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Services");
   await expect(page.getByText("Anliegen direkt erledigen")).toHaveCount(0);
-  await expect(page.locator(".service-grid a")).toHaveCount(4);
+  await expect(page.locator(".service-grid a")).toHaveCount(5);
   const serviceGrid = page.locator(".service-grid");
   await expect(serviceGrid.getByRole("link", { name: /SortierKompass/ })).toHaveAttribute(
     "href",
@@ -163,7 +176,26 @@ test("verteilt die vier digitalen Services auf eigene Seiten", async ({ page }) 
     "href",
     "/demo/services/recyclinghof-24-7",
   );
+  await expect(serviceGrid.getByRole("link", { name: /Container-Shop/ })).toHaveAttribute(
+    "href",
+    "/demo/services/container-shop",
+  );
   await expect(page.locator("#sortierkompass, #meldung, #sperrmuell, #nachtzugang")).toHaveCount(0);
+});
+
+test("zeigt den Container-Shop als ehrliche, klickbare Pilot-Vorschau", async ({ page }) => {
+  await page.goto("/demo/services/container-shop");
+
+  await expect(
+    page.getByRole("heading", { name: "Container passend zum Projekt finden" }),
+  ).toBeVisible();
+  await expect(page.locator(".container-option")).toHaveCount(3);
+  await expect(page.getByText("Noch keine Bestellung und keine Preiszusage")).toBeVisible();
+  await expect(page.getByRole("button", { name: /bestellen/i })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Entsorgungsweg prüfen" })).toHaveAttribute(
+    "href",
+    "/demo/abfall-abc",
+  );
 });
 
 test("verwendet auf allen Service-Seiten die helle Servicefläche ohne redundanten Rücksprung", async ({
