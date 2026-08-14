@@ -575,7 +575,11 @@ export function CitizenPilot({
                   <span>
                     <Icon name="camera" />
                   </span>
-                  <strong>SortierKompass</strong>
+                  <strong>
+                    Sortier
+                    <wbr />
+                    Kompass
+                  </strong>
                   <small>Beispielfoto prüfen</small>
                 </a>
                 <a href={`/${tenantKey}/services/maengel/new`}>

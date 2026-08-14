@@ -1978,8 +1978,8 @@ button:hover,
 }
 
 .collection-hero .waste-status-badge {
-  background: rgb(255 255 255 / 72%);
-  border: 1px solid #9dc9a0;
+  background: transparent;
+  border: 0;
   color: #225b2c;
 }
 
@@ -2027,6 +2027,12 @@ button:hover,
 
 .quick-actions nav a small {
   color: #62767b;
+}
+
+.quick-actions nav a strong,
+.quick-actions nav a small {
+  min-width: 0;
+  overflow-wrap: normal;
 }
 
 .home-service-highlights {
@@ -2163,8 +2169,8 @@ button:hover,
 
 .container-shop__intro .waste-status-badge {
   align-self: start;
-  background: rgb(255 255 255 / 68%);
-  border: 1px solid #aed4cd;
+  background: transparent;
+  border: 0;
   color: #174b49;
 }
 

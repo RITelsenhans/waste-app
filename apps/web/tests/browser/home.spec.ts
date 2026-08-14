@@ -68,6 +68,10 @@ test("lädt die kompakte personalisierte Aachen-Pilotstartseite", async ({ page 
     "href",
     "/demo/services/container-shop",
   );
+  await expect(page.locator(".collection-hero .waste-status-badge")).toHaveCSS(
+    "border-top-width",
+    "0px",
+  );
   const notices = await page.locator("#hinweise").boundingBox();
   const address = await page.locator("#adresse").boundingBox();
   expect(notices).not.toBeNull();
@@ -190,6 +194,10 @@ test("zeigt den Container-Shop als ehrliche, klickbare Pilot-Vorschau", async ({
     page.getByRole("heading", { name: "Container passend zum Projekt finden" }),
   ).toBeVisible();
   await expect(page.locator(".container-option")).toHaveCount(3);
+  await expect(page.locator(".container-shop__intro .waste-status-badge")).toHaveCSS(
+    "border-top-width",
+    "0px",
+  );
   await expect(page.getByText("Noch keine Bestellung und keine Preiszusage")).toBeVisible();
   await expect(page.getByRole("button", { name: /bestellen/i })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Entsorgungsweg prüfen" })).toHaveAttribute(
@@ -349,6 +357,15 @@ test("@visual bleibt bei 320 Pixeln ohne horizontalen Überlauf bedienbar", asyn
     scrollWidth: document.documentElement.scrollWidth,
   }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+  const sorterLink = page.getByRole("link", { name: /SortierKompass/ });
+  const sorterLinkBox = await sorterLink.boundingBox();
+  const sorterLabelBox = await sorterLink.locator("strong").boundingBox();
+  expect(sorterLinkBox).not.toBeNull();
+  expect(sorterLabelBox).not.toBeNull();
+  expect(sorterLabelBox!.x).toBeGreaterThanOrEqual(sorterLinkBox!.x);
+  expect(sorterLabelBox!.x + sorterLabelBox!.width).toBeLessThanOrEqual(
+    sorterLinkBox!.x + sorterLinkBox!.width,
+  );
   await expect(page.getByRole("navigation", { name: "Mobile Hauptnavigation" })).toBeVisible();
   await expect(page.getByRole("link", { name: "ABC", exact: true })).toBeVisible();
 });
