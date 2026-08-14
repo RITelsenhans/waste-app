@@ -53,8 +53,13 @@ test("lädt die kompakte personalisierte Aachen-Pilotstartseite", async ({ page 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("August");
   await expect(page.getByRole("heading", { level: 1 })).not.toContainText("04. August");
   await expect(page.locator(".collection-address")).toHaveText("Musterstraße 12, 52062 Aachen");
-  await expect(page.locator("#kalender .collection-card")).toHaveCount(3);
+  await expect(page.locator("#kalender")).toHaveCount(0);
   await expect(page.locator("#sortierkompass")).not.toBeVisible();
+  const notices = await page.locator("#hinweise").boundingBox();
+  const address = await page.locator("#adresse").boundingBox();
+  expect(notices).not.toBeNull();
+  expect(address).not.toBeNull();
+  expect(address!.y).toBeGreaterThan(notices!.y + notices!.height - 4);
 });
 
 test("aktualisiert eine gespeicherte Demo-Adresse auf den aktuellen Aachen-Datensatz", async ({
@@ -159,6 +164,28 @@ test("verteilt die vier digitalen Services auf eigene Seiten", async ({ page }) 
     "/demo/services/recyclinghof-24-7",
   );
   await expect(page.locator("#sortierkompass, #meldung, #sperrmuell, #nachtzugang")).toHaveCount(0);
+});
+
+test("verwendet auf allen Service-Seiten die helle Servicefläche ohne redundanten Rücksprung", async ({
+  page,
+}) => {
+  await page.goto("/demo/services/sortierkompass");
+  await expect(page.getByRole("link", { name: "Alle Services" })).toHaveCount(0);
+  await expect(page.getByText("3 Demo-Bilder")).toBeVisible();
+  const sortingBackground = await page
+    .locator("#sortierkompass")
+    .evaluate((element) => getComputedStyle(element).backgroundImage);
+
+  await page.goto("/demo/services/maengel/new");
+  await expect(page.getByRole("link", { name: "Alle Services" })).toHaveCount(0);
+  await expect(page.locator("#meldung")).toHaveCSS("background-image", sortingBackground);
+
+  await page.goto("/demo/services/sperrmuell/new");
+  await expect(page.locator("#sperrmuell")).toHaveCSS("background-image", sortingBackground);
+
+  await page.goto("/demo/services/recyclinghof-24-7");
+  await expect(page.locator("#nachtzugang")).toHaveCSS("background-image", sortingBackground);
+  await expect(page.locator("#nachtzufahrt")).toHaveCSS("color", "rgb(23, 49, 59)");
 });
 
 test("legt eine synthetische Reklamation an und ruft ihren Status ab", async ({ page }) => {

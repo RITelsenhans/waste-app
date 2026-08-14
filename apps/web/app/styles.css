@@ -1955,7 +1955,10 @@ button:hover,
   box-shadow: none;
 }
 
-.sorting-showcase {
+.service-hub,
+.service-task,
+.sorting-showcase,
+.access-showcase {
   background:
     radial-gradient(circle at 5% 0%, rgb(255 204 103 / 32%), transparent 23rem),
     radial-gradient(circle at 92% 100%, rgb(46 184 174 / 24%), transparent 26rem),
@@ -1965,6 +1968,171 @@ button:hover,
   max-width: none;
   padding-inline: max(clamp(1rem, 4vw, 2rem), calc((100vw - var(--layout-content-max)) / 2 + 2rem));
   width: 100vw;
+}
+
+.access-showcase {
+  color: #17313b;
+}
+
+.access-showcase .section-title > span {
+  background: linear-gradient(145deg, #c8f1ed, #e1f6f4);
+  color: #0a6e6b;
+}
+
+.access-showcase .eyebrow,
+.access-showcase .access-step-label {
+  color: #9d1930;
+}
+
+.access-showcase .section-lead,
+.access-journey__head p {
+  color: #35555a;
+}
+
+.access-showcase__jump:focus-visible,
+.journey-scroll:focus-visible {
+  outline-color: #0a6e6b;
+}
+
+.simulation-disclaimer {
+  background: rgb(255 248 232 / 82%);
+  border-color: #dfbe6d;
+  color: #604915;
+}
+
+.simulation-disclaimer .waste-icon {
+  color: #9a6810;
+}
+
+.access-pass-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgb(255 204 103 / 26%), transparent 17rem),
+    linear-gradient(145deg, #ffffff, #edf8f5);
+  border: 1px solid #b9d8d2;
+  color: #17313b;
+}
+
+.access-pass-card::after {
+  border-color: rgb(23 143 137 / 17%);
+}
+
+.access-pass-card .access-step-label,
+.access-pass-card .eyebrow {
+  color: #9d1930;
+}
+
+.access-pass-details {
+  border-block-color: #c9d9dc;
+}
+
+.access-pass-details dt,
+.access-credential small,
+.access-pass-note {
+  color: #526b74;
+}
+
+.access-credential {
+  background: rgb(255 255 255 / 74%);
+  border-color: #aed4cd;
+}
+
+.access-empty-state .waste-icon {
+  color: #178f89;
+}
+
+.access-journey {
+  background: rgb(255 255 255 / 72%);
+  border-color: #aed4cd;
+  color: #17313b;
+}
+
+.access-journey .access-step-label {
+  color: #9d1930;
+}
+
+.access-journey .waste-status-badge {
+  color: #35555a;
+}
+
+.journey-scroll {
+  scrollbar-color: #178f89 #d7e8e4;
+}
+
+.journey-progress__track {
+  background: #c7dcd8;
+}
+
+.journey-progress__stop {
+  color: #627a7e;
+}
+
+.journey-progress__stop > span {
+  background: #edf7f4;
+  border-color: #91b9b3;
+}
+
+.journey-progress__stop.is-complete,
+.journey-progress__stop.is-current {
+  color: #17313b;
+}
+
+.journey-card {
+  background: rgb(255 255 255 / 84%);
+  border-color: #bad8d2;
+}
+
+.journey-card.is-current {
+  box-shadow: 0 0.9rem 2.2rem rgb(7 45 50 / 16%);
+}
+
+.journey-card__scene {
+  border-bottom-color: #bad8d2;
+}
+
+.journey-card__title > span {
+  background: #dff4f1;
+  color: #0a6e6b;
+}
+
+.journey-card__title small {
+  color: #5d777b;
+}
+
+.journey-card__body > p {
+  color: #526b74;
+}
+
+.journey-action:disabled {
+  background: #e0ebe8;
+  color: #687d80;
+}
+
+.journey-card.is-complete .journey-action:disabled {
+  background: #d8eee8;
+  color: #17645e;
+}
+
+.journey-live-status {
+  background: linear-gradient(90deg, rgb(217 244 239 / 86%), rgb(238 242 232 / 86%));
+  border-color: #9bc9c2;
+}
+
+.gate-message,
+.gate-message strong {
+  color: #17313b;
+}
+
+.access-timeline {
+  border-top-color: #bad8d2;
+}
+
+.access-timeline li {
+  background: rgb(255 255 255 / 78%);
+  border: 1px solid #c4ddd8;
+}
+
+.access-timeline small {
+  color: #5d777b;
 }
 
 .sorting-showcase__head {
@@ -2417,29 +2585,6 @@ button:hover,
   max-width: 46rem;
 }
 
-.service-back {
-  margin: 0.7rem auto -1rem;
-  max-width: var(--layout-content-max);
-  padding-inline: clamp(1rem, 4vw, 2rem);
-}
-
-.service-back a {
-  align-items: center;
-  color: #0a6e6b;
-  display: inline-flex;
-  font-size: 0.9rem;
-  font-weight: var(--typography-weight-bold);
-  gap: 0.35rem;
-  min-height: var(--control-target-min);
-  text-decoration: none;
-}
-
-.service-back .waste-icon {
-  height: 1rem;
-  transform: rotate(180deg);
-  width: 1rem;
-}
-
 .service-hub {
   padding-top: clamp(1.25rem, 3vw, 2.5rem);
 }
@@ -2577,12 +2722,12 @@ button:hover,
   display: none;
 }
 
-.view-home #kalender {
-  padding-top: clamp(2rem, 4vw, 3.5rem);
+.view-home .home-hero {
+  padding-bottom: clamp(0.75rem, 2vw, 1.4rem);
 }
 
-.view-home .collection-card {
-  min-height: 8.5rem;
+.view-home .home-section {
+  padding-block: clamp(1.4rem, 3.2vw, 2.75rem);
 }
 
 .view-sorting #sortierkompass {
@@ -2655,10 +2800,10 @@ button:hover,
   align-items: center;
   background:
     radial-gradient(circle at 70% 25%, rgb(255 207 105 / 58%), transparent 2.5rem),
-    linear-gradient(145deg, #113946, #176963);
+    linear-gradient(145deg, #d9f2ed, #b9e2da);
   border-radius: 1.25rem;
   box-shadow: 0 0.8rem 1.8rem rgb(7 29 45 / 14%);
-  color: #d8fffa;
+  color: #0a6e6b;
   display: inline-flex;
   height: 5.5rem;
   justify-content: center;
@@ -2824,8 +2969,8 @@ button:hover,
 }
 
 .journey-control {
-  background: #102832;
-  border: 2px solid #4a737b;
+  background: rgb(255 255 255 / 86%);
+  border: 2px solid #9bc9c2;
   border-radius: 1.1rem;
   display: grid;
   gap: 0;
