@@ -262,8 +262,7 @@ export function CitizenPilot({
   const filteredCollections = collections.filter(
     (item) => !excludedWasteTypes.has(item.wasteTypeLabel),
   );
-  const displayedCollections =
-    view === "home" ? filteredCollections.slice(0, 3) : filteredCollections;
+  const displayedCollections = filteredCollections;
   const selectedSite = sites.find((site) => site.id === selectedSiteId) ?? sites[0];
   const mapUrl = selectedSite
     ? `https://www.openstreetmap.org/export/embed.html?bbox=${selectedSite.longitude - 0.018}%2C${selectedSite.latitude - 0.012}%2C${selectedSite.longitude + 0.018}%2C${selectedSite.latitude + 0.012}&layer=mapnik&marker=${selectedSite.latitude}%2C${selectedSite.longitude}`
@@ -482,14 +481,7 @@ export function CitizenPilot({
           </header>
         )}
         {isServiceView(view) && view !== "services" && (
-          <>
-            <h1 className="visually-hidden">{servicePageTitles[view]}</h1>
-            <nav className="service-back" aria-label="Service-Navigation">
-              <a href={`/${tenantKey}/services`}>
-                <Icon name="chevron-right" /> Alle Services
-              </a>
-            </nav>
-          </>
+          <h1 className="visually-hidden">{servicePageTitles[view]}</h1>
         )}
         {view === "services" && (
           <section className="service-hub home-section" aria-labelledby="services-title">
@@ -593,72 +585,7 @@ export function CitizenPilot({
             </Card>
           </section>
         )}
-        {view === "home" && (
-          <section className="home-section" id="adresse">
-            <p className="eyebrow">Adresse</p>
-            <h2 className="section-title">
-              <span>
-                <Icon name="home" />
-              </span>
-              Für welchen Abholort?
-            </h2>
-            <form className="search-form" onSubmit={searchAddresses}>
-              <label>
-                Straße, Hausnummer, Ort oder Postleitzahl
-                <input
-                  value={addressQuery}
-                  onChange={(event) => setAddressQuery(event.target.value)}
-                  placeholder={`z. B. Musterstraße 12 oder ${config.serviceArea.city}`}
-                  minLength={2}
-                  required
-                />
-              </label>
-              <button type="submit">Suchen</button>
-            </form>
-            <p className="search-hint">
-              Aktuelle Testdaten: <strong>{config.serviceArea.city}</strong>. Sie können auch nach „
-              {config.name}“ suchen.
-            </p>
-            {addressSearchCompleted && (
-              <div className="address-results" ref={addressResultsRef} tabIndex={-1}>
-                <div className="address-results__head">
-                  <h3>
-                    {addresses.length ? `${addresses.length} Treffer` : "Keine Adresse gefunden"}
-                  </h3>
-                  <button type="button" onClick={() => setAddressSearchCompleted(false)}>
-                    Schließen
-                  </button>
-                </div>
-                <div className="result-list">
-                  {addresses.map((item) => (
-                    <button
-                      className={
-                        address?.id === item.id ? "result-button is-selected" : "result-button"
-                      }
-                      key={item.id}
-                      onClick={() => {
-                        void loadAddressData(item);
-                        setAddressSearchCompleted(false);
-                        setAddressQuery("");
-                      }}
-                      type="button"
-                    >
-                      <Icon name="map-pin" />
-                      {item.displayLabel}
-                    </button>
-                  ))}
-                </div>
-                {addresses.length === 0 && (
-                  <p>
-                    Für diese Kommune sind momentan nur synthetische Adressen in{" "}
-                    <strong>{config.serviceArea.city}</strong> hinterlegt.
-                  </p>
-                )}
-              </div>
-            )}
-          </section>
-        )}
-        {(view === "home" || view === "calendar") && (
+        {view === "calendar" && (
           <section className="home-section" id="kalender">
             <p className="eyebrow">Abfuhrkalender</p>
             <h2 className="section-title">
@@ -667,7 +594,7 @@ export function CitizenPilot({
               </span>
               Die nächsten Termine
             </h2>
-            {view === "calendar" && wasteTypes.length > 0 && (
+            {wasteTypes.length > 0 && (
               <fieldset className="collection-filter">
                 <legend>Abfallarten anzeigen</legend>
                 <div>
@@ -693,23 +620,21 @@ export function CitizenPilot({
                 </div>
               </fieldset>
             )}
-            {view === "calendar" && (
-              <div className="calendar-disclosure calendar-disclosure--first">
-                <button
-                  aria-controls="quarter-calendar"
-                  aria-expanded={calendarOpen}
-                  className="calendar-toggle"
-                  onClick={() => setCalendarOpen((open) => !open)}
-                  type="button"
-                >
-                  <Icon name="calendar" />
-                  {calendarOpen
-                    ? "Kalenderansicht schließen"
-                    : "Kalenderansicht für drei Monate öffnen"}
-                </button>
-                <p>Alle gefilterten Abholungen im nächsten Quartal als Kalender.</p>
-              </div>
-            )}
+            <div className="calendar-disclosure calendar-disclosure--first">
+              <button
+                aria-controls="quarter-calendar"
+                aria-expanded={calendarOpen}
+                className="calendar-toggle"
+                onClick={() => setCalendarOpen((open) => !open)}
+                type="button"
+              >
+                <Icon name="calendar" />
+                {calendarOpen
+                  ? "Kalenderansicht schließen"
+                  : "Kalenderansicht für drei Monate öffnen"}
+              </button>
+              <p>Alle gefilterten Abholungen im nächsten Quartal als Kalender.</p>
+            </div>
             <div className="collection-list">
               {displayedCollections.map((item) => (
                 <Card as="article" className="collection-card" elevation="flat" key={item.id}>
@@ -721,30 +646,6 @@ export function CitizenPilot({
                 </Card>
               ))}
             </div>
-            {view === "home" && (
-              <p className="section-link-row">
-                <a className="button-link button-link--dark" href={`/${tenantKey}/kalender`}>
-                  Alle Termine und Filter öffnen
-                </a>
-              </p>
-            )}
-            {view !== "calendar" && (
-              <div className="calendar-disclosure">
-                <button
-                  aria-controls="quarter-calendar"
-                  aria-expanded={calendarOpen}
-                  className="calendar-toggle"
-                  onClick={() => setCalendarOpen((open) => !open)}
-                  type="button"
-                >
-                  <Icon name="calendar" />
-                  {calendarOpen
-                    ? "Kalenderansicht schließen"
-                    : "Kalenderansicht für drei Monate öffnen"}
-                </button>
-                <p>Optional: alle zukünftigen Abholungen im nächsten Quartal als Kalender.</p>
-              </div>
-            )}
             {calendarOpen && (
               <div className="quarter-calendar" id="quarter-calendar">
                 {calendarMonths().map((month) => (
@@ -938,6 +839,71 @@ export function CitizenPilot({
                 </small>
               )}
             </Card>
+          </section>
+        )}
+        {view === "home" && (
+          <section className="home-section" id="adresse">
+            <p className="eyebrow">Adresse</p>
+            <h2 className="section-title">
+              <span>
+                <Icon name="home" />
+              </span>
+              Für welchen Abholort?
+            </h2>
+            <form className="search-form" onSubmit={searchAddresses}>
+              <label>
+                Straße, Hausnummer, Ort oder Postleitzahl
+                <input
+                  value={addressQuery}
+                  onChange={(event) => setAddressQuery(event.target.value)}
+                  placeholder={`z. B. Musterstraße 12 oder ${config.serviceArea.city}`}
+                  minLength={2}
+                  required
+                />
+              </label>
+              <button type="submit">Suchen</button>
+            </form>
+            <p className="search-hint">
+              Aktuelle Testdaten: <strong>{config.serviceArea.city}</strong>. Sie können auch nach „
+              {config.name}“ suchen.
+            </p>
+            {addressSearchCompleted && (
+              <div className="address-results" ref={addressResultsRef} tabIndex={-1}>
+                <div className="address-results__head">
+                  <h3>
+                    {addresses.length ? `${addresses.length} Treffer` : "Keine Adresse gefunden"}
+                  </h3>
+                  <button type="button" onClick={() => setAddressSearchCompleted(false)}>
+                    Schließen
+                  </button>
+                </div>
+                <div className="result-list">
+                  {addresses.map((item) => (
+                    <button
+                      className={
+                        address?.id === item.id ? "result-button is-selected" : "result-button"
+                      }
+                      key={item.id}
+                      onClick={() => {
+                        void loadAddressData(item);
+                        setAddressSearchCompleted(false);
+                        setAddressQuery("");
+                      }}
+                      type="button"
+                    >
+                      <Icon name="map-pin" />
+                      {item.displayLabel}
+                    </button>
+                  ))}
+                </div>
+                {addresses.length === 0 && (
+                  <p>
+                    Für diese Kommune sind momentan nur synthetische Adressen in{" "}
+                    <strong>{config.serviceArea.city}</strong> hinterlegt.
+                  </p>
+                )}
+              </div>
+            )}
           </section>
         )}
         {view === "sites" && (

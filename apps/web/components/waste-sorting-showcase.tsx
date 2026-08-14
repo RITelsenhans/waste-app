@@ -82,7 +82,7 @@ export function WasteSortingShowcase({ tenantKey }: { tenantKey: string }) {
       <div className="sorting-showcase__head">
         <div className="sorting-showcase__meta">
           <p className="eyebrow">Neu · Visuelle Entsorgungshilfe</p>
-          <StatusBadge tone="info">Interaktiver Pilot</StatusBadge>
+          <StatusBadge tone="info">3 Demo-Bilder</StatusBadge>
         </div>
         <h2 className="section-title">
           <span>
