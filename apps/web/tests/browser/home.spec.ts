@@ -50,8 +50,9 @@ test("verlinkt die fünf Kernaufgaben stabil und markiert die aktive Seite", asy
 test("lädt die kompakte personalisierte Aachen-Pilotstartseite", async ({ page }) => {
   await page.goto("/demo");
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("August");
-  await expect(page.getByRole("heading", { level: 1 })).not.toContainText("04. August");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    /^(Mo|Di|Mi|Do|Fr|Sa|So)\., \d{2}\. [\p{L}]+$/u,
+  );
   await expect(page.locator(".collection-address")).toHaveText("Musterstraße 12, 52062 Aachen");
   await expect(page.locator("#kalender")).toHaveCount(0);
   await expect(page.locator("#sortierkompass")).not.toBeVisible();
@@ -472,8 +473,8 @@ test("lädt einen neu gepflegten Hinweis sichtbar nach", async ({ page, request 
       title,
       body: "Dieser Hinweis wurde während des Browsertests gepflegt.",
       priority: "info",
-      validFrom: "2026-08-01T00:00:00Z",
-      validUntil: "2026-08-31T23:59:59Z",
+      validFrom: "2020-01-01T00:00:00Z",
+      validUntil: "2099-12-31T23:59:59Z",
     },
   });
   expect(created.ok()).toBeTruthy();
@@ -518,8 +519,8 @@ test("Pflege-Unit hält Entwürfe zurück und protokolliert die Freigabe", async
       title,
       body: "Dieser Hinweis wird erst nach der Sichtprüfung veröffentlicht.",
       priority: "info",
-      validFrom: "2026-08-01T00:00:00Z",
-      validUntil: "2026-08-31T23:59:59Z",
+      validFrom: "2020-01-01T00:00:00Z",
+      validUntil: "2099-12-31T23:59:59Z",
       publicationStatus: "draft",
     },
   });
