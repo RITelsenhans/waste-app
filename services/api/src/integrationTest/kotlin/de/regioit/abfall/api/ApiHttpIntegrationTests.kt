@@ -289,8 +289,8 @@ class ApiHttpIntegrationTests {
                           "title":"Noch nicht freigegeben",
                           "body":"Dieser Hinweis beginnt als Entwurf.",
                           "priority":"info",
-                          "validFrom":"2026-08-01T00:00:00Z",
-                          "validUntil":"2026-09-01T00:00:00Z",
+                          "validFrom":"2020-01-01T00:00:00Z",
+                          "validUntil":"2099-12-31T23:59:59Z",
                           "publicationStatus":"draft"
                         }
                         """.trimIndent()
@@ -329,8 +329,8 @@ class ApiHttpIntegrationTests {
                       "title":"Jetzt freigegeben",
                       "body":"Dieser Hinweis ist veröffentlicht.",
                       "priority":"info",
-                      "validFrom":"2026-08-01T00:00:00Z",
-                      "validUntil":"2026-09-01T00:00:00Z",
+                      "validFrom":"2020-01-01T00:00:00Z",
+                      "validUntil":"2099-12-31T23:59:59Z",
                       "publicationStatus":"published"
                     }
                     """.trimIndent()
