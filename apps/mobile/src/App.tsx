@@ -48,7 +48,7 @@ export function App() {
       setMessage(
         error instanceof AddressNotFoundError
           ? "Keine synthetische Pilotadresse gefunden. Beispiel: Musterstraße 12."
-          : "Pilot-API nicht erreichbar. Lokal zuerst „pnpm dev“ starten.",
+          : "Pilot-API derzeit nicht erreichbar. Bitte Internetverbindung prüfen und erneut versuchen.",
       );
     }
   }, []);
