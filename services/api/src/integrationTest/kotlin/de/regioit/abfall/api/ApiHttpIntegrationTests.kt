@@ -52,6 +52,23 @@ class ApiHttpIntegrationTests {
     }
 
     @Test
+    fun `mobile pilot origin can read the public API`() {
+        val response =
+            mockMvc
+                .get("/v1/addresses/search") {
+                    header("Origin", "capacitor://localhost")
+                    param("tenantId", "demo")
+                    param("q", "Musterstraße 12")
+                }.andExpect {
+                    status { isOk() }
+                    jsonPath("$[0].id") { value("demo-musterstrasse-12") }
+                }.andReturn()
+                .response
+
+        assertEquals("capacitor://localhost", response.getHeader("Access-Control-Allow-Origin"))
+    }
+
+    @Test
     fun `monitoring is protected and removes only expired technical records`() {
         mockMvc
             .get("/v1/monitoring/summary")
