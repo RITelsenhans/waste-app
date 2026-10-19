@@ -99,6 +99,18 @@ einen eigenen Passwortschutz und leitet administrative Aufrufe serverseitig mit 
 Service-Geheimnis weiter; siehe ADR-0011. Die Web-App verwendet standardmäßig
 `http://localhost:8080` als API. Eine andere Basis-URL kann mit `API_BASE_URL` gesetzt werden.
 
+Für eine interne Managementvorführung kann dieselbe iOS-Hülle stattdessen die geschützte,
+veröffentlichte Bürgerdemo laden. Damit stehen in der installierten App auch Kalender,
+Abfall-ABC, Standorte und die Pilot-Services zur Verfügung:
+
+```bash
+CAPACITOR_SERVER_URL=https://waste-app-web.vercel.app/demo pnpm mobile:sync
+```
+
+Dieser Modus benötigt eine Internetverbindung und einmalig das Demo-Passwort. Er ist eine
+explizite Vorführungsvariante und weder die dauerhafte Mobilarchitektur noch ein freigegebener
+App-Store-Build; ohne `CAPACITOR_SERVER_URL` bleibt der getrennte Technikspike aus ADR-0013 aktiv.
+
 ## Geschützt im Browser teilen
 
 Für die zeitlich begrenzte Kollegenvorführung steht eine GitHub-Codespaces-Konfiguration

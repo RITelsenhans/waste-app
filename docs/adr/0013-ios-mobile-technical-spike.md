@@ -30,12 +30,21 @@ verbindlicher Mobilbetrieb sind nicht vorhanden.
   explizit zu konfigurieren.
 - Der Spike bewertet Build, Installation, lokale Einstellung und API-Verbindung. Er ist keine
   Ablösung der in der Produktspezifikation bevorzugten nativen Zielarchitektur.
+- Für interne Managementvorführungen darf die Hülle über die nur beim Synchronisieren gesetzte
+  Variable `CAPACITOR_SERVER_URL` vorübergehend die geschützte veröffentlichte Bürgerdemo laden.
+  Ohne diese Variable bleibt der getrennte React-/Vite-Client der Standard. Die Vorführungsvariante
+  benötigt eine Internetverbindung, übernimmt keine Zugangsdaten in Quellcode oder Build und ist
+  keine Entscheidung für eine WebView-basierte Produktarchitektur.
 
 ## Folgen
 
 Der kritische technische Pfad lässt sich mit geringem Zusatzaufwand im iOS-Simulator und später
 auf einem signierten Testgerät erproben. Web und Mobile teilen Vertrag, Daten und Designwerte,
 haben aber getrennte Oberflächen und Builds.
+
+Die optionale Managementvariante zeigt kurzfristig den vollständigen Funktionsumfang des
+Webpiloten auf dem Testgerät. Sie teilt dessen Passwortschutz, Verfügbarkeit und Laufzeitgrenzen
+und darf deshalb nicht als Offlinefähigkeit oder native Funktionsparität bewertet werden.
 
 Vor einem TestFlight- oder Produktivpiloten bleiben insbesondere Apple-Developer-Team und
 Signierung, Bundle-ID-Freigabe, HTTPS-Endpunkt, Authentisierung, sichere Gerätespeicherung,
