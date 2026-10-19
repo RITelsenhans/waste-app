@@ -8,7 +8,7 @@ import {
 const baseline = {
   nodeMajor: 22,
   javaMajor: 21,
-  nextVersion: "16.2.12",
+  nextVersion: "16.3.8",
   springBootVersion: "4.1.0",
   kotlinVersion: "2.4.10",
   maximumSecurityWorkflowAgeHours: 192,
@@ -18,7 +18,7 @@ test("erkennt eine konsistente deklarierte Softwarebaseline", () => {
   const result = evaluateDeclaredBaseline({
     baseline,
     rootPackage: { engines: { node: "22.x" } },
-    webPackage: { engines: { node: "22.x" }, dependencies: { next: "16.2.12" } },
+    webPackage: { engines: { node: "22.x" }, dependencies: { next: "16.3.8" } },
     gradleBuild:
       'id("org.springframework.boot") version "4.1.0" apply false\nkotlin("jvm") version "2.4.10" apply false\nsourceCompatibility = JavaVersion.VERSION_21',
   });
@@ -30,7 +30,7 @@ test("erkennt eine abweichende Node-Laufzeit im Vercel-Webpaket", () => {
   const result = evaluateDeclaredBaseline({
     baseline,
     rootPackage: { engines: { node: "22.x" } },
-    webPackage: { engines: { node: "24.x" }, dependencies: { next: "16.2.12" } },
+    webPackage: { engines: { node: "24.x" }, dependencies: { next: "16.3.8" } },
     gradleBuild:
       'id("org.springframework.boot") version "4.1.0" apply false\nkotlin("jvm") version "2.4.10" apply false\nsourceCompatibility = JavaVersion.VERSION_21',
   });

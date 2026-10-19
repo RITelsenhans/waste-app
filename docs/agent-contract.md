@@ -5,6 +5,10 @@
 - Maßgeblich ist die Produktspezifikation unter `docs/product/`.
 - Der aktuelle Entwicklungsauftrag liefert einen ausdrücklich synthetischen,
   lokal testbaren Phase-1/2-Piloten.
+- Ergänzend ist ein synthetischer iOS-Technikspike als installierbare Capacitor-Hülle
+  freigegeben. Er dient nur dem Nachweis von Build, lokaler Einstellung und API-Anbindung
+  und ist weder Bestandteil der Web-Abnahme noch eine Entscheidung für die spätere
+  produktive Mobilarchitektur.
 - Aus Phase 2 sind das gemeinsame Vorgangsmodell, Mängel/Reklamationen, Sperrmüll
   sowie der ausdrücklich synthetische 24/7-Recyclinghof-Zugangs-Showcase freigegeben.
   Der Showcase umfasst Antrag, Code oder `DEMO-`-Kennzeichen und simulierte
@@ -17,6 +21,8 @@
 ## Architekturgrenzen
 
 - Web: Next.js App Router, React und TypeScript.
+- iOS-Technikspike: eigener React-/Vite-Client in einer Capacitor-Hülle; keine Einbettung
+  der Next.js-Webanwendung und keine duplizierten Geschäftsregeln.
 - API/BFF: eigenständiger Kotlin/Spring-Boot-Service.
 - Öffentliche Verträge werden contract-first unter `contracts/openapi/` gepflegt.
 - Designwerte kommen aus `packages/design-tokens`; Mandantenwerte kommen aus Laufzeitkonfiguration.

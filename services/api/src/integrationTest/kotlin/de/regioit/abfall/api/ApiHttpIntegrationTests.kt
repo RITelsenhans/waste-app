@@ -52,6 +52,23 @@ class ApiHttpIntegrationTests {
     }
 
     @Test
+    fun `mobile pilot origin can read the public API`() {
+        val response =
+            mockMvc
+                .get("/v1/addresses/search") {
+                    header("Origin", "capacitor://localhost")
+                    param("tenantId", "demo")
+                    param("q", "Musterstraße 12")
+                }.andExpect {
+                    status { isOk() }
+                    jsonPath("$[0].id") { value("demo-musterstrasse-12") }
+                }.andReturn()
+                .response
+
+        assertEquals("capacitor://localhost", response.getHeader("Access-Control-Allow-Origin"))
+    }
+
+    @Test
     fun `monitoring is protected and removes only expired technical records`() {
         mockMvc
             .get("/v1/monitoring/summary")
@@ -272,8 +289,8 @@ class ApiHttpIntegrationTests {
                           "title":"Noch nicht freigegeben",
                           "body":"Dieser Hinweis beginnt als Entwurf.",
                           "priority":"info",
-                          "validFrom":"2026-08-01T00:00:00Z",
-                          "validUntil":"2026-09-01T00:00:00Z",
+                          "validFrom":"2020-01-01T00:00:00Z",
+                          "validUntil":"2099-12-31T23:59:59Z",
                           "publicationStatus":"draft"
                         }
                         """.trimIndent()
@@ -312,8 +329,8 @@ class ApiHttpIntegrationTests {
                       "title":"Jetzt freigegeben",
                       "body":"Dieser Hinweis ist veröffentlicht.",
                       "priority":"info",
-                      "validFrom":"2026-08-01T00:00:00Z",
-                      "validUntil":"2026-09-01T00:00:00Z",
+                      "validFrom":"2020-01-01T00:00:00Z",
+                      "validUntil":"2099-12-31T23:59:59Z",
                       "publicationStatus":"published"
                     }
                     """.trimIndent()

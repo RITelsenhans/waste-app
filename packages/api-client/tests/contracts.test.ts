@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import demoTenantExample from "../../../contracts/examples/demo-tenant-config.json";
 import readyExample from "../../../contracts/examples/ready-response.json";
 import {
+  AddressNotFoundError,
+  getAddressOverview,
   getTenantConfig,
   TenantConfigNotFoundError,
   TenantConfigUnavailableError,
@@ -92,5 +94,67 @@ describe("generated tenant SDK facade", () => {
     await expect(getTenantConfig("demo", { fetcher })).rejects.toMatchObject({
       status: 503,
     } satisfies Partial<TenantConfigUnavailableError>);
+  });
+});
+
+describe("mobile address overview facade", () => {
+  it("resolves the first matching address and its collections through the generated SDK", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        Response.json([
+          {
+            city: "Aachen",
+            displayLabel: "Musterstraße 12, 52062 Aachen",
+            district: "Zentrum",
+            houseNumber: "12",
+            id: "demo-musterstrasse-12",
+            postalCode: "52062",
+            street: "Musterstraße",
+            tenantId: "demo",
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(
+        Response.json([
+          {
+            addressId: "demo-musterstrasse-12",
+            effectiveDate: "2026-10-20",
+            id: "collection-yellow-2026-10-20",
+            lastModified: "2026-10-01T08:00:00Z",
+            plannedDate: "2026-10-20",
+            publicationStatus: "published",
+            publicationUpdatedAt: "2026-10-01T08:00:00Z",
+            status: "planned",
+            wasteTypeId: "packaging",
+            wasteTypeLabel: "Leichtverpackungen",
+          },
+        ]),
+      );
+
+    const result = await getAddressOverview(" Musterstraße 12 ", "demo", {
+      apiBaseUrl: "https://api.example.invalid/",
+      fetcher,
+    });
+
+    expect(result.address.id).toBe("demo-musterstrasse-12");
+    expect(result.collections[0]?.wasteTypeLabel).toBe("Leichtverpackungen");
+    expect(fetcher).toHaveBeenCalledTimes(2);
+
+    const searchUrl = new URL((fetcher.mock.calls[0]?.[0] as Request).url);
+    expect(searchUrl.pathname).toBe("/v1/addresses/search");
+    expect(searchUrl.searchParams.get("tenantId")).toBe("demo");
+    expect(searchUrl.searchParams.get("q")).toBe("Musterstraße 12");
+
+    const collectionUrl = new URL((fetcher.mock.calls[1]?.[0] as Request).url);
+    expect(collectionUrl.pathname).toBe("/v1/addresses/demo-musterstrasse-12/collections");
+  });
+
+  it("reports an empty address search as not found", async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(Response.json([]));
+
+    await expect(getAddressOverview("Unbekannt", "demo", { fetcher })).rejects.toBeInstanceOf(
+      AddressNotFoundError,
+    );
   });
 });

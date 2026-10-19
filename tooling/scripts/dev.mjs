@@ -59,6 +59,7 @@ const services = {
       SPRING_MAIL_HOST: "127.0.0.1",
       SPRING_MAIL_PORT: String(mailSmtpPort),
       WASTE_MAIL_APP_BASE_URL: `http://localhost:${webPort}/demo`,
+      WASTE_MOBILE_ORIGIN: process.env.WASTE_MOBILE_ORIGIN ?? "capacitor://localhost",
       WASTE_MAIL_ENABLED: sharedDemo ? "false" : (process.env.WASTE_MAIL_ENABLED ?? "true"),
       WASTE_PILOT_ADMIN_ENABLED: sharedDemo
         ? "false"
