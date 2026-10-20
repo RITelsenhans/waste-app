@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <title>Abfall App Pilot – Verbindung unterbrochen</title>
+    <style>
+      :root {
+        color: #16223b;
+        background: #f5f7fa;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        align-items: center;
+        display: flex;
+        min-height: 100vh;
+        margin: 0;
+        padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+      }
+
+      main {
+        background: #ffffff;
+        border-top: 8px solid #c8102e;
+        border-radius: 18px;
+        box-shadow: 0 16px 42px rgb(22 34 59 / 12%);
+        margin: 0 auto;
+        max-width: 520px;
+        padding: 32px 28px;
+        width: 100%;
+      }
+
+      .brand {
+        color: #c8102e;
+        font-size: 1.15rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        margin: 0 0 28px;
+      }
+
+      .eyebrow {
+        color: #267c7b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        margin: 0 0 8px;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        font-size: clamp(1.8rem, 8vw, 2.35rem);
+        line-height: 1.08;
+        margin: 0 0 16px;
+      }
+
+      p {
+        font-size: 1.05rem;
+        line-height: 1.55;
+        margin: 0 0 24px;
+      }
+
+      button {
+        appearance: none;
+        background: #006f73;
+        border: 0;
+        border-radius: 12px;
+        color: #ffffff;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 750;
+        min-height: 52px;
+        padding: 12px 20px;
+        width: 100%;
+      }
+
+      button:active {
+        background: #00595c;
+      }
+
+      .note {
+        color: #5c6678;
+        font-size: 0.88rem;
+        margin: 18px 0 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="brand">regio iT · Abfall App Pilot</p>
+      <p class="eyebrow">Verbindung unterbrochen</p>
+      <h1>Die Vorführung konnte nicht geladen werden.</h1>
+      <p>
+        Bitte Internetverbindung prüfen und erneut versuchen. Es wurden keine Eingaben gelöscht.
+      </p>
+      <button id="retry" type="button">Erneut laden</button>
+      <p class="note">Diese Vorführungsfassung benötigt eine aktive Internetverbindung.</p>
+    </main>
+    <script>
+      document.getElementById("retry").addEventListener("click", function () {
+        var serverUrl = window.Capacitor && window.Capacitor.getServerUrl();
+        if (serverUrl && serverUrl.indexOf("https://") === 0) {
+          window.location.replace(serverUrl);
+          return;
+        }
+        window.location.reload();
+      });
+    </script>
+  </body>
+</html>

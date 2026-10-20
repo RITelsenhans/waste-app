@@ -109,7 +109,9 @@ CAPACITOR_SERVER_URL=https://waste-app-web.vercel.app/demo pnpm mobile:sync
 
 Dieser Modus benötigt eine Internetverbindung und einmalig das Demo-Passwort. Er ist eine
 explizite Vorführungsvariante und weder die dauerhafte Mobilarchitektur noch ein freigegebener
-App-Store-Build; ohne `CAPACITOR_SERVER_URL` bleibt der getrennte Technikspike aus ADR-0013 aktiv.
+App-Store-Build. Kann die veröffentlichte Demo nicht geladen werden, zeigt die Hülle statt einer
+weißen Fläche eine lokale Hinweisseite mit Wiederholen-Aktion. Ohne `CAPACITOR_SERVER_URL` bleibt
+der getrennte Technikspike aus ADR-0013 aktiv.
 
 ## Geschützt im Browser teilen
 
