@@ -34,8 +34,11 @@ verbindlicher Mobilbetrieb sind nicht vorhanden.
   Variable `CAPACITOR_SERVER_URL` vorübergehend die geschützte veröffentlichte Bürgerdemo laden.
   Ohne diese Variable bleibt der getrennte React-/Vite-Client der Standard. Die Vorführungsvariante
   benötigt eine Internetverbindung, übernimmt keine Zugangsdaten in Quellcode oder Build und ist
-  keine Entscheidung für eine WebView-basierte Produktarchitektur. Schlägt das Laden der externen
-  Seite fehl, zeigt `server.errorPath` eine lokal gebündelte Hinweisseite mit Wiederholen-Aktion.
+  keine Entscheidung für eine WebView-basierte Produktarchitektur. Weiterleitungen innerhalb des
+  konfigurierten HTTPS-Hosts, insbesondere vom Demopfad zum Passwort-Gate, werden explizit über
+  `server.allowNavigation` zugelassen; andere Hosts bleiben ausgeschlossen. Schlägt das Laden der
+  externen Seite fehl, zeigt `server.errorPath` eine lokal gebündelte Hinweisseite mit
+  Wiederholen-Aktion.
 
 ## Folgen
 

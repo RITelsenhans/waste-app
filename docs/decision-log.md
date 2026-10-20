@@ -1,6 +1,6 @@
 # Decision Log
 
-Stand: 19. Oktober 2026
+Stand: 20. Oktober 2026
 
 ## Fehlende Voraussetzungen
 
@@ -90,6 +90,7 @@ Stand: 19. Oktober 2026
 | D-067 | Ein getrenntes `apps/mobile` erprobt iOS mit Capacitor 8, React und Vite. Der installierbare Technikspike nutzt die bestehenden Design Tokens und OpenAPI-Verträge, speichert nur die synthetische Adressauswahl lokal und greift direkt auf die Pilot-API zu.                                                                                                   | Liefert auf KI-gestütztem Entwicklungsweg schnell einen realen Build- und Integrationsnachweis, ohne die Next.js-Webanwendung einzubetten oder eine produktive Mobilarchitektur vorwegzunehmen. Kotlin Multiplatform mit nativen Oberflächen bleibt das Zielbild der Produktspezifikation; siehe ADR-0013.             |
 | D-068 | Next.js und `eslint-config-next` werden auf 16.3.8 angehoben; die vorhandenen Security-Overrides für `sharp`, `js-yaml` und `brace-expansion` werden aktualisiert und um `source-map-js` ergänzt.                                                                                                                                                                | Der Audit beim iOS-Spike meldete für Next.js 16.2.12 drei kritische RCE- sowie eine SSRF-Lücke und weitere inzwischen behobene High-Severity-Befunde. Die Patchstände schließen die verfügbaren Fixes ohne Architekturwechsel; für `braces` ist trotz Advisory noch keine korrigierte npm-Version veröffentlicht.      |
 | D-069 | Die signierte iOS-Hülle darf für eine interne Managementvorführung über die Buildvariable `CAPACITOR_SERVER_URL` die geschützte veröffentlichte Bürgerdemo laden; ohne die Variable bleibt der getrennte Technikspike aktiv. Scheitert der externe Ladevorgang, erscheint eine lokal gebündelte Hinweisseite mit Wiederholen-Aktion.                             | Stellt Kalender, Standorte, Abfall-ABC und Pilot-Services auf dem Testgerät bereit, ohne Passwort oder Ziel-URL fest in den App-Code zu schreiben. Der Modus benötigt Internet und ist weder Offline-Nachweis noch Vorentscheidung für eine WebView-basierte Produkt- oder TestFlight-Architektur; siehe ADR-0013.     |
+| D-070 | Der interne TestFlight-Nachweis wird im bezahlten Team `supplychaineers TEC GmbH` unter der Bundle-ID `com.supplychaineers.abfallpilot` geführt. Die temporäre Web-Demo erlaubt in der iOS-Hülle ausschließlich Navigationen innerhalb des zur Buildzeit konfigurierten HTTPS-Hosts, damit die Weiterleitung vom Demopfad zum Passwort-Gate in der App bleibt.   | Die ursprünglich vorgesehene Regio-IT-Bundle-ID steht diesem Apple-Team nicht zur Verfügung. Die hostgenaue Freigabe behebt den beobachteten Ladeabbruch, ohne beliebige Fremdnavigation in der WebView zu erlauben. TestFlight und die WebView-Demo bleiben interne technische Nachweise ohne Produktivfreigabe.      |
 
 ## Offene Entscheidungen
 
