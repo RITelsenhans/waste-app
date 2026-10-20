@@ -1,13 +1,16 @@
 # Abhängigkeits- und Lizenzprüfung
 
-Stand: 1. August 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, Build- und Testabhängigkeiten. Transitive Abhängigkeiten müssen in CI künftig zusätzlich per SBOM und Policy geprüft werden.
+Stand: 19. Oktober 2026. Aufgeführt sind bewusst hinzugefügte direkte Laufzeit-, Build- und Testabhängigkeiten. Transitive Abhängigkeiten müssen in CI künftig zusätzlich per SBOM und Policy geprüft werden.
 
 | Komponente                  | Version                     | Bedarf                                                                                                     | Lizenz                                                          |
 | --------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Next.js                     | 16.2.12                     | App Router, SSR und Web-Build                                                                              | MIT                                                             |
+| Next.js                     | 16.3.8                      | App Router, SSR und Web-Build; schließt die gemeldeten kritischen 16.2-Sicherheitslücken                   | MIT                                                             |
 | React / React DOM           | 19.2.8                      | deklarative Weboberfläche                                                                                  | MIT                                                             |
+| Capacitor Core / iOS / CLI  | 8.5.3                       | installierbare iOS-Hülle, native Xcode-Integration und reproduzierbare Synchronisierung des Technikspikes  | MIT                                                             |
+| Capacitor Preferences       | 8.0.1                       | kleine, nicht sensible lokale Einstellung der synthetischen Pilotadresse                                   | MIT                                                             |
+| Vite / React Plugin         | 8.3.4 / 6.1.2               | statischer Mobile-Build und React-Transformation für die Capacitor-Hülle                                   | MIT                                                             |
 | TypeScript                  | 6.0.3                       | statische Typprüfung im Web; Version 7 ist mit der aktuellen Next.js-Linttoolchain noch nicht kompatibel   | Apache-2.0                                                      |
-| ESLint / eslint-config-next | 9.39.5 / 16.2.12            | Web-Linting und Next-Regeln; ESLint 10 ist von den transitiven Next.js-Plugins noch nicht freigegeben      | MIT                                                             |
+| ESLint / eslint-config-next | 9.39.5 / 16.3.8             | Web-Linting und Next-Regeln; ESLint 10 ist von den transitiven Next.js-Plugins noch nicht freigegeben      | MIT                                                             |
 | Vitest                      | 4.1.10                      | schnelle TypeScript-Basistests                                                                             | MIT                                                             |
 | Node.js-Typdefinitionen     | 24.13.3                     | Typen für Node-basierte Generator-Konfiguration und Buildskripte; Patch innerhalb der Node-24-Baseline     | MIT                                                             |
 | Prettier                    | 3.9.6                       | einheitliche Web-/Dokumentformatierung                                                                     | MIT                                                             |
@@ -55,20 +58,21 @@ Ziel-Repositories.
 
 Sicherheitsbedingte transitive Overrides:
 
-| Komponente      | Erzwungene Version | Bedarf                                                                   | Lizenz     |
-| --------------- | ------------------ | ------------------------------------------------------------------------ | ---------- |
-| brace-expansion | 5.0.9              | schließt CVE-2026-14257 und GHSA-rgw5-rvv9-x895 im ESLint/Minimatch-Pfad | MIT        |
-| js-yaml         | 4.3.1              | schließt CVE-2026-59870 in den ESLint- und OpenAPI-Tooling-Pfaden        | MIT        |
-| nanoid          | 3.3.17             | schließt GHSA-2v37-7h3g-55p8 in den Next.js- und PostCSS-Pfaden          | MIT        |
-| postcss         | 8.5.25             | schließt die im Next.js-Buildpfad gemeldete High-Severity-Lücke          | MIT        |
-| sharp           | 0.35.0             | schließt die im Next.js-Bildpfad gemeldete High-Severity-Lücke           | Apache-2.0 |
+| Komponente      | Erzwungene Version | Bedarf                                                                  | Lizenz       |
+| --------------- | ------------------ | ----------------------------------------------------------------------- | ------------ |
+| brace-expansion | 5.0.11             | schließt die gemeldeten Rekursions-DoS-Lücken im ESLint/Minimatch-Pfad  | MIT          |
+| js-yaml         | 4.3.2              | schließt die gemeldete Merge-Key-DoS-Lücke in den Tooling-Pfaden        | MIT          |
+| nanoid          | 3.3.18             | schließt GHSA-2v37-7h3g-55p8 in den Next.js- und PostCSS-Pfaden         | MIT          |
+| postcss         | 8.5.25             | schließt die im Next.js-Buildpfad gemeldete High-Severity-Lücke         | MIT          |
+| sharp           | 0.35.5             | schließt die gemeldeten libheif- und librsvg-Lücken im Next.js-Bildpfad | Apache-2.0   |
+| source-map-js   | 1.2.2              | schließt die gemeldete Event-Loop-DoS-Lücke im PostCSS-Pfad             | BSD-3-Clause |
 
 Die Overrides bleiben nur so lange bestehen, bis die direkten Upstream-Abhängigkeiten
 selbst sichere Versionen auflösen. `sharp` wird zusätzlich mit dem
 Next.js-Produktionsbuild und der Bildroute getestet.
 
 `minimatch@3.1.5` erwartet historisch den CommonJS-Default-Export von
-`brace-expansion`. Die sichere Major-Version 5.0.9 exportiert stattdessen die Funktion
+`brace-expansion`. Die sichere Major-Version 5.0.11 exportiert stattdessen die Funktion
 benannt als `expand`. Der minimale, eingecheckte pnpm-Patch unter `patches/` akzeptiert
 beide Exportformen, verändert keine Matching-Logik und ermöglicht so die sichere
 Version ohne inkompatiblen ESLint-Lauf. Der Patch wird entfernt, sobald ESLint diese
@@ -78,11 +82,13 @@ Explizit erlaubte transitive Build-Skripte:
 
 | Komponente    | Version | Herkunft und Bedarf                                                      | Lizenz     |
 | ------------- | ------- | ------------------------------------------------------------------------ | ---------- |
-| sharp         | 0.35.0  | Transitiv über Next.js; native Bildverarbeitung für `next/image`         | Apache-2.0 |
+| sharp         | 0.35.5  | Transitiv über Next.js; native Bildverarbeitung für `next/image`         | Apache-2.0 |
 | unrs-resolver | 1.12.2  | Transitiv über `eslint-config-next`; nativer Import-Resolver für Linting | MIT        |
 
-Es wurden keine zusätzlichen UI-, CSS-, Telemetrie-, Karten- oder
-Authentifizierungsbibliotheken aufgenommen. Die Codespaces-Demo verwendet nur die
+Für den iOS-Technikspike wurden keine zusätzlichen UI-, CSS-, Telemetrie-, Karten- oder
+Authentifizierungsbibliotheken aufgenommen. Capacitor, sein iOS-Ziel und Preferences
+bilden ausschließlich die native Hülle und eine kleine lokale Einstellung; die
+Fachdaten bleiben in der bestehenden Pilot-API. Die Codespaces-Demo verwendet nur die
 offiziellen Dev-Container-Bausteine und das offizielle PostgreSQL-Image; sie sind keine
 Anwendungsbibliotheken und keine produktive Betriebsplattform. Die Datenbankbibliotheken sind durch den
 freigegebenen persistenten Pilotweg begründet; die neue Pflegeoberfläche verwendet
@@ -96,6 +102,13 @@ Ausfallverhalten und eine datenschutzrechtliche Freigabe sind vor externer
 Bereitstellung noch verbindlich zu entscheiden.
 
 ## Bekannte Tooling-Warnung
+
+Der Audit vom 19. Oktober 2026 meldet noch `GHSA-vfj7-8cjw-p6xm` für das ausschließlich
+im Lint-Tooling transitiv verwendete `braces@3.0.3`. Der Advisory nennt `3.0.4` als
+korrigiert, diese Version ist im npm-Register jedoch noch nicht veröffentlicht. Der
+High-Severity-Gate bleibt deshalb bewusst rot und wird weder unterdrückt noch mit einem
+ungeprüften Quellcode-Fork umgangen. Nach Veröffentlichung ist der Patch einzuspielen
+und der Override-Bedarf erneut zu prüfen.
 
 `pnpm peers check` meldet für `@napi-rs/wasm-runtime` optionale
 `@emnapi/core`-/`@emnapi/runtime`-Peers in einer Alpha-Versionsreihe. Die Pfade stammen

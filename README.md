@@ -11,6 +11,7 @@ synthetische Demo-Daten und ist keine produktive Bereitstellung.
 - JDK 21 bis 26; erzeugter Bytecode zielt auf Java 21
 - PostgreSQL 17 (`brew install postgresql@17`); ein globaler Datenbankdienst ist nicht nötig
 - Internetzugang beim ersten Installieren der Abhängigkeiten
+- Für den optionalen iOS-Technikspike: Xcode mit installierter iOS-Simulator-Runtime
 
 ## Installation
 
@@ -76,10 +77,41 @@ Danach:
 - Readiness: <http://localhost:8080/v1/health/ready>
 - Demo-Konfiguration: <http://localhost:8080/v1/tenants/demo/config>
 
+## iOS-Technikspike
+
+`apps/mobile` ist ein getrennter, installierbarer Capacitor-Technikspike. Er bettet die
+Next.js-Anwendung nicht ein, verwendet aber dieselben Design Tokens, OpenAPI-Verträge und
+synthetischen Pilotdaten. Während `pnpm dev` läuft, wird das native Projekt synchronisiert und
+in Xcode geöffnet:
+
+```bash
+pnpm mobile:sync
+pnpm mobile:open
+```
+
+Im Xcode-Simulator startet die App standardmäßig gegen `http://localhost:8080`. Eine abweichende
+API wird vor dem Synchronisieren über `VITE_API_BASE_URL` gesetzt. Auf einem echten Gerät ist
+eine erreichbare HTTPS-Pilot-API erforderlich. Die App ist kein freigegebener TestFlight- oder
+Produktionsbuild; Details und Grenzen stehen in [ADR-0013](docs/adr/0013-ios-mobile-technical-spike.md).
+
 Die Pflege-Unit läuft lokal ohne Anmeldung auf Loopback. Die veröffentlichte Pilotvariante besitzt
 einen eigenen Passwortschutz und leitet administrative Aufrufe serverseitig mit einem separaten
 Service-Geheimnis weiter; siehe ADR-0011. Die Web-App verwendet standardmäßig
 `http://localhost:8080` als API. Eine andere Basis-URL kann mit `API_BASE_URL` gesetzt werden.
+
+Für eine interne Managementvorführung kann dieselbe iOS-Hülle stattdessen die geschützte,
+veröffentlichte Bürgerdemo laden. Damit stehen in der installierten App auch Kalender,
+Abfall-ABC, Standorte und die Pilot-Services zur Verfügung:
+
+```bash
+CAPACITOR_SERVER_URL=https://waste-app-web.vercel.app/demo pnpm mobile:sync
+```
+
+Dieser Modus benötigt eine Internetverbindung und einmalig das Demo-Passwort. Er ist eine
+explizite Vorführungsvariante und weder die dauerhafte Mobilarchitektur noch ein freigegebener
+App-Store-Build. Kann die veröffentlichte Demo nicht geladen werden, zeigt die Hülle statt einer
+weißen Fläche eine lokale Hinweisseite mit Wiederholen-Aktion. Ohne `CAPACITOR_SERVER_URL` bleibt
+der getrennte Technikspike aus ADR-0013 aktiv.
 
 ## Geschützt im Browser teilen
 

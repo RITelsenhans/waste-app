@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "@waste/ui";
 import { CLIENT_API_BASE_URL as API } from "../lib/client-api";
@@ -30,6 +31,7 @@ const navigation: { href: string; label: string; view: CitizenView }[] = [
 ];
 
 export function SiteHeader({ addressLabel, config, tenantKey, view }: SiteHeaderProps) {
+  const router = useRouter();
   const municipalityDisplayName = config.name.replace(/\s*·\s*Pilot\s*$/iu, "");
   const servicesActive = [
     "services",
@@ -101,7 +103,7 @@ export function SiteHeader({ addressLabel, config, tenantKey, view }: SiteHeader
                   const tenant = municipalities.find(
                     (municipality) => municipality.tenantId === event.currentTarget.value,
                   );
-                  if (tenant) window.location.assign(`/${encodeURIComponent(tenant.tenantId)}`);
+                  if (tenant) router.push(`/${encodeURIComponent(tenant.tenantId)}`);
                 }}
               >
                 {municipalities.map((municipality) => (
