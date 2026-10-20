@@ -153,7 +153,10 @@ nachtragen:
 1. Vercel-Adresse im Browser öffnen → es erscheint die **Passwortabfrage**.
 2. Mit `DEMO_ACCESS_PASSWORD` anmelden → die Bürgeransicht unter `/demo` lädt.
 3. Am Handy prüfen (Android/Apple): dieselbe URL im mobilen Browser reicht — keine
-   App-Installation nötig.
+   App-Store-Installation nötig. Für eine interne Managementvorführung kann die
+   angemeldete Seite über **Teilen → Zum Home-Bildschirm** als `Abfall APP Pilot`
+   abgelegt werden. Sie startet dann ohne Safari-Werkzeugleiste direkt unter `/demo`,
+   bleibt aber ausdrücklich onlineabhängig und ist kein Offline-Nachweis.
 4. An die Kollegen gehen **zwei getrennte Nachrichten**: einmal die **URL**, auf
    einem anderen Kanal das **Passwort**. Die Sitzung hält 8 Stunden.
 5. Admin-Adresse öffnen, mit demselben Passwort anmelden und kontrollieren, dass eine
