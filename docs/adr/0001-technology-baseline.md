@@ -9,7 +9,7 @@ Abschnitt 9 verlangt Next.js/App Router mit React und TypeScript sowie eine eige
 
 ## Entscheidung
 
-- Next.js 16.2.12, React/React DOM 19.2.8 und TypeScript 6.0.3. TypeScript 7 wird erst verwendet, wenn die von `eslint-config-next` eingebundene typescript-eslint-Toolchain es unterstützt.
+- Next.js und `eslint-config-next` 16.4.1, React/React DOM 19.2.8 und TypeScript 6.0.3. Das koordinierte Next.js-Sicherheitsupdate schließt die im Dependency Audit gemeldeten RCE-, SSRF- und DoS-Lücken. TypeScript 7 wird erst verwendet, wenn die von `eslint-config-next` eingebundene typescript-eslint-Toolchain es unterstützt.
 - pnpm 11.9.0 und Node.js 22; lokale und CI-Läufe verwenden mindestens 22.13.
 - Spring Boot 4.1.0, Kotlin 2.4.10 und Gradle Wrapper 9.6.1.
 - Kompilierung auf Java-21-Bytecode; Builds dürfen mit kompatiblem JDK 21–26 laufen.

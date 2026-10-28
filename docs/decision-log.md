@@ -84,6 +84,18 @@ Stand: 13. August 2026
 | D-061 | Die vier Pilot-Services SortierKompass, Mängelmeldung, Sperrmüll und 24/7-Recyclinghof-Zugang erhalten eigene Aufgabenpfade; `/services` bleibt als kompakte Auswahlseite bestehen. Die große allgemeine Service-Einleitung entfällt auf den Funktionsseiten.                                                     | Begrenzt die Scrolllänge, stellt pro Seite genau eine Aufgabe in den Mittelpunkt und führt die bereits spezifizierten Deep Links für Mängel und Sperrmüll konsequent fort. Der Qualitätsagent prüft jeden Service unabhängig auf seinem Zielpfad.                                                                      |
 | D-062 | Der Qualitätsagent akzeptiert neben der erwarteten Commit-ID nur solche Deployment-Revisionen, deren Git-Tree innerhalb der jüngsten 1.000 erreichbaren Commits des vollständig ausgecheckten Produktionsbranches identisch ist.                                                                                  | Verhindert rote Fehlalarme bei von Vercel übersprungenen, inhaltsgleichen Folge-Commits. Branchabweichungen und nicht nachweisbar identische Inhalte bleiben Fehler; ohne gültigen Tree-Nachweis gilt ausschließlich die exakte Commit-ID.                                                                             |
 
+## Sicherheitsupdate des Dependency Audits vom 28. Oktober 2026
+
+Next.js und `eslint-config-next` werden gemeinsam auf 16.4.1 aktualisiert.
+Die bestehenden Sicherheits-Overrides werden auf die korrigierten Versionen
+angehoben und um `source-map-js@1.2.2`, `vite@8.1.6` und `zod@4.6.6` ergänzt.
+Damit werden die fünf kritischen und elf hohen Befunde aus Actions-Job
+`121513276090` behoben, ohne die Audit-Schwelle `high` oder die Lizenzrichtlinie
+abzuschwächen. Die Overrides bleiben bis zur sicheren Upstream-Auflösung
+vorübergehend; Versionen und Lizenzen stehen in
+`architecture/dependencies.md`. Die historischen Versionsangaben in D-045
+werden durch dieses Sicherheitsupdate abgelöst.
+
 ## Offene Entscheidungen
 
 Die 20 Grundsatzentscheidungen aus Abschnitt 23 der Produktspezifikation bleiben offen. Für den nächsten Auftrag sind besonders zu klären:

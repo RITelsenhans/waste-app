@@ -19,6 +19,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -130,6 +131,21 @@ class ApiHttpIntegrationTests {
 
     @Test
     fun `phase one content can be searched and stays consistent`() {
+        val nextCollectionDate = LocalDate.now(ZoneId.of("Europe/Berlin")).plusDays(1)
+        jdbc
+            .sql(
+                """
+                insert into collection_event
+                    (id, tenant_id, address_id, waste_type_id, waste_type_label, planned_date,
+                     effective_date, status)
+                values
+                    (:id, 'demo', 'demo-musterstrasse-12', 'residual', 'Restabfall',
+                     :collectionDate, :collectionDate, 'planned')
+                """.trimIndent(),
+            ).param("id", "integration-${UUID.randomUUID()}")
+            .param("collectionDate", nextCollectionDate)
+            .update()
+
         mockMvc
             .get("/v1/addresses/search") {
                 param("tenantId", "demo")
@@ -258,6 +274,8 @@ class ApiHttpIntegrationTests {
 
     @Test
     fun `draft content stays private until publication and changes are audited`() {
+        val validFrom = Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS)
+        val validUntil = validFrom.plus(30, ChronoUnit.DAYS)
         val created =
             mockMvc
                 .post("/v1/admin/notices") {
@@ -272,8 +290,8 @@ class ApiHttpIntegrationTests {
                           "title":"Noch nicht freigegeben",
                           "body":"Dieser Hinweis beginnt als Entwurf.",
                           "priority":"info",
-                          "validFrom":"2026-08-01T00:00:00Z",
-                          "validUntil":"2026-09-01T00:00:00Z",
+                          "validFrom":"$validFrom",
+                          "validUntil":"$validUntil",
                           "publicationStatus":"draft"
                         }
                         """.trimIndent()
@@ -312,8 +330,8 @@ class ApiHttpIntegrationTests {
                       "title":"Jetzt freigegeben",
                       "body":"Dieser Hinweis ist veröffentlicht.",
                       "priority":"info",
-                      "validFrom":"2026-08-01T00:00:00Z",
-                      "validUntil":"2026-09-01T00:00:00Z",
+                      "validFrom":"$validFrom",
+                      "validUntil":"$validUntil",
                       "publicationStatus":"published"
                     }
                     """.trimIndent()
