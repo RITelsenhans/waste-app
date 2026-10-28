@@ -18,7 +18,7 @@ describe("web release information", () => {
       branch: "feat/phase1-phase2-functional-pilot",
       applicationVersion: "0.1.0",
       nodeVersion: "22.14.0",
-      nextVersion: "16.2.12",
+      nextVersion: "16.4.1",
     });
   });
 

@@ -76,6 +76,46 @@ test("security workflow and dependency policy enforce the agreed baseline", asyn
   assert.match(dependencyPolicy, /GPL-3\.0-only/);
 });
 
+test("locked dependencies retain the dependency audit security fixes", async () => {
+  const lockfile = await readRepositoryFile("pnpm-lock.yaml");
+  const minimumVersions = {
+    next: "16.4.1",
+    "eslint-config-next": "16.4.1",
+    "brace-expansion": "5.0.12",
+    "js-yaml": "4.3.2",
+    nanoid: "3.3.18",
+    sharp: "0.35.5",
+    "source-map-js": "1.2.2",
+    vite: "8.1.6",
+    zod: "4.6.6",
+  };
+
+  for (const [dependency, minimum] of Object.entries(minimumVersions)) {
+    const versions = [
+      ...lockfile.matchAll(new RegExp(`^  ${dependency}@(\\d+\\.\\d+\\.\\d+):$`, "gm")),
+    ];
+    assert.ok(versions.length > 0, `${dependency} fehlt im Lockfile.`);
+    for (const [, version] of versions) {
+      assert.ok(
+        version.localeCompare(minimum, "en", { numeric: true }) >= 0,
+        `${dependency}@${version} benötigt mindestens ${minimum}.`,
+      );
+    }
+  }
+
+  const web = JSON.parse(await readRepositoryFile("apps/web/package.json"));
+  const admin = JSON.parse(await readRepositoryFile("apps/admin/package.json"));
+  const eslint = JSON.parse(await readRepositoryFile("packages/eslint-config/package.json"));
+  const root = JSON.parse(await readRepositoryFile("package.json"));
+  const baseline = JSON.parse(
+    await readRepositoryFile("tooling/quality-agent/technical-baseline.json"),
+  );
+  assert.equal(web.dependencies.next, admin.dependencies.next);
+  assert.equal(web.dependencies.next, eslint.dependencies["eslint-config-next"]);
+  assert.equal(web.dependencies.next, baseline.nextVersion);
+  assert.equal(root.scripts["security:audit"], "pnpm audit --audit-level high");
+});
+
 test("Dependabot covers npm, Gradle and GitHub Actions", async () => {
   const dependabot = await readRepositoryFile(".github/dependabot.yml");
 
